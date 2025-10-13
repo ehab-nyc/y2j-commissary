@@ -19,11 +19,13 @@ interface Product {
   category_id: string;
   image_url: string | null;
   categories: { name: string } | null;
+  box_sizes: string[];
 }
 
 interface CartItem {
   product: Product;
   quantity: number;
+  boxSize: string;
 }
 
 const Products = () => {
@@ -73,12 +75,12 @@ const Products = () => {
     setCategories(data || []);
   };
 
-  const addToCart = (product: Product) => {
-    const existing = cart.find(item => item.product.id === product.id);
+  const addToCart = (product: Product, boxSize: string) => {
+    const existing = cart.find(item => item.product.id === product.id && item.boxSize === boxSize);
     if (existing) {
       if (existing.quantity < product.quantity) {
         setCart(cart.map(item =>
-          item.product.id === product.id
+          item.product.id === product.id && item.boxSize === boxSize
             ? { ...item, quantity: item.quantity + 1 }
             : item
         ));
@@ -86,20 +88,20 @@ const Products = () => {
         toast.error('Not enough stock available');
       }
     } else {
-      setCart([...cart, { product, quantity: 1 }]);
+      setCart([...cart, { product, quantity: 1, boxSize }]);
     }
   };
 
-  const removeFromCart = (productId: string) => {
-    const existing = cart.find(item => item.product.id === productId);
+  const removeFromCart = (productId: string, boxSize: string) => {
+    const existing = cart.find(item => item.product.id === productId && item.boxSize === boxSize);
     if (existing && existing.quantity > 1) {
       setCart(cart.map(item =>
-        item.product.id === productId
+        item.product.id === productId && item.boxSize === boxSize
           ? { ...item, quantity: item.quantity - 1 }
           : item
       ));
     } else {
-      setCart(cart.filter(item => item.product.id !== productId));
+      setCart(cart.filter(item => !(item.product.id === productId && item.boxSize === boxSize)));
     }
   };
 
@@ -205,7 +207,8 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map(product => {
-              const cartItem = cart.find(item => item.product.id === product.id);
+              const [selectedBoxSize, setSelectedBoxSize] = useState(product.box_sizes?.[0] || '1 box');
+              const cartItem = cart.find(item => item.product.id === product.id && item.boxSize === selectedBoxSize);
               const inCart = cartItem?.quantity || 0;
               
               return (
@@ -226,22 +229,39 @@ const Products = () => {
                     </div>
                     <CardDescription className="line-clamp-2">{product.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="pb-3">
+                  <CardContent className="pb-3 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-2xl font-bold text-primary">${product.price.toFixed(2)}</span>
                       <span className="text-sm text-muted-foreground">Stock: {product.quantity}</span>
                     </div>
+                    {product.box_sizes && product.box_sizes.length > 1 && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Box Size</label>
+                        <Select value={selectedBoxSize} onValueChange={setSelectedBoxSize}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {product.box_sizes.map(size => (
+                              <SelectItem key={size} value={size}>
+                                {size}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter className="gap-2">
                     {inCart > 0 ? (
                       <div className="flex items-center gap-2 w-full">
-                        <Button variant="outline" size="icon" onClick={() => removeFromCart(product.id)}>
+                        <Button variant="outline" size="icon" onClick={() => removeFromCart(product.id, selectedBoxSize)}>
                           <Minus className="w-4 h-4" />
                         </Button>
                         <div className="flex-1 text-center font-semibold">{inCart}</div>
                         <Button 
                           size="icon" 
-                          onClick={() => addToCart(product)}
+                          onClick={() => addToCart(product, selectedBoxSize)}
                           disabled={inCart >= product.quantity}
                         >
                           <Plus className="w-4 h-4" />
@@ -249,7 +269,7 @@ const Products = () => {
                       </div>
                     ) : (
                       <Button 
-                        onClick={() => addToCart(product)} 
+                        onClick={() => addToCart(product, selectedBoxSize)} 
                         className="w-full gap-2"
                         disabled={product.quantity === 0}
                       >
