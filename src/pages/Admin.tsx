@@ -68,24 +68,34 @@ const Admin = () => {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file);
+      console.log('Uploading image:', filePath);
 
-    if (uploadError) {
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error(`Failed to upload image: ${uploadError.message}`);
+        return null;
+      }
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      console.log('Image uploaded successfully:', data.publicUrl);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Unexpected error uploading image:', error);
       toast.error('Failed to upload image');
       return null;
     }
-
-    const { data } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   };
 
   const handleSaveProduct = async (e: React.FormEvent<HTMLFormElement>) => {
