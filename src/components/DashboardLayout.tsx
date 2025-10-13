@@ -1,6 +1,7 @@
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart } from 'lucide-react';
+import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardLayoutProps {
@@ -23,6 +24,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/worker', label: 'Orders Queue', icon: Package, show: hasRole('worker') || hasRole('manager') },
     { path: '/manager', label: 'Management', icon: BarChart3, show: hasRole('manager') },
     { path: '/admin', label: 'Admin Panel', icon: Users, show: hasRole('admin') },
+    { path: '/profile', label: 'Profile', icon: UserCircle, show: true },
   ];
 
   return (

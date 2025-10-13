@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
@@ -186,6 +187,18 @@ const Admin = () => {
     } else {
       toast.success('User role updated successfully');
       fetchUsers();
+    }
+  };
+
+  const handleResetUserPassword = async (userId: string, userEmail: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+      redirectTo: `${window.location.origin}/auth?reset=true`,
+    });
+
+    if (error) {
+      toast.error('Failed to send password reset email');
+    } else {
+      toast.success(`Password reset email sent to ${userEmail}`);
     }
   };
 
@@ -473,8 +486,30 @@ const Admin = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {new Date(user.created_at).toLocaleDateString()}
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="gap-2">
+                                <KeyRound className="w-4 h-4" />
+                                Reset Password
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Reset Password</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will send a password reset email to {user.email}. 
+                                  Are you sure you want to continue?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleResetUserPassword(user.id, user.email)}>
+                                  Send Reset Email
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))}
