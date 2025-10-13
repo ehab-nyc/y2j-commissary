@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,6 +19,7 @@ const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -34,6 +35,7 @@ const Admin = () => {
     fetchProducts();
     fetchCategories();
     fetchUsers();
+    fetchOrders();
     fetchSettings();
   }, []);
 
@@ -62,6 +64,21 @@ const Admin = () => {
       `)
       .order('email');
     setUsers(data || []);
+  };
+
+  const fetchOrders = async () => {
+    const { data } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        profiles!orders_customer_id_fkey(email, full_name),
+        order_items(
+          *,
+          products(name, price)
+        )
+      `)
+      .order('created_at', { ascending: false });
+    setOrders(data || []);
   };
 
   const fetchSettings = async () => {
@@ -221,6 +238,30 @@ const Admin = () => {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (error) {
+      toast.error('Failed to delete order');
+    } else {
+      toast.success('Order deleted successfully');
+      fetchOrders();
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500/10 text-yellow-600 border-yellow-200';
+      case 'processing': return 'bg-blue-500/10 text-blue-600 border-blue-200';
+      case 'completed': return 'bg-green-500/10 text-green-600 border-green-200';
+      case 'cancelled': return 'bg-red-500/10 text-red-600 border-red-200';
+      default: return 'bg-muted';
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -230,10 +271,14 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2">
+              <ClipboardList className="w-4 h-4" />
+              Orders
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
@@ -467,6 +512,89 @@ const Admin = () => {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Management</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Items</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No orders found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      orders.map(order => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono text-sm">
+                            {order.id.slice(0, 8)}...
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{order.profiles?.full_name || 'N/A'}</div>
+                              <div className="text-sm text-muted-foreground">{order.profiles?.email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(order.status)}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {order.order_items?.length || 0} item(s)
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            ${Number(order.total).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Order</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this order? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteOrder(order.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
