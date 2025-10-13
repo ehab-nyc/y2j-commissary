@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,30 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [settings, setSettings] = useState({ company_name: 'Commissary System', logo_url: '', login_background_url: '' });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('key, value')
+      .in('key', ['company_name', 'logo_url', 'login_background_url']);
+    
+    if (data) {
+      const settingsObj = data.reduce((acc: any, item) => {
+        acc[item.key] = item.value || '';
+        return acc;
+      }, {});
+      setSettings({
+        company_name: settingsObj.company_name || 'Commissary System',
+        logo_url: settingsObj.logo_url || '',
+        login_background_url: settingsObj.login_background_url || ''
+      });
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -89,15 +113,29 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-background p-4">
-      <Card className="w-full max-w-md shadow-elevated">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: settings.login_background_url 
+          ? `url(${settings.login_background_url})` 
+          : 'linear-gradient(to bottom right, hsl(var(--background)), hsl(var(--secondary) / 0.2), hsl(var(--background)))',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+      <Card className="w-full max-w-md shadow-elevated relative z-10">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-2">
-            <div className="p-3 rounded-full bg-primary/10">
-              <ShoppingBag className="w-8 h-8 text-primary" />
-            </div>
+            {settings.logo_url ? (
+              <img src={settings.logo_url} alt="Logo" className="h-16 w-auto object-contain" />
+            ) : (
+              <div className="p-3 rounded-full bg-primary/10">
+                <ShoppingBag className="w-8 h-8 text-primary" />
+              </div>
+            )}
           </div>
-          <CardTitle className="text-2xl font-bold">Commissary System</CardTitle>
+          <CardTitle className="text-2xl font-bold">{settings.company_name}</CardTitle>
           <CardDescription>Sign in to access your account</CardDescription>
         </CardHeader>
         <CardContent>

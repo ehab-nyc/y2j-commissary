@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,23 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, hasRole, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [companyName, setCompanyName] = useState('Commissary');
+
+  useEffect(() => {
+    fetchCompanyName();
+  }, []);
+
+  const fetchCompanyName = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'company_name')
+      .single();
+    
+    if (data?.value) {
+      setCompanyName(data.value);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -34,7 +52,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-6 h-6 text-primary" />
-              <span className="font-bold text-xl">Commissary</span>
+              <span className="font-bold text-xl">{companyName}</span>
             </div>
             
             <div className="hidden md:flex items-center gap-4">

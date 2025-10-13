@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -24,6 +24,9 @@ const Admin = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedBoxSizes, setSelectedBoxSizes] = useState<string[]>(['1 box']);
+  const [settings, setSettings] = useState({ company_name: '', logo_url: '', login_background_url: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bgFile, setBgFile] = useState<File | null>(null);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -31,6 +34,7 @@ const Admin = () => {
     fetchProducts();
     fetchCategories();
     fetchUsers();
+    fetchSettings();
   }, []);
 
   const fetchProducts = async () => {
@@ -58,6 +62,21 @@ const Admin = () => {
       `)
       .order('email');
     setUsers(data || []);
+  };
+
+  const fetchSettings = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('key, value')
+      .in('key', ['company_name', 'logo_url', 'login_background_url']);
+    
+    if (data) {
+      const settingsObj = data.reduce((acc: any, item) => {
+        acc[item.key] = item.value || '';
+        return acc;
+      }, {});
+      setSettings(settingsObj);
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,11 +226,11 @@ const Admin = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Admin Panel</h1>
-          <p className="text-muted-foreground">Manage products and users</p>
+          <p className="text-muted-foreground">Manage products, users, and app settings</p>
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -219,6 +238,10 @@ const Admin = () => {
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <ShoppingBag className="w-4 h-4" />
+              Branding
             </TabsTrigger>
           </TabsList>
 
@@ -515,6 +538,154 @@ const Admin = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>App Branding Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    value={settings.company_name}
+                    onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
+                    placeholder="Enter company name"
+                  />
+                  <Button 
+                    onClick={async () => {
+                      const { error } = await supabase
+                        .from('app_settings')
+                        .update({ value: settings.company_name })
+                        .eq('key', 'company_name');
+                      
+                      if (error) {
+                        toast.error('Failed to update company name');
+                      } else {
+                        toast.success('Company name updated');
+                      }
+                    }}
+                    className="mt-2"
+                  >
+                    Save Company Name
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Company Logo</Label>
+                  {settings.logo_url && (
+                    <div className="mb-2">
+                      <img src={settings.logo_url} alt="Logo" className="h-20 w-auto object-contain border rounded p-2" />
+                    </div>
+                  )}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                  />
+                  <Button 
+                    onClick={async () => {
+                      if (!logoFile) {
+                        toast.error('Please select a logo file');
+                        return;
+                      }
+
+                      const fileExt = logoFile.name.split('.').pop();
+                      const fileName = `logo.${fileExt}`;
+                      const filePath = `${fileName}`;
+
+                      const { error: uploadError } = await supabase.storage
+                        .from('branding')
+                        .upload(filePath, logoFile, { upsert: true });
+
+                      if (uploadError) {
+                        toast.error('Failed to upload logo');
+                        return;
+                      }
+
+                      const { data } = supabase.storage
+                        .from('branding')
+                        .getPublicUrl(filePath);
+
+                      const { error } = await supabase
+                        .from('app_settings')
+                        .update({ value: data.publicUrl })
+                        .eq('key', 'logo_url');
+
+                      if (error) {
+                        toast.error('Failed to update logo');
+                      } else {
+                        toast.success('Logo updated');
+                        fetchSettings();
+                        setLogoFile(null);
+                      }
+                    }}
+                    disabled={!logoFile}
+                    className="mt-2"
+                  >
+                    Upload Logo
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Login Background Image</Label>
+                  {settings.login_background_url && (
+                    <div className="mb-2">
+                      <img src={settings.login_background_url} alt="Background" className="h-32 w-auto object-cover border rounded" />
+                    </div>
+                  )}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setBgFile(e.target.files?.[0] || null)}
+                  />
+                  <Button 
+                    onClick={async () => {
+                      if (!bgFile) {
+                        toast.error('Please select a background image');
+                        return;
+                      }
+
+                      const fileExt = bgFile.name.split('.').pop();
+                      const fileName = `background.${fileExt}`;
+                      const filePath = `${fileName}`;
+
+                      const { error: uploadError } = await supabase.storage
+                        .from('branding')
+                        .upload(filePath, bgFile, { upsert: true });
+
+                      if (uploadError) {
+                        toast.error('Failed to upload background');
+                        return;
+                      }
+
+                      const { data } = supabase.storage
+                        .from('branding')
+                        .getPublicUrl(filePath);
+
+                      const { error } = await supabase
+                        .from('app_settings')
+                        .update({ value: data.publicUrl })
+                        .eq('key', 'login_background_url');
+
+                      if (error) {
+                        toast.error('Failed to update background');
+                      } else {
+                        toast.success('Background updated');
+                        fetchSettings();
+                        setBgFile(null);
+                      }
+                    }}
+                    disabled={!bgFile}
+                    className="mt-2"
+                  >
+                    Upload Background
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
