@@ -140,6 +140,7 @@ const Products = () => {
       product_id: item.product.id,
       quantity: item.quantity,
       price: item.product.price,
+      box_size: item.boxSize,
     }));
 
     const { error: itemsError } = await supabase

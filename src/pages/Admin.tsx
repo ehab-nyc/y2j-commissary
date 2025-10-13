@@ -74,6 +74,7 @@ const Admin = () => {
         profiles!orders_customer_id_fkey(email, full_name),
         order_items(
           *,
+          box_size,
           products(name, price)
         )
       `)

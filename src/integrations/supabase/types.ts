@@ -61,6 +61,7 @@ export type Database = {
       }
       order_items: {
         Row: {
+          box_size: string | null
           created_at: string | null
           id: string
           order_id: string
@@ -69,6 +70,7 @@ export type Database = {
           quantity: number
         }
         Insert: {
+          box_size?: string | null
           created_at?: string | null
           id?: string
           order_id: string
@@ -77,6 +79,7 @@ export type Database = {
           quantity: number
         }
         Update: {
+          box_size?: string | null
           created_at?: string | null
           id?: string
           order_id?: string
