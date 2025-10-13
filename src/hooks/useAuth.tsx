@@ -24,23 +24,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user roles
-          const { data: userRoles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-          
-          setRoles(userRoles?.map(r => r.role) || []);
+          // Defer role fetching to prevent deadlock
+          setTimeout(() => {
+            supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .then(({ data: userRoles }) => {
+                setRoles(userRoles?.map(r => r.role) || []);
+                setLoading(false);
+              });
+          }, 0);
         } else {
           setRoles([]);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
