@@ -16,6 +16,7 @@ interface Order {
   order_items: Array<{
     quantity: number;
     price: number;
+    box_size: string;
     products: {
       name: string;
     };
@@ -39,6 +40,7 @@ const Orders = () => {
         order_items(
           quantity,
           price,
+          box_size,
           products(name)
         )
       `)
@@ -113,6 +115,7 @@ const Orders = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Product</TableHead>
+                        <TableHead>Box Size</TableHead>
                         <TableHead className="text-right">Quantity</TableHead>
                         <TableHead className="text-right">Price</TableHead>
                         <TableHead className="text-right">Subtotal</TableHead>
@@ -122,6 +125,7 @@ const Orders = () => {
                       {order.order_items.map((item, idx) => (
                         <TableRow key={idx}>
                           <TableCell className="font-medium">{item.products.name}</TableCell>
+                          <TableCell>{item.box_size}</TableCell>
                           <TableCell className="text-right">{item.quantity}</TableCell>
                           <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
                           <TableCell className="text-right">
