@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Users, Package, Upload, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
@@ -21,6 +22,9 @@ const Admin = () => {
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedBoxSizes, setSelectedBoxSizes] = useState<string[]>(['1 box']);
+
+  const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
   useEffect(() => {
     fetchProducts();
@@ -118,6 +122,7 @@ const Admin = () => {
       quantity: parseInt(formData.get('quantity') as string),
       category_id: formData.get('category_id') as string,
       image_url: imageUrl,
+      box_sizes: selectedBoxSizes.length > 0 ? selectedBoxSizes : ['1 box'],
       active: true,
     };
 
@@ -148,6 +153,7 @@ const Admin = () => {
     setEditingProduct(null);
     setImageFile(null);
     setImagePreview(null);
+    setSelectedBoxSizes(['1 box']);
     fetchProducts();
   };
 
@@ -210,6 +216,7 @@ const Admin = () => {
                 setEditingProduct(null);
                 setImageFile(null);
                 setImagePreview(null);
+                setSelectedBoxSizes(['1 box']);
               }
             }}>
               <DialogTrigger asChild>
@@ -217,6 +224,7 @@ const Admin = () => {
                   setEditingProduct(null);
                   setImageFile(null);
                   setImagePreview(null);
+                  setSelectedBoxSizes(['1 box']);
                 }} className="gap-2">
                   <Plus className="w-4 h-4" />
                   Add Product
@@ -320,6 +328,29 @@ const Admin = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-2">
+                    <Label>Available Box Sizes</Label>
+                    <div className="space-y-2">
+                      {BOX_SIZE_OPTIONS.map((size) => (
+                        <div key={size} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={size}
+                            checked={selectedBoxSizes.includes(size)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedBoxSizes([...selectedBoxSizes, size]);
+                              } else {
+                                setSelectedBoxSizes(selectedBoxSizes.filter(s => s !== size));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={size} className="cursor-pointer font-normal">
+                            {size}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                   <Button type="submit" className="w-full">
                     {editingProduct ? 'Update' : 'Create'} Product
                   </Button>
@@ -335,6 +366,7 @@ const Admin = () => {
                       <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Box Sizes</TableHead>
                       <TableHead className="text-right">Price</TableHead>
                       <TableHead className="text-right">Stock</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -358,6 +390,15 @@ const Admin = () => {
                         </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.categories?.name}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1 flex-wrap">
+                            {(product.box_sizes || ['1 box']).map((size: string) => (
+                              <Badge key={size} variant="outline" className="text-xs">
+                                {size}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                           <Badge variant={product.quantity < 10 ? 'destructive' : 'secondary'}>
@@ -373,6 +414,7 @@ const Admin = () => {
                                 setEditingProduct(product);
                                 setImagePreview(null);
                                 setImageFile(null);
+                                setSelectedBoxSizes(product.box_sizes || ['1 box']);
                                 setShowProductDialog(true);
                               }}
                             >

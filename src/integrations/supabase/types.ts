@@ -128,6 +128,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean | null
+          box_sizes: string[] | null
           category_id: string | null
           created_at: string | null
           description: string | null
@@ -140,6 +141,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          box_sizes?: string[] | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -152,6 +154,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          box_sizes?: string[] | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
