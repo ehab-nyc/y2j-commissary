@@ -17,6 +17,7 @@ interface Product {
   price: number;
   quantity: number;
   category_id: string;
+  image_url: string | null;
   categories: { name: string } | null;
 }
 
@@ -199,6 +200,15 @@ const Products = () => {
               
               return (
                 <Card key={product.id} className="overflow-hidden hover:shadow-elevated transition-shadow">
+                  {product.image_url && (
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg">{product.name}</CardTitle>

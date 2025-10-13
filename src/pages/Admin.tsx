@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
@@ -19,6 +19,8 @@ const Admin = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showProductDialog, setShowProductDialog] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -53,9 +55,51 @@ const Admin = () => {
     setUsers(data || []);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error('Failed to upload image');
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   const handleSaveProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    let imageUrl = editingProduct?.image_url;
+    
+    if (imageFile) {
+      const uploadedUrl = await uploadImage(imageFile);
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl;
+      }
+    }
     
     const productData = {
       name: formData.get('name') as string,
@@ -63,6 +107,7 @@ const Admin = () => {
       price: parseFloat(formData.get('price') as string),
       quantity: parseInt(formData.get('quantity') as string),
       category_id: formData.get('category_id') as string,
+      image_url: imageUrl,
       active: true,
     };
 
@@ -91,6 +136,8 @@ const Admin = () => {
 
     setShowProductDialog(false);
     setEditingProduct(null);
+    setImageFile(null);
+    setImagePreview(null);
     fetchProducts();
   };
 
@@ -147,9 +194,20 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="products" className="space-y-4">
-            <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+            <Dialog open={showProductDialog} onOpenChange={(open) => {
+              setShowProductDialog(open);
+              if (!open) {
+                setEditingProduct(null);
+                setImageFile(null);
+                setImagePreview(null);
+              }
+            }}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingProduct(null)} className="gap-2">
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setImageFile(null);
+                  setImagePreview(null);
+                }} className="gap-2">
                   <Plus className="w-4 h-4" />
                   Add Product
                 </Button>
@@ -162,6 +220,43 @@ const Admin = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSaveProduct} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Product Image</Label>
+                    <div className="flex flex-col gap-3">
+                      {(imagePreview || editingProduct?.image_url) && (
+                        <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
+                          <img
+                            src={imagePreview || editingProduct?.image_url}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                          {imagePreview && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2"
+                              onClick={() => {
+                                setImageFile(null);
+                                setImagePreview(null);
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      <div className="relative">
+                        <Input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
                     <Input
@@ -227,6 +322,7 @@ const Admin = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead className="text-right">Price</TableHead>
@@ -237,6 +333,19 @@ const Admin = () => {
                   <TableBody>
                     {products.map(product => (
                       <TableRow key={product.id}>
+                        <TableCell>
+                          {product.image_url ? (
+                            <img
+                              src={product.image_url}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                              <Package className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.categories?.name}</TableCell>
                         <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
@@ -252,6 +361,8 @@ const Admin = () => {
                               size="sm"
                               onClick={() => {
                                 setEditingProduct(product);
+                                setImagePreview(null);
+                                setImageFile(null);
                                 setShowProductDialog(true);
                               }}
                             >
