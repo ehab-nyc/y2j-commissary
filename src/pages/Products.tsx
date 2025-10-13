@@ -41,6 +41,7 @@ const Products = () => {
   }, []);
 
   const fetchProducts = async () => {
+    console.log('Fetching products...');
     const { data, error } = await supabase
       .from('products')
       .select('*, categories(name)')
@@ -48,18 +49,27 @@ const Products = () => {
       .order('name');
 
     if (error) {
-      toast.error('Failed to load products');
+      console.error('Error fetching products:', error);
+      toast.error(`Failed to load products: ${error.message}`);
     } else {
+      console.log('Products fetched:', data);
       setProducts(data || []);
     }
     setLoading(false);
   };
 
   const fetchCategories = async () => {
-    const { data } = await supabase
+    console.log('Fetching categories...');
+    const { data, error } = await supabase
       .from('categories')
       .select('*')
       .order('name');
+    
+    if (error) {
+      console.error('Error fetching categories:', error);
+    } else {
+      console.log('Categories fetched:', data);
+    }
     setCategories(data || []);
   };
 
