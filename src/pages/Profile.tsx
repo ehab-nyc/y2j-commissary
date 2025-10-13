@@ -5,12 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { User, Lock, Save } from 'lucide-react';
+import { User, Lock, Save, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from 'next-themes';
 
 const Profile = () => {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [fullName, setFullName] = useState('');
@@ -140,6 +143,29 @@ const Profile = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter your phone number"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="theme">Appearance</Label>
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {theme === 'dark' ? (
+                        <Moon className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Sun className="w-5 h-5 text-primary" />
+                      )}
+                      <div>
+                        <p className="font-medium">Dark Mode</p>
+                        <p className="text-xs text-muted-foreground">
+                          {theme === 'dark' ? 'Enabled' : 'Disabled'}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="theme"
+                      checked={theme === 'dark'}
+                      onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    />
+                  </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full gap-2">
                   <Save className="w-4 h-4" />
