@@ -36,6 +36,7 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [boxSizes, setBoxSizes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchProducts();
@@ -56,6 +57,12 @@ const Products = () => {
     } else {
       console.log('Products fetched:', data);
       setProducts(data || []);
+      // Initialize box sizes for each product
+      const initialBoxSizes: Record<string, string> = {};
+      data?.forEach(product => {
+        initialBoxSizes[product.id] = product.box_sizes?.[0] || '1 box';
+      });
+      setBoxSizes(initialBoxSizes);
     }
     setLoading(false);
   };
@@ -207,7 +214,7 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map(product => {
-              const [selectedBoxSize, setSelectedBoxSize] = useState(product.box_sizes?.[0] || '1 box');
+              const selectedBoxSize = boxSizes[product.id] || product.box_sizes?.[0] || '1 box';
               const cartItem = cart.find(item => item.product.id === product.id && item.boxSize === selectedBoxSize);
               const inCart = cartItem?.quantity || 0;
               
@@ -237,7 +244,10 @@ const Products = () => {
                     {product.box_sizes && product.box_sizes.length > 1 && (
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Box Size</label>
-                        <Select value={selectedBoxSize} onValueChange={setSelectedBoxSize}>
+                        <Select 
+                          value={selectedBoxSize} 
+                          onValueChange={(value) => setBoxSizes(prev => ({ ...prev, [product.id]: value }))}
+                        >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
