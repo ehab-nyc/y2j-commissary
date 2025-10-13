@@ -83,6 +83,7 @@ const Products = () => {
   };
 
   const addToCart = (product: Product, boxSize: string) => {
+    console.log('Adding to cart:', product.name, 'Box size:', boxSize);
     const existing = cart.find(item => item.product.id === product.id && item.boxSize === boxSize);
     if (existing) {
       if (existing.quantity < product.quantity) {
@@ -247,10 +248,13 @@ const Products = () => {
                         <label className="text-sm font-medium">Box Size</label>
                         <Select 
                           value={selectedBoxSize} 
-                          onValueChange={(value) => setBoxSizes(prev => ({ ...prev, [product.id]: value }))}
+                          onValueChange={(value) => {
+                            console.log('Box size changed:', product.name, 'from', selectedBoxSize, 'to', value);
+                            setBoxSizes(prev => ({ ...prev, [product.id]: value }));
+                          }}
                         >
                           <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue placeholder="Select box size" />
                           </SelectTrigger>
                           <SelectContent>
                             {product.box_sizes.map(size => (
