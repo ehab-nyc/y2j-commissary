@@ -125,7 +125,7 @@ const Orders = () => {
                       {order.order_items.map((item, idx) => (
                         <TableRow key={idx}>
                           <TableCell className="font-medium">{item.products.name}</TableCell>
-                          <TableCell>{item.box_size}</TableCell>
+                          <TableCell>{item.box_size || '1 box'}</TableCell>
                           <TableCell className="text-right">{item.quantity}</TableCell>
                           <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
                           <TableCell className="text-right">
