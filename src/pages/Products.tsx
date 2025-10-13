@@ -39,11 +39,11 @@ const Products = () => {
   const [boxSizes, setBoxSizes] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(true); // Reset box sizes on initial load
     fetchCategories();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (resetBoxSizes: boolean = false) => {
     console.log('Fetching products...');
     const { data, error } = await supabase
       .from('products')
@@ -57,12 +57,14 @@ const Products = () => {
     } else {
       console.log('Products fetched:', data);
       setProducts(data || []);
-      // Initialize box sizes for each product
-      const initialBoxSizes: Record<string, string> = {};
-      data?.forEach(product => {
-        initialBoxSizes[product.id] = product.box_sizes?.[0] || '1 box';
-      });
-      setBoxSizes(initialBoxSizes);
+      // Only initialize box sizes on first load, not on refetch
+      if (resetBoxSizes) {
+        const initialBoxSizes: Record<string, string> = {};
+        data?.forEach(product => {
+          initialBoxSizes[product.id] = product.box_sizes?.[0] || '1 box';
+        });
+        setBoxSizes(initialBoxSizes);
+      }
     }
     setLoading(false);
   };
@@ -153,7 +155,7 @@ const Products = () => {
     } else {
       toast.success('Order placed successfully!');
       setCart([]);
-      fetchProducts();
+      fetchProducts(false); // Don't reset box sizes when refetching after order
     }
   };
 
