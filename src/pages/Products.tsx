@@ -47,6 +47,7 @@ const Products = () => {
   const loadCartFromEdit = async () => {
     const editCartData = localStorage.getItem('editOrderCart');
     const editOrderId = localStorage.getItem('editOrderId');
+    const editOrderItemId = localStorage.getItem('editOrderItemId');
     
     if (editCartData && editOrderId) {
       try {
@@ -70,20 +71,26 @@ const Products = () => {
           
           setCart(loadedCart as CartItem[]);
           
-          // Delete the original order
-          await supabase.from('order_items').delete().eq('order_id', editOrderId);
-          await supabase.from('orders').delete().eq('id', editOrderId);
-          
-          toast.success('Order loaded for editing');
+          // If editing a single item, delete just that item; otherwise delete the whole order
+          if (editOrderItemId) {
+            await supabase.from('order_items').delete().eq('id', editOrderItemId);
+            toast.success('Item loaded for editing');
+          } else {
+            await supabase.from('order_items').delete().eq('order_id', editOrderId);
+            await supabase.from('orders').delete().eq('id', editOrderId);
+            toast.success('Order loaded for editing');
+          }
         }
         
         // Clear localStorage
         localStorage.removeItem('editOrderCart');
         localStorage.removeItem('editOrderId');
+        localStorage.removeItem('editOrderItemId');
       } catch (error) {
         console.error('Error loading cart from edit:', error);
         localStorage.removeItem('editOrderCart');
         localStorage.removeItem('editOrderId');
+        localStorage.removeItem('editOrderItemId');
       }
     }
   };

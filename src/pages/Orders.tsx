@@ -13,10 +13,12 @@ import { Trash2, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
+  id: string;
   quantity: number;
   price: number;
   box_size: string;
   product_id: string;
+  order_id: string;
   products: {
     name: string;
   };
@@ -46,10 +48,12 @@ const Orders = () => {
       .select(`
         *,
         order_items(
+          id,
           quantity,
           price,
           box_size,
           product_id,
+          order_id,
           products(name)
         )
       `)
@@ -64,44 +68,60 @@ const Orders = () => {
     setLoading(false);
   };
 
-  const deleteOrder = async (orderId: string) => {
-    // First delete order items
-    const { error: itemsError } = await supabase
+  const deleteOrderItem = async (itemId: string, orderId: string) => {
+    const { error } = await supabase
       .from('order_items')
       .delete()
-      .eq('order_id', orderId);
+      .eq('id', itemId);
 
-    if (itemsError) {
-      toast.error('Failed to delete order items');
+    if (error) {
+      toast.error('Failed to delete item');
       return;
     }
 
-    // Then delete the order
-    const { error: orderError } = await supabase
-      .from('orders')
-      .delete()
-      .eq('id', orderId);
+    // Check if order has any remaining items
+    const { data: remainingItems } = await supabase
+      .from('order_items')
+      .select('id')
+      .eq('order_id', orderId);
 
-    if (orderError) {
-      toast.error('Failed to delete order');
+    // If no items left, delete the order
+    if (!remainingItems || remainingItems.length === 0) {
+      await supabase.from('orders').delete().eq('id', orderId);
+      toast.success('Order deleted (no items remaining)');
     } else {
-      toast.success('Order deleted successfully');
-      fetchOrders();
+      // Recalculate order total
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('quantity, price')
+        .eq('order_id', orderId);
+      
+      const newTotal = items?.reduce((sum, item) => sum + item.quantity * item.price, 0) || 0;
+      
+      await supabase
+        .from('orders')
+        .update({ total: newTotal })
+        .eq('id', orderId);
+      
+      toast.success('Item removed from order');
     }
+
+    fetchOrders();
   };
 
-  const editOrder = async (order: Order) => {
-    // Store order items in localStorage to repopulate cart
-    const cartItems = order.order_items.map(item => ({
+  const editOrderItem = (item: OrderItem, orderId: string) => {
+    // Store single item in localStorage to repopulate cart
+    const cartItem = {
       productId: item.product_id,
       quantity: item.quantity,
       boxSize: item.box_size,
-    }));
+    };
     
-    localStorage.setItem('editOrderCart', JSON.stringify(cartItems));
-    localStorage.setItem('editOrderId', order.id);
+    localStorage.setItem('editOrderCart', JSON.stringify([cartItem]));
+    localStorage.setItem('editOrderId', orderId);
+    localStorage.setItem('editOrderItemId', item.id);
     
-    toast.success('Redirecting to edit order...');
+    toast.success('Redirecting to edit item...');
     navigate('/products');
   };
 
@@ -157,41 +177,6 @@ const Orders = () => {
                       <span className="text-lg font-bold text-primary">
                         ${order.total.toFixed(2)}
                       </span>
-                      {order.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => editOrder(order)}
-                            className="gap-2"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" className="gap-2">
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Order?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete this order. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteOrder(order.id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -204,6 +189,7 @@ const Orders = () => {
                         <TableHead className="text-right">Quantity</TableHead>
                         <TableHead className="text-right">Price</TableHead>
                         <TableHead className="text-right">Subtotal</TableHead>
+                        {order.status === 'pending' && <TableHead className="text-right">Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -216,6 +202,43 @@ const Orders = () => {
                           <TableCell className="text-right">
                             ${(item.quantity * item.price).toFixed(2)}
                           </TableCell>
+                          {order.status === 'pending' && (
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editOrderItem(item, order.id)}
+                                  className="gap-1"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                  Edit
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm" className="gap-1">
+                                      <Trash2 className="w-3 h-3" />
+                                      Delete
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will remove {item.products.name} from your order.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => deleteOrderItem(item.id, order.id)}>
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
