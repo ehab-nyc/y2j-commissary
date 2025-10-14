@@ -98,8 +98,19 @@ export const NotificationBell = () => {
   const handleNotificationClick = async (notification: Notification) => {
     await markAsRead(notification.id);
     
-    // Navigate to orders page
-    navigate('/orders');
+    // Navigate based on user role
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user?.id);
+    
+    const userRoles = roles?.map(r => r.role) || [];
+    
+    if (userRoles.includes('worker') || userRoles.includes('manager') || userRoles.includes('admin')) {
+      navigate('/worker');
+    } else {
+      navigate('/orders');
+    }
   };
 
   const markAllAsRead = async () => {
