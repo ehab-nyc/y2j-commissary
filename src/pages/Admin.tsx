@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -44,6 +44,8 @@ const Admin = () => {
   const [settings, setSettings] = useState({ company_name: '', logo_url: '', login_background_url: '' });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bgFile, setBgFile] = useState<File | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showOrderDialog, setShowOrderDialog] = useState(false);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -575,7 +577,7 @@ const Admin = () => {
                       <TableHead>Items</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -611,28 +613,40 @@ const Admin = () => {
                           <TableCell>
                             {new Date(order.created_at).toLocaleDateString()}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Order</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this order? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteOrder(order.id)}>
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                          <TableCell className="text-center">
+                            <div className="flex gap-2 justify-center">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setShowOrderDialog(true);
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Order</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this order? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteOrder(order.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -641,6 +655,72 @@ const Admin = () => {
                 </Table>
               </CardContent>
             </Card>
+
+            <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Order Details - #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
+                  <DialogDescription>
+                    Complete order information and items
+                  </DialogDescription>
+                </DialogHeader>
+                {selectedOrder && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Customer</p>
+                        <p className="font-medium">{selectedOrder.profiles?.full_name || 'N/A'}</p>
+                        <p className="text-sm text-muted-foreground">{selectedOrder.profiles?.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Order Date</p>
+                        <p className="font-medium">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Status</p>
+                        <Badge className={getStatusColor(selectedOrder.status)}>
+                          {selectedOrder.status.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Amount</p>
+                        <p className="text-lg font-bold text-primary">
+                          ${Number(selectedOrder.total).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold mb-3">Order Items</h3>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Product</TableHead>
+                            <TableHead>Box Size</TableHead>
+                            <TableHead className="text-right">Quantity</TableHead>
+                            <TableHead className="text-right">Price</TableHead>
+                            <TableHead className="text-right">Subtotal</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedOrder.order_items?.map((item: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell className="font-medium">{item.products?.name}</TableCell>
+                              <TableCell>{item.box_size || '1 box'}</TableCell>
+                              <TableCell className="text-right">{item.quantity}</TableCell>
+                              <TableCell className="text-right">${Number(item.price).toFixed(2)}</TableCell>
+                              <TableCell className="text-right">
+                                ${(item.quantity * Number(item.price)).toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
