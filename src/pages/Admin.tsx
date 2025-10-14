@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye, Folder } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -31,6 +31,11 @@ const brandingSchema = z.object({
 
 const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin']);
 
+const categorySchema = z.object({
+  name: z.string().trim().min(1, "Category name is required").max(100, "Category name must be less than 100 characters"),
+  description: z.string().trim().max(500, "Description must be less than 500 characters").optional(),
+});
+
 const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -46,6 +51,8 @@ const Admin = () => {
   const [bgFile, setBgFile] = useState<File | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -287,6 +294,84 @@ const Admin = () => {
     }
   };
 
+  const handleSaveCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const categoryData = {
+      name: (formData.get('name') as string).trim(),
+      description: (formData.get('description') as string)?.trim() || undefined,
+    };
+
+    // Validate category data
+    const validation = categorySchema.safeParse(categoryData);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    if (editingCategory) {
+      // Update existing category
+      const { error } = await supabase
+        .from('categories')
+        .update({ 
+          name: validation.data.name,
+          description: validation.data.description || null
+        })
+        .eq('id', editingCategory.id);
+
+      if (error) {
+        toast.error('Failed to update category');
+        return;
+      }
+      toast.success('Category updated successfully');
+    } else {
+      // Create new category
+      const { error } = await supabase
+        .from('categories')
+        .insert([{ 
+          name: validation.data.name,
+          description: validation.data.description || null
+        }]);
+
+      if (error) {
+        toast.error('Failed to create category');
+        return;
+      }
+      toast.success('Category created successfully');
+    }
+
+    setShowCategoryDialog(false);
+    setEditingCategory(null);
+    fetchCategories();
+    fetchProducts(); // Refresh products to update category names
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    // Check if category has products
+    const { data: products } = await supabase
+      .from('products')
+      .select('id')
+      .eq('category_id', categoryId);
+
+    if (products && products.length > 0) {
+      toast.error('Cannot delete category with existing products');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', categoryId);
+
+    if (error) {
+      toast.error('Failed to delete category');
+    } else {
+      toast.success('Category deleted successfully');
+      fetchCategories();
+    }
+  };
+
   const handleDeleteOrder = async (orderId: string) => {
     const { error } = await supabase
       .from('orders')
@@ -320,10 +405,14 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-4xl">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-2">
+              <Folder className="w-4 h-4" />
+              Categories
             </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <ClipboardList className="w-4 h-4" />
@@ -561,6 +650,131 @@ const Admin = () => {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="categories" className="space-y-4">
+            <Dialog open={showCategoryDialog} onOpenChange={(open) => {
+              setShowCategoryDialog(open);
+              if (!open) {
+                setEditingCategory(null);
+              }
+            }}>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Categories</h2>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setEditingCategory(null)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Category
+                  </Button>
+                </DialogTrigger>
+              </div>
+
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingCategory ? 'Edit' : 'Create'} Category</DialogTitle>
+                  <DialogDescription>
+                    {editingCategory ? 'Update' : 'Add a new'} product category
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSaveCategory} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Category Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      defaultValue={editingCategory?.name}
+                      required
+                      maxLength={100}
+                      placeholder="e.g., Snacks, Beverages, etc."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Input
+                      id="description"
+                      name="description"
+                      defaultValue={editingCategory?.description || ''}
+                      maxLength={500}
+                      placeholder="Brief description of this category"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    {editingCategory ? 'Update' : 'Create'} Category
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          No categories found. Create your first category to get started.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      categories.map(category => (
+                        <TableRow key={category.id}>
+                          <TableCell className="font-medium">{category.name}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {category.description || '—'}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {new Date(category.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingCategory(category);
+                                  setShowCategoryDialog(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{category.name}"? This action cannot be undone. Categories with existing products cannot be deleted.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteCategory(category.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
