@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationBell } from '@/components/NotificationBell';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -78,6 +79,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <span className="text-sm text-muted-foreground hidden sm:inline">
                 {user?.email}
               </span>
+              <NotificationBell />
               <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
                 <LogOut className="w-4 h-4" />
                 Sign Out

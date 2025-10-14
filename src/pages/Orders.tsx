@@ -6,10 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
@@ -29,6 +30,7 @@ interface Order {
   status: string;
   total: number;
   created_at: string;
+  notes: string | null;
   order_items: OrderItem[];
 }
 
@@ -37,6 +39,8 @@ const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingNotes, setEditingNotes] = useState<string | null>(null);
+  const [notesText, setNotesText] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -166,6 +170,32 @@ const Orders = () => {
 
     toast.success('Order deleted successfully');
     fetchOrders();
+  };
+
+  const handleNotesEdit = (orderId: string, currentNotes: string | null) => {
+    setEditingNotes(orderId);
+    setNotesText(currentNotes || '');
+  };
+
+  const saveNotes = async (orderId: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ notes: notesText })
+      .eq('id', orderId);
+
+    if (error) {
+      toast.error('Failed to save notes');
+      return;
+    }
+
+    toast.success('Notes saved successfully');
+    setEditingNotes(null);
+    fetchOrders();
+  };
+
+  const cancelNotesEdit = () => {
+    setEditingNotes(null);
+    setNotesText('');
   };
 
   const getStatusColor = (status: string) => {
@@ -310,6 +340,50 @@ const Orders = () => {
                       ))}
                     </TableBody>
                   </Table>
+                </CardContent>
+                
+                {/* Order Notes Section */}
+                <CardContent className="border-t pt-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        Order Notes
+                      </h4>
+                      {editingNotes !== order.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleNotesEdit(order.id, order.notes)}
+                        >
+                          {order.notes ? 'Edit Notes' : 'Add Notes'}
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {editingNotes === order.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={notesText}
+                          onChange={(e) => setNotesText(e.target.value)}
+                          placeholder="Add any special instructions or notes for your order..."
+                          className="min-h-[100px]"
+                        />
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => saveNotes(order.id)}>
+                            Save Notes
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelNotesEdit}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        {order.notes || 'No notes added'}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
