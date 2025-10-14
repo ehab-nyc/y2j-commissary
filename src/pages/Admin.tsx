@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,21 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+
+// Validation schemas
+const productSchema = z.object({
+  name: z.string().trim().min(1, "Product name is required").max(200, "Product name must be less than 200 characters"),
+  description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
+  price: z.number().positive("Price must be positive").max(999999.99, "Price must be less than 1,000,000"),
+  quantity: z.number().int("Quantity must be a whole number").min(0, "Quantity cannot be negative").max(999999, "Quantity must be less than 1,000,000"),
+  category_id: z.string().uuid("Invalid category selected"),
+});
+
+const brandingSchema = z.object({
+  company_name: z.string().trim().min(1, "Company name is required").max(100, "Company name must be less than 100 characters"),
+});
+
+const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin']);
 
 const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -144,6 +160,24 @@ const Admin = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    // Parse and validate input data
+    const rawData = {
+      name: formData.get('name') as string,
+      description: (formData.get('description') as string) || undefined,
+      price: parseFloat(formData.get('price') as string),
+      quantity: parseInt(formData.get('quantity') as string),
+      category_id: formData.get('category_id') as string,
+    };
+
+    // Validate with schema
+    const validation = productSchema.safeParse(rawData);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
+    const validatedData = validation.data;
+    
     let imageUrl = editingProduct?.image_url;
     
     if (imageFile) {
@@ -154,11 +188,11 @@ const Admin = () => {
     }
     
     const productData = {
-      name: formData.get('name') as string,
-      description: formData.get('description') as string,
-      price: parseFloat(formData.get('price') as string),
-      quantity: parseInt(formData.get('quantity') as string),
-      category_id: formData.get('category_id') as string,
+      name: validatedData.name,
+      description: validatedData.description || '',
+      price: validatedData.price,
+      quantity: validatedData.quantity,
+      category_id: validatedData.category_id,
       image_url: imageUrl,
       box_sizes: selectedBoxSizes.length > 0 ? selectedBoxSizes : ['1 box'],
       active: true,
@@ -210,6 +244,13 @@ const Admin = () => {
   };
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    // Validate role
+    const validation = roleSchema.safeParse(newRole);
+    if (!validation.success) {
+      toast.error('Invalid role selected');
+      return;
+    }
+
     await supabase
       .from('user_roles')
       .delete()
@@ -217,7 +258,7 @@ const Admin = () => {
 
     const { error } = await supabase
       .from('user_roles')
-      .insert([{ user_id: userId, role: newRole as any }]);
+      .insert([{ user_id: userId, role: validation.data as any }]);
 
     if (error) {
       toast.error('Failed to update user role');
@@ -687,9 +728,16 @@ const Admin = () => {
                   />
                   <Button 
                     onClick={async () => {
+                      // Validate company name
+                      const validation = brandingSchema.safeParse({ company_name: settings.company_name });
+                      if (!validation.success) {
+                        toast.error(validation.error.errors[0].message);
+                        return;
+                      }
+
                       const { error } = await supabase
                         .from('app_settings')
-                        .update({ value: settings.company_name })
+                        .update({ value: validation.data.company_name })
                         .eq('key', 'company_name');
                       
                       if (error) {
