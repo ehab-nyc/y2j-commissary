@@ -23,7 +23,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  const [settings, setSettings] = useState({ company_name: 'Commissary System', logo_url: '', login_background_url: '' });
+  const [settings, setSettings] = useState({ company_name: 'Commissary System', logo_url: '', login_background_url: '', login_blur_amount: '2' });
 
   useEffect(() => {
     fetchSettings();
@@ -33,7 +33,7 @@ const Auth = () => {
     const { data } = await supabase
       .from('app_settings')
       .select('key, value')
-      .in('key', ['company_name', 'logo_url', 'login_background_url']);
+      .in('key', ['company_name', 'logo_url', 'login_background_url', 'login_blur_amount']);
     
     if (data) {
       const settingsObj = data.reduce((acc: any, item) => {
@@ -43,7 +43,8 @@ const Auth = () => {
       setSettings({
         company_name: settingsObj.company_name || 'Commissary System',
         logo_url: settingsObj.logo_url || '',
-        login_background_url: settingsObj.login_background_url || ''
+        login_background_url: settingsObj.login_background_url || '',
+        login_blur_amount: settingsObj.login_blur_amount || '2'
       });
     }
   };
@@ -139,7 +140,10 @@ const Auth = () => {
         backgroundPosition: 'center',
       }}
     >
-      <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px]" />
+      <div 
+        className="absolute inset-0 bg-background/40" 
+        style={{ backdropFilter: `blur(${settings.login_blur_amount}px)` }}
+      />
       <Card className="w-full max-w-md shadow-elevated relative z-10">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-2">

@@ -41,7 +41,7 @@ const Admin = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedBoxSizes, setSelectedBoxSizes] = useState<string[]>(['1 box']);
-  const [settings, setSettings] = useState({ company_name: '', logo_url: '', login_background_url: '' });
+  const [settings, setSettings] = useState({ company_name: '', logo_url: '', login_background_url: '', login_blur_amount: '2' });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bgFile, setBgFile] = useState<File | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -104,14 +104,19 @@ const Admin = () => {
     const { data } = await supabase
       .from('app_settings')
       .select('key, value')
-      .in('key', ['company_name', 'logo_url', 'login_background_url']);
+      .in('key', ['company_name', 'logo_url', 'login_background_url', 'login_blur_amount']);
     
     if (data) {
       const settingsObj = data.reduce((acc: any, item) => {
         acc[item.key] = item.value || '';
         return acc;
       }, {});
-      setSettings(settingsObj);
+      setSettings({
+        company_name: settingsObj.company_name || 'Commissary System',
+        logo_url: settingsObj.logo_url || '',
+        login_background_url: settingsObj.login_background_url || '',
+        login_blur_amount: settingsObj.login_blur_amount || '2'
+      });
     }
   };
 
@@ -941,6 +946,49 @@ const Admin = () => {
                     className="mt-2"
                   >
                     Upload Background
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="blurAmount">Login Background Blur (px)</Label>
+                  <Input
+                    id="blurAmount"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={settings.login_blur_amount}
+                    onChange={(e) => setSettings({ ...settings, login_blur_amount: e.target.value })}
+                    placeholder="2"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Control the background blur amount (0 = no blur, 20 = maximum blur)
+                  </p>
+                  <Button 
+                    onClick={async () => {
+                      const blurValue = parseInt(settings.login_blur_amount);
+                      if (isNaN(blurValue) || blurValue < 0 || blurValue > 20) {
+                        toast.error('Blur amount must be between 0 and 20');
+                        return;
+                      }
+
+                      const { error } = await supabase
+                        .from('app_settings')
+                        .upsert({ 
+                          key: 'login_blur_amount', 
+                          value: settings.login_blur_amount 
+                        }, {
+                          onConflict: 'key'
+                        });
+                      
+                      if (error) {
+                        toast.error('Failed to update blur amount');
+                      } else {
+                        toast.success('Blur amount updated');
+                      }
+                    }}
+                    className="mt-2"
+                  >
+                    Save Blur Amount
                   </Button>
                 </div>
               </CardContent>
