@@ -48,6 +48,7 @@ const Products = () => {
     const editCartData = localStorage.getItem('editOrderCart');
     const editOrderId = localStorage.getItem('editOrderId');
     const editOrderItemId = localStorage.getItem('editOrderItemId');
+    const keepOrderId = localStorage.getItem('keepOrderId');
     
     if (editCartData && editOrderId) {
       try {
@@ -65,6 +66,7 @@ const Products = () => {
           localStorage.removeItem('editOrderCart');
           localStorage.removeItem('editOrderId');
           localStorage.removeItem('editOrderItemId');
+          localStorage.removeItem('keepOrderId');
           return;
         }
 
@@ -73,6 +75,7 @@ const Products = () => {
           localStorage.removeItem('editOrderCart');
           localStorage.removeItem('editOrderId');
           localStorage.removeItem('editOrderItemId');
+          localStorage.removeItem('keepOrderId');
           return;
         }
         
@@ -94,8 +97,8 @@ const Products = () => {
           
           setCart(loadedCart as CartItem[]);
           
-          // If editing a single item, delete just that item; otherwise delete the whole order
-          if (editOrderItemId) {
+          // If keeping order, just delete the item being edited
+          if (keepOrderId && editOrderItemId) {
             const { error: deleteError } = await supabase
               .from('order_items')
               .delete()
@@ -105,32 +108,12 @@ const Products = () => {
               toast.error('Failed to remove original item');
               console.error('Delete error:', deleteError);
             } else {
-              toast.success('Item loaded for editing');
-            }
-          } else {
-            const { error: deleteItemsError } = await supabase
-              .from('order_items')
-              .delete()
-              .eq('order_id', editOrderId);
-            
-            const { error: deleteOrderError } = await supabase
-              .from('orders')
-              .delete()
-              .eq('id', editOrderId);
-            
-            if (deleteItemsError || deleteOrderError) {
-              toast.error('Failed to remove original order');
-              console.error('Delete errors:', { deleteItemsError, deleteOrderError });
-            } else {
-              toast.success('Order loaded for editing');
+              toast.success('Item loaded for editing - order will be updated');
             }
           }
         }
         
-        // Clear localStorage after successful processing
-        localStorage.removeItem('editOrderCart');
-        localStorage.removeItem('editOrderId');
-        localStorage.removeItem('editOrderItemId');
+        // Don't clear localStorage yet - keep editOrderId for placeOrder to use
       } catch (error) {
         console.error('Error loading cart from edit:', error);
         toast.error('Failed to load order for editing');
@@ -138,6 +121,7 @@ const Products = () => {
         localStorage.removeItem('editOrderCart');
         localStorage.removeItem('editOrderId');
         localStorage.removeItem('editOrderItemId');
+        localStorage.removeItem('keepOrderId');
       }
     }
   };
@@ -231,23 +215,44 @@ const Products = () => {
       return sum + pricePerUnit * item.quantity;
     }, 0);
 
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_id: user?.id,
-        total,
-        status: 'pending',
-      })
-      .select()
-      .single();
+    // Check if we're editing an existing order
+    const editOrderId = localStorage.getItem('editOrderId');
+    const keepOrderId = localStorage.getItem('keepOrderId');
+    
+    let orderId = editOrderId && keepOrderId ? editOrderId : null;
 
-    if (orderError || !order) {
-      toast.error('Failed to create order');
-      return;
+    // If not editing or keeping order, create a new one
+    if (!orderId) {
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          customer_id: user?.id,
+          total,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (orderError || !order) {
+        toast.error('Failed to create order');
+        return;
+      }
+      orderId = order.id;
+    } else {
+      // Update existing order total
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ total })
+        .eq('id', orderId);
+
+      if (updateError) {
+        toast.error('Failed to update order');
+        return;
+      }
     }
 
     const orderItems = cart.map(item => ({
-      order_id: order.id,
+      order_id: orderId,
       product_id: item.product.id,
       quantity: item.quantity,
       price: item.product.price * getBoxSizeMultiplier(item.boxSize),
@@ -261,8 +266,16 @@ const Products = () => {
     if (itemsError) {
       toast.error('Failed to add items to order');
     } else {
-      toast.success('Order placed successfully!');
+      const message = keepOrderId ? 'Order updated successfully!' : 'Order placed successfully!';
+      toast.success(message);
       setCart([]);
+      
+      // Clear edit-related localStorage
+      localStorage.removeItem('editOrderCart');
+      localStorage.removeItem('editOrderId');
+      localStorage.removeItem('editOrderItemId');
+      localStorage.removeItem('keepOrderId');
+      
       fetchProducts(false); // Don't reset box sizes when refetching after order
     }
   };

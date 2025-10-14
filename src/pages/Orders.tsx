@@ -137,9 +137,35 @@ const Orders = () => {
     localStorage.setItem('editOrderCart', JSON.stringify([cartItem]));
     localStorage.setItem('editOrderId', orderId);
     localStorage.setItem('editOrderItemId', item.id);
+    localStorage.setItem('keepOrderId', 'true'); // Flag to keep same order
     
     toast.success('Redirecting to edit item...');
     navigate('/products');
+  };
+
+  const deleteOrder = async (orderId: string) => {
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', orderId);
+
+    if (itemsError) {
+      toast.error('Failed to delete order items');
+      return;
+    }
+
+    const { error: orderError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (orderError) {
+      toast.error('Failed to delete order');
+      return;
+    }
+
+    toast.success('Order deleted successfully');
+    fetchOrders();
   };
 
   const getStatusColor = (status: string) => {
@@ -194,6 +220,30 @@ const Orders = () => {
                       <span className="text-lg font-bold text-primary">
                         ${order.total.toFixed(2)}
                       </span>
+                      {order.status === 'pending' && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" className="gap-1">
+                              <Trash2 className="w-3 h-3" />
+                              Delete Order
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Entire Order?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete this order and all its items.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteOrder(order.id)}>
+                                Delete Order
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
