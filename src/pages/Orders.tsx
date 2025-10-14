@@ -109,7 +109,24 @@ const Orders = () => {
     fetchOrders();
   };
 
-  const editOrderItem = (item: OrderItem, orderId: string) => {
+  const editOrderItem = async (item: OrderItem, orderId: string) => {
+    // Verify order is still in pending status before allowing edit
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('status')
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
+      toast.error('Failed to load order details');
+      return;
+    }
+
+    if (order.status !== 'pending') {
+      toast.error('Cannot edit orders that are being processed or completed');
+      return;
+    }
+
     // Store single item in localStorage to repopulate cart
     const cartItem = {
       productId: item.product_id,

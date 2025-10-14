@@ -53,6 +53,29 @@ const Products = () => {
       try {
         const cartData = JSON.parse(editCartData);
         
+        // Verify order is still in pending status before proceeding
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('id', editOrderId)
+          .single();
+
+        if (orderError || !order) {
+          toast.error('Order not found or already deleted');
+          localStorage.removeItem('editOrderCart');
+          localStorage.removeItem('editOrderId');
+          localStorage.removeItem('editOrderItemId');
+          return;
+        }
+
+        if (order.status !== 'pending') {
+          toast.error('Cannot edit order - it is being processed or completed');
+          localStorage.removeItem('editOrderCart');
+          localStorage.removeItem('editOrderId');
+          localStorage.removeItem('editOrderItemId');
+          return;
+        }
+        
         // Fetch full product details for each cart item
         const { data: products } = await supabase
           .from('products')
@@ -73,21 +96,45 @@ const Products = () => {
           
           // If editing a single item, delete just that item; otherwise delete the whole order
           if (editOrderItemId) {
-            await supabase.from('order_items').delete().eq('id', editOrderItemId);
-            toast.success('Item loaded for editing');
+            const { error: deleteError } = await supabase
+              .from('order_items')
+              .delete()
+              .eq('id', editOrderItemId);
+            
+            if (deleteError) {
+              toast.error('Failed to remove original item');
+              console.error('Delete error:', deleteError);
+            } else {
+              toast.success('Item loaded for editing');
+            }
           } else {
-            await supabase.from('order_items').delete().eq('order_id', editOrderId);
-            await supabase.from('orders').delete().eq('id', editOrderId);
-            toast.success('Order loaded for editing');
+            const { error: deleteItemsError } = await supabase
+              .from('order_items')
+              .delete()
+              .eq('order_id', editOrderId);
+            
+            const { error: deleteOrderError } = await supabase
+              .from('orders')
+              .delete()
+              .eq('id', editOrderId);
+            
+            if (deleteItemsError || deleteOrderError) {
+              toast.error('Failed to remove original order');
+              console.error('Delete errors:', { deleteItemsError, deleteOrderError });
+            } else {
+              toast.success('Order loaded for editing');
+            }
           }
         }
         
-        // Clear localStorage
+        // Clear localStorage after successful processing
         localStorage.removeItem('editOrderCart');
         localStorage.removeItem('editOrderId');
         localStorage.removeItem('editOrderItemId');
       } catch (error) {
         console.error('Error loading cart from edit:', error);
+        toast.error('Failed to load order for editing');
+        // Clear localStorage on error to prevent retry loops
         localStorage.removeItem('editOrderCart');
         localStorage.removeItem('editOrderId');
         localStorage.removeItem('editOrderItemId');
