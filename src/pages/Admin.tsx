@@ -722,6 +722,15 @@ const Admin = () => {
                         </TableBody>
                       </Table>
                     </div>
+
+                    {selectedOrder.notes && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h3 className="font-semibold mb-2 text-sm">Customer Notes</h3>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {selectedOrder.notes}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </DialogContent>
