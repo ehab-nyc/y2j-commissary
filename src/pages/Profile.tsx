@@ -6,16 +6,38 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { User, Lock, Save, Moon, Sun } from 'lucide-react';
+import { User, Lock, Save, Moon, Sun, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
+import { format } from 'date-fns';
+
+interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  box_size: string;
+  products: {
+    name: string;
+  };
+}
+
+interface Order {
+  id: string;
+  status: string;
+  total: number;
+  created_at: string;
+  order_items: OrderItem[];
+}
 
 const Profile = () => {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -24,6 +46,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchOrders();
   }, [user]);
 
   const fetchProfile = async () => {
@@ -39,6 +62,44 @@ const Profile = () => {
       setProfile(data);
       setFullName(data.full_name || '');
       setPhone(data.phone || '');
+    }
+  };
+
+  const fetchOrders = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(
+          id,
+          quantity,
+          price,
+          box_size,
+          products(name)
+        )
+      `)
+      .eq('customer_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setOrders(data || []);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-500/10 text-yellow-700 border-yellow-200';
+      case 'processing':
+        return 'bg-blue-500/10 text-blue-700 border-blue-200';
+      case 'completed':
+        return 'bg-green-500/10 text-green-700 border-green-200';
+      case 'cancelled':
+        return 'bg-red-500/10 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-500/10 text-gray-700 border-gray-200';
     }
   };
 
@@ -215,6 +276,68 @@ const Profile = () => {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5" />
+              Order History
+            </CardTitle>
+            <CardDescription>View your past orders (read-only)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {orders.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No orders yet</p>
+            ) : (
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <div key={order.id} className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div>
+                        <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(order.created_at), 'PPp')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge className={getStatusColor(order.status)}>
+                          {order.status.toUpperCase()}
+                        </Badge>
+                        <span className="font-bold text-primary">
+                          ${order.total.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product</TableHead>
+                          <TableHead>Box Size</TableHead>
+                          <TableHead className="text-right">Qty</TableHead>
+                          <TableHead className="text-right">Price</TableHead>
+                          <TableHead className="text-right">Subtotal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {order.order_items.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-medium">{item.products.name}</TableCell>
+                            <TableCell>{item.box_size || '1 box'}</TableCell>
+                            <TableCell className="text-right">{item.quantity}</TableCell>
+                            <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">
+                              ${(item.quantity * item.price).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
