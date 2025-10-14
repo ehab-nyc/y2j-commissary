@@ -84,6 +84,12 @@ const Products = () => {
     setCategories(data || []);
   };
 
+  const getBoxSizeMultiplier = (boxSize: string): number => {
+    if (boxSize === '1/2 box') return 0.5;
+    if (boxSize === '1/4 box') return 0.25;
+    return 1;
+  };
+
   const addToCart = (product: Product, boxSize: string) => {
     console.log('Adding to cart:', product.name, 'Box size:', boxSize);
     const existing = cart.find(item => item.product.id === product.id && item.boxSize === boxSize);
@@ -121,7 +127,10 @@ const Products = () => {
       return;
     }
 
-    const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const total = cart.reduce((sum, item) => {
+      const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
+      return sum + pricePerUnit * item.quantity;
+    }, 0);
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -142,7 +151,7 @@ const Products = () => {
       order_id: order.id,
       product_id: item.product.id,
       quantity: item.quantity,
-      price: item.product.price,
+      price: item.product.price * getBoxSizeMultiplier(item.boxSize),
       box_size: item.boxSize,
     }));
 
@@ -166,7 +175,10 @@ const Products = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const cartTotal = cart.reduce((sum, item) => {
+    const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
+    return sum + pricePerUnit * item.quantity;
+  }, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -242,7 +254,9 @@ const Products = () => {
                   </CardHeader>
                   <CardContent className="pb-3 space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-2xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                      <span className="text-2xl font-bold text-primary">
+                        ${(product.price * getBoxSizeMultiplier(selectedBoxSize)).toFixed(2)}
+                      </span>
                       <span className="text-sm text-muted-foreground">Stock: {product.quantity}</span>
                     </div>
                     {product.box_sizes && product.box_sizes.length > 1 && (
