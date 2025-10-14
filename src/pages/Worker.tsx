@@ -18,6 +18,7 @@ interface Order {
   total: number;
   created_at: string;
   customer_id: string;
+  notes: string | null;
   profiles: {
     full_name: string | null;
     email: string;
@@ -161,6 +162,14 @@ const Worker = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  {order.notes && (
+                    <div className="p-4 border-t bg-muted/30">
+                      <div className="text-sm font-medium mb-1">Customer Notes:</div>
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {order.notes}
+                      </div>
+                    </div>
+                  )}
                   <div className="p-4 bg-muted/50 flex gap-2">
                     {order.status === 'pending' && (
                       <Button
