@@ -41,7 +41,52 @@ const Products = () => {
   useEffect(() => {
     fetchProducts(true); // Reset box sizes on initial load
     fetchCategories();
+    loadCartFromEdit();
   }, []);
+
+  const loadCartFromEdit = async () => {
+    const editCartData = localStorage.getItem('editOrderCart');
+    const editOrderId = localStorage.getItem('editOrderId');
+    
+    if (editCartData && editOrderId) {
+      try {
+        const cartData = JSON.parse(editCartData);
+        
+        // Fetch full product details for each cart item
+        const { data: products } = await supabase
+          .from('products')
+          .select('*, categories(name)')
+          .in('id', cartData.map((item: any) => item.productId));
+        
+        if (products) {
+          const loadedCart = cartData.map((item: any) => {
+            const product = products.find(p => p.id === item.productId);
+            return product ? {
+              product,
+              quantity: item.quantity,
+              boxSize: item.boxSize,
+            } : null;
+          }).filter(Boolean);
+          
+          setCart(loadedCart as CartItem[]);
+          
+          // Delete the original order
+          await supabase.from('order_items').delete().eq('order_id', editOrderId);
+          await supabase.from('orders').delete().eq('id', editOrderId);
+          
+          toast.success('Order loaded for editing');
+        }
+        
+        // Clear localStorage
+        localStorage.removeItem('editOrderCart');
+        localStorage.removeItem('editOrderId');
+      } catch (error) {
+        console.error('Error loading cart from edit:', error);
+        localStorage.removeItem('editOrderCart');
+        localStorage.removeItem('editOrderId');
+      }
+    }
+  };
 
   const fetchProducts = async (resetBoxSizes: boolean = false) => {
     console.log('Fetching products...');

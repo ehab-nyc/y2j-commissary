@@ -3,28 +3,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { Trash2, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface OrderItem {
+  quantity: number;
+  price: number;
+  box_size: string;
+  product_id: string;
+  products: {
+    name: string;
+  };
+}
 
 interface Order {
   id: string;
   status: string;
   total: number;
   created_at: string;
-  order_items: Array<{
-    quantity: number;
-    price: number;
-    box_size: string;
-    products: {
-      name: string;
-    };
-  }>;
+  order_items: OrderItem[];
 }
 
 const Orders = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +49,7 @@ const Orders = () => {
           quantity,
           price,
           box_size,
+          product_id,
           products(name)
         )
       `)
@@ -53,6 +62,47 @@ const Orders = () => {
       setOrders(data || []);
     }
     setLoading(false);
+  };
+
+  const deleteOrder = async (orderId: string) => {
+    // First delete order items
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', orderId);
+
+    if (itemsError) {
+      toast.error('Failed to delete order items');
+      return;
+    }
+
+    // Then delete the order
+    const { error: orderError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (orderError) {
+      toast.error('Failed to delete order');
+    } else {
+      toast.success('Order deleted successfully');
+      fetchOrders();
+    }
+  };
+
+  const editOrder = async (order: Order) => {
+    // Store order items in localStorage to repopulate cart
+    const cartItems = order.order_items.map(item => ({
+      productId: item.product_id,
+      quantity: item.quantity,
+      boxSize: item.box_size,
+    }));
+    
+    localStorage.setItem('editOrderCart', JSON.stringify(cartItems));
+    localStorage.setItem('editOrderId', order.id);
+    
+    toast.success('Redirecting to edit order...');
+    navigate('/products');
   };
 
   const getStatusColor = (status: string) => {
@@ -100,13 +150,48 @@ const Orders = () => {
                         {format(new Date(order.created_at), 'PPp')}
                       </CardDescription>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <Badge className={getStatusColor(order.status)}>
                         {order.status.toUpperCase()}
                       </Badge>
                       <span className="text-lg font-bold text-primary">
                         ${order.total.toFixed(2)}
                       </span>
+                      {order.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => editOrder(order)}
+                            className="gap-2"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" className="gap-2">
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this order. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteOrder(order.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
