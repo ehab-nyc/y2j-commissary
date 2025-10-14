@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
 import { z } from 'zod';
+import { passwordSchema } from '@/lib/validation';
 
 interface OrderItem {
   id: string;
@@ -159,8 +160,9 @@ const Profile = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    const validation = passwordSchema.safeParse(newPassword);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
       return;
     }
 
