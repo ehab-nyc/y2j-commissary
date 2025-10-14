@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Trash2, Edit, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 
 interface OrderItem {
   id: string;
@@ -178,9 +179,18 @@ const Orders = () => {
   };
 
   const saveNotes = async (orderId: string) => {
+    // Validation schema for notes
+    const notesSchema = z.string().max(1000, 'Notes cannot exceed 1000 characters').trim();
+
+    const validation = notesSchema.safeParse(notesText);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+
     const { error } = await supabase
       .from('orders')
-      .update({ notes: notesText })
+      .update({ notes: validation.data })
       .eq('id', orderId);
 
     if (error) {

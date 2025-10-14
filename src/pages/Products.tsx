@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Minus, ShoppingCart, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { z } from 'zod';
 
 interface Product {
   id: string;
@@ -208,6 +209,35 @@ const Products = () => {
     if (cart.length === 0) {
       toast.error('Cart is empty');
       return;
+    }
+
+    // Validation schema for order items
+    const orderItemSchema = z.object({
+      product_id: z.string().uuid(),
+      quantity: z.number().int().positive().max(1000, 'Quantity cannot exceed 1000'),
+      box_size: z.enum(['1 box', '1/2 box', '1/4 box'], { 
+        errorMap: () => ({ message: 'Invalid box size' }) 
+      }),
+    });
+
+    // Validate all cart items
+    for (const item of cart) {
+      const validation = orderItemSchema.safeParse({
+        product_id: item.product.id,
+        quantity: item.quantity,
+        box_size: item.boxSize,
+      });
+
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
+      // Check stock availability
+      if (item.quantity > item.product.quantity) {
+        toast.error(`Insufficient stock for ${item.product.name}. Available: ${item.product.quantity}`);
+        return;
+      }
     }
 
     const total = cart.reduce((sum, item) => {

@@ -13,6 +13,7 @@ import { User, Lock, Save, Moon, Sun, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
+import { z } from 'zod';
 
 interface OrderItem {
   id: string;
@@ -107,11 +108,36 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validation schemas
+    const fullNameSchema = z.string().max(100, 'Full name cannot exceed 100 characters').trim();
+    const phoneSchema = z.string()
+      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format')
+      .optional()
+      .or(z.literal(''));
+
+    // Validate full name
+    const nameValidation = fullNameSchema.safeParse(fullName);
+    if (!nameValidation.success) {
+      toast.error(nameValidation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
+    // Validate phone if provided
+    if (phone) {
+      const phoneValidation = phoneSchema.safeParse(phone);
+      if (!phoneValidation.success) {
+        toast.error(phoneValidation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update({
-        full_name: fullName,
-        phone: phone,
+        full_name: nameValidation.data,
+        phone: phone || null,
       })
       .eq('id', user?.id);
 
