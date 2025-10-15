@@ -33,6 +33,10 @@ interface Order {
   created_at: string;
   notes: string | null;
   order_items: OrderItem[];
+  assigned_worker?: {
+    full_name: string | null;
+    email: string;
+  } | null;
 }
 
 const Orders = () => {
@@ -388,6 +392,14 @@ const Orders = () => {
               </tr>
             </tbody>
           </table>
+          
+          ${order.assigned_worker ? `
+            <div style="margin-top: 15px; padding: 10px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
+              <p style="margin: 0; font-size: 11px; color: #000;">
+                <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
+              </p>
+            </div>
+          ` : ''}
           
           <script>
             window.onload = () => {

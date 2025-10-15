@@ -281,8 +281,8 @@ const Worker = () => {
           </table>
           
           ${order.assigned_worker ? `
-            <div style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
-              <p style="margin: 0; font-size: 12px; color: #666;">
+            <div style="margin-top: 15px; padding: 10px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
+              <p style="margin: 0; font-size: 11px; color: #000;">
                 <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
               </p>
             </div>
