@@ -240,6 +240,11 @@ const Products = () => {
       }
     }
 
+    // SECURITY NOTE: Client-side price calculation for UX only.
+    // Price integrity is enforced server-side via database triggers:
+    // - recalculate_order_item_price: Overrides item prices with current product prices
+    // - recalculate_order_total: Recalculates order total from validated item prices
+    // This ensures tampering with client-side prices has no effect on actual charges.
     const total = cart.reduce((sum, item) => {
       const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
       return sum + pricePerUnit * item.quantity;
@@ -281,11 +286,12 @@ const Products = () => {
       }
     }
 
+    // SECURITY NOTE: Client-provided prices are overridden by recalculate_order_item_price trigger
     const orderItems = cart.map(item => ({
       order_id: orderId,
       product_id: item.product.id,
       quantity: item.quantity,
-      price: item.product.price * getBoxSizeMultiplier(item.boxSize),
+      price: item.product.price * getBoxSizeMultiplier(item.boxSize), // Overridden by DB trigger
       box_size: item.boxSize,
     }));
 
