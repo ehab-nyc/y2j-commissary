@@ -156,7 +156,8 @@ const Worker = () => {
               background-repeat: no-repeat;
               background-position: center;
               opacity: 0.08;
-              z-index: -1;
+              z-index: 0;
+              pointer-events: none;
             }
             .header {
               display: flex;
@@ -165,6 +166,8 @@ const Worker = () => {
               margin-bottom: 30px;
               padding-bottom: 20px;
               border-bottom: 2px solid #000;
+              position: relative;
+              z-index: 1;
             }
             .logo-section {
               display: flex;
