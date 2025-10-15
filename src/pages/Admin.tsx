@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye, Folder } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye, Folder, Printer } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -394,6 +394,146 @@ const Admin = () => {
       case 'cancelled': return 'bg-red-500/10 text-red-600 border-red-200';
       default: return 'bg-muted';
     }
+  };
+
+  const printOrder = (order: any) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsHtml = order.order_items?.map((item: any) => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.products?.name}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.box_size || '1 box'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${item.quantity}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${Number(item.price).toFixed(2)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${(item.quantity * Number(item.price)).toFixed(2)}</td>
+      </tr>
+    `).join('') || '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Order #${order.id.slice(0, 8)}</title>
+          <style>
+            @media print {
+              @page { margin: 0.5in; }
+            }
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              max-width: 8.5in;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #000;
+            }
+            .logo-section {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
+            .logo {
+              max-height: 60px;
+              max-width: 120px;
+            }
+            .company-name {
+              font-size: 24px;
+              font-weight: bold;
+            }
+            .order-info {
+              text-align: right;
+            }
+            .customer-info {
+              margin-bottom: 20px;
+              padding: 15px;
+              background-color: #f9fafb;
+              border-radius: 5px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            th {
+              background-color: #f3f4f6;
+              padding: 10px;
+              text-align: left;
+              border-bottom: 2px solid #000;
+            }
+            .total-row {
+              font-weight: bold;
+              font-size: 18px;
+            }
+            .notes {
+              margin-top: 30px;
+              padding: 15px;
+              background-color: #f9fafb;
+              border-left: 4px solid #000;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo-section">
+              ${settings.logo_url ? `<img src="${settings.logo_url}" alt="${settings.company_name}" class="logo" />` : ''}
+              <div class="company-name">${settings.company_name}</div>
+            </div>
+            <div class="order-info">
+              <h2>Order #${order.id.slice(0, 8)}</h2>
+              <p>${new Date(order.created_at).toLocaleString()}</p>
+              <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
+            </div>
+          </div>
+          
+          <div class="customer-info">
+            <strong>Customer:</strong> ${order.profiles?.full_name || 'N/A'}<br/>
+            <strong>Email:</strong> ${order.profiles?.email || 'N/A'}
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th style="text-align: center;">Box Size</th>
+                <th style="text-align: right;">Quantity</th>
+                <th style="text-align: right;">Price</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+              <tr class="total-row">
+                <td colspan="4" style="padding: 15px 8px; text-align: right;">TOTAL:</td>
+                <td style="padding: 15px 8px; text-align: right;">$${Number(order.total).toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          ${order.notes ? `
+            <div class="notes">
+              <strong>Customer Notes:</strong>
+              <p>${order.notes}</p>
+            </div>
+          ` : ''}
+          
+          <script>
+            window.onload = () => {
+              window.print();
+              window.onafterprint = () => window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   return (
@@ -837,6 +977,13 @@ const Admin = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                onClick={() => printOrder(order)}
+                              >
+                                <Printer className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
                                 onClick={() => {
                                   setSelectedOrder(order);
                                   setShowOrderDialog(true);
@@ -878,10 +1025,23 @@ const Admin = () => {
             <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
               <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Order Details - #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
-                  <DialogDescription>
-                    Complete order information and items
-                  </DialogDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <DialogTitle>Order Details - #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
+                      <DialogDescription>
+                        Complete order information and items
+                      </DialogDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => selectedOrder && printOrder(selectedOrder)}
+                      className="gap-2"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Print Order
+                    </Button>
+                  </div>
                 </DialogHeader>
                 {selectedOrder && (
                   <div className="space-y-4">
