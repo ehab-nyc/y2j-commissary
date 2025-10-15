@@ -36,6 +36,8 @@ interface Order {
   profiles?: {
     full_name: string | null;
     email: string;
+    cart_name: string | null;
+    cart_number: string | null;
   } | null;
   assigned_worker?: {
     full_name: string | null;
@@ -83,6 +85,7 @@ const Orders = () => {
       .from('orders')
       .select(`
         *,
+        profiles!orders_customer_id_fkey(full_name, email, cart_name, cart_number),
         assigned_worker:profiles!orders_assigned_worker_id_fkey(full_name, email),
         order_items(
           id,
@@ -384,6 +387,7 @@ const Orders = () => {
           
           <div class="customer-info" style="display: flex; justify-content: space-between; align-items: center;">
             <div><strong>Customer:</strong> ${order.profiles?.full_name || 'N/A'}</div>
+            ${order.profiles?.cart_name || order.profiles?.cart_number ? `<div><strong>Cart:</strong> ${order.profiles?.cart_name || ''} ${order.profiles?.cart_number || ''}</div>` : ''}
             ${order.assigned_worker ? `<div><strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}</div>` : ''}
           </div>
           

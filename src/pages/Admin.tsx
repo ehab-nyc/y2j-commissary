@@ -102,7 +102,7 @@ const Admin = () => {
       .from('orders')
       .select(`
         *,
-        profiles!orders_customer_id_fkey(email, full_name),
+        profiles!orders_customer_id_fkey(email, full_name, cart_name, cart_number),
         assigned_worker:profiles!orders_assigned_worker_id_fkey(full_name, email),
         order_items(
           *,
@@ -541,6 +541,7 @@ const Admin = () => {
           
           <div class="customer-info" style="display: flex; justify-content: space-between; align-items: center;">
             <div><strong>Customer:</strong> ${order.profiles?.full_name || 'N/A'}</div>
+            ${order.profiles?.cart_name || order.profiles?.cart_number ? `<div><strong>Cart:</strong> ${order.profiles?.cart_name || ''} ${order.profiles?.cart_number || ''}</div>` : ''}
             ${order.assigned_worker ? `<div><strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}</div>` : ''}
           </div>
           

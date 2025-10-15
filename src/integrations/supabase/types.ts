@@ -242,6 +242,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cart_name: string | null
+          cart_number: string | null
           created_at: string | null
           email: string
           full_name: string | null
@@ -250,6 +252,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          cart_name?: string | null
+          cart_number?: string | null
           created_at?: string | null
           email: string
           full_name?: string | null
@@ -258,6 +262,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          cart_name?: string | null
+          cart_number?: string | null
           created_at?: string | null
           email?: string
           full_name?: string | null

@@ -52,6 +52,8 @@ const Auth = () => {
     const email = formData.get('signup-email') as string;
     const password = formData.get('signup-password') as string;
     const fullName = formData.get('signup-name') as string;
+    const cartName = formData.get('signup-cart-name') as string;
+    const cartNumber = formData.get('signup-cart-number') as string;
 
     // Validate password strength
     const passwordValidation = passwordSchema.safeParse(password);
@@ -61,7 +63,7 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -75,6 +77,16 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else {
+      // Update profile with cart info
+      if (authData.user) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            cart_name: cartName,
+            cart_number: cartNumber
+          })
+          .eq('id', authData.user.id);
+      }
       toast.success('Account created successfully!');
       navigate('/');
     }
@@ -230,6 +242,26 @@ const Auth = () => {
                     name="signup-name"
                     type="text"
                     placeholder="John Doe"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-cart-name">Cart Name</Label>
+                  <Input
+                    id="signup-cart-name"
+                    name="signup-cart-name"
+                    type="text"
+                    placeholder="Cart Name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-cart-number">Cart Number</Label>
+                  <Input
+                    id="signup-cart-number"
+                    name="signup-cart-number"
+                    type="text"
+                    placeholder="Cart Number"
                     required
                   />
                 </div>
