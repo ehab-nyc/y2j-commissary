@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { TrendingUp, Package, Users, DollarSign, Eye, Printer, BarChart3, ClipboardList } from 'lucide-react';
+import { TrendingUp, Package, Users, DollarSign, Eye, Printer, BarChart3, ClipboardList, CheckCircle2, Play } from 'lucide-react';
 
 const Manager = () => {
   const [stats, setStats] = useState({
@@ -103,6 +103,28 @@ const Manager = () => {
       toast.error('Failed to load statistics');
     }
     setLoading(false);
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const updateData: any = { status: newStatus };
+    if ((newStatus === 'processing' || newStatus === 'completed') && user) {
+      updateData.assigned_worker_id = user.id;
+    }
+    
+    const { error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId);
+
+    if (error) {
+      toast.error('Failed to update order status');
+    } else {
+      toast.success(`Order marked as ${newStatus}`);
+      fetchOrders();
+      fetchStats();
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -443,6 +465,27 @@ const Manager = () => {
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="flex gap-2 justify-center">
+                                {order.status === 'pending' && (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm"
+                                    onClick={() => updateOrderStatus(order.id, 'processing')}
+                                  >
+                                    <Play className="w-4 h-4 mr-1" />
+                                    Start
+                                  </Button>
+                                )}
+                                {order.status === 'processing' && (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm"
+                                    onClick={() => updateOrderStatus(order.id, 'completed')}
+                                    className="bg-accent hover:bg-accent/90"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                                    Complete
+                                  </Button>
+                                )}
                                 <Button 
                                   variant="outline" 
                                   size="sm"
