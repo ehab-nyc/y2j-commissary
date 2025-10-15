@@ -273,8 +273,9 @@ const Orders = () => {
               font-family: system-ui, -apple-system, sans-serif;
               max-width: 8.5in;
               margin: 0 auto;
-              padding: 20px;
+              padding: 15px;
               position: relative;
+              font-size: 11px;
             }
             body::before {
               content: '';
@@ -282,13 +283,13 @@ const Orders = () => {
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 800px;
-              height: 800px;
+              width: 60%;
+              height: 60%;
               background-image: url('${logoUrl}');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
-              opacity: 0.08;
+              opacity: 0.05;
               z-index: 0;
               pointer-events: none;
             }
@@ -296,48 +297,59 @@ const Orders = () => {
               display: flex;
               align-items: center;
               justify-content: space-between;
-              margin-bottom: 30px;
-              padding-bottom: 20px;
-              border-bottom: 2px solid #000;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 1.5px solid #000;
               position: relative;
               z-index: 1;
             }
             .logo-section {
               display: flex;
               align-items: center;
-              gap: 15px;
+              gap: 10px;
             }
             .logo {
-              max-height: 100px;
-              max-width: 200px;
+              max-height: 60px;
+              max-width: 120px;
             }
             .company-name {
-              font-size: 24px;
+              font-size: 16px;
               font-weight: bold;
             }
             .order-info {
               text-align: right;
+              font-size: 11px;
+            }
+            .order-info h2 {
+              font-size: 14px;
+              margin: 0 0 5px 0;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin: 20px 0;
+              margin: 15px 0;
+              font-size: 10px;
             }
             th {
               background-color: #f3f4f6;
-              padding: 10px;
+              padding: 6px;
               text-align: left;
-              border-bottom: 2px solid #000;
+              border-bottom: 1.5px solid #000;
+              font-size: 10px;
+            }
+            td {
+              padding: 5px 6px;
             }
             .total-row {
               font-weight: bold;
-              font-size: 18px;
+              font-size: 12px;
             }
             .notes {
-              margin-top: 30px;
-              padding: 15px;
+              margin-top: 20px;
+              padding: 10px;
               background-color: #f9fafb;
-              border-left: 4px solid #000;
+              border-left: 3px solid #000;
+              font-size: 10px;
             }
           </style>
         </head>
@@ -347,8 +359,8 @@ const Orders = () => {
               ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
               <div>
                 <div class="company-name">${companyName}</div>
-                ${companyAddress ? `<div style="font-size: 12px; margin-top: 5px;">${companyAddress}</div>` : ''}
-                ${companyEmail ? `<div style="font-size: 12px; margin-top: 2px;">${companyEmail}</div>` : ''}
+                ${companyAddress ? `<div style="font-size: 9px; margin-top: 3px;">${companyAddress}</div>` : ''}
+                ${companyEmail ? `<div style="font-size: 9px; margin-top: 2px;">${companyEmail}</div>` : ''}
               </div>
             </div>
             <div class="order-info">
