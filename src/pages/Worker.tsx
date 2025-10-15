@@ -173,8 +173,8 @@ const Worker = () => {
               gap: 15px;
             }
             .logo {
-              max-height: 60px;
-              max-width: 120px;
+              max-height: 100px;
+              max-width: 200px;
             }
             .company-name {
               font-size: 24px;
