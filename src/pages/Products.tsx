@@ -10,6 +10,7 @@ import { Plus, Minus, ShoppingCart, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
   id: string;
@@ -31,6 +32,7 @@ interface CartItem {
 
 const Products = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -207,7 +209,7 @@ const Products = () => {
 
   const placeOrder = async () => {
     if (cart.length === 0) {
-      toast.error('Cart is empty');
+      toast.error(t('products.cartEmpty'));
       return;
     }
 
@@ -334,14 +336,14 @@ const Products = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Products</h1>
-            <p className="text-muted-foreground">Browse and order from our inventory</p>
+            <h1 className="text-3xl font-bold">{t('products.title')}</h1>
+            <p className="text-muted-foreground">{t('products.subtitle')}</p>
           </div>
           
           {cartCount > 0 && (
             <Button onClick={placeOrder} size="lg" className="gap-2 shadow-elevated">
               <ShoppingCart className="w-5 h-5" />
-              Place Order (${cartTotal.toFixed(2)})
+              {t('products.placeOrder')} (${cartTotal.toFixed(2)})
               <Badge variant="secondary" className="ml-1">{cartCount}</Badge>
             </Button>
           )}
@@ -351,7 +353,7 @@ const Products = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              placeholder={t('products.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -360,10 +362,10 @@ const Products = () => {
           
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t('products.category')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">{t('products.allCategories')}</SelectItem>
               {categories.map(cat => (
                 <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
               ))}
@@ -405,11 +407,11 @@ const Products = () => {
                       <span className="text-2xl font-bold text-primary">
                         ${(product.price * getBoxSizeMultiplier(selectedBoxSize)).toFixed(2)}
                       </span>
-                      <span className="text-sm text-muted-foreground">Stock: {product.quantity}</span>
+                      <span className="text-sm text-muted-foreground">{t('products.stock')}: {product.quantity}</span>
                     </div>
                     {product.box_sizes && product.box_sizes.length > 1 && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Box Size</label>
+                        <label className="text-sm font-medium">{t('products.boxSize')}</label>
                         <Select 
                           value={selectedBoxSize} 
                           onValueChange={(value) => {
@@ -453,7 +455,7 @@ const Products = () => {
                         disabled={product.quantity === 0}
                       >
                         <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
+                        {t('products.addToCart')}
                       </Button>
                     )}
                   </CardFooter>

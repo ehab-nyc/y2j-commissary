@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { Trash2, Edit, MessageSquare, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 interface OrderItem {
   id: string;
@@ -47,6 +48,7 @@ interface Order {
 
 const Orders = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -429,8 +431,8 @@ const Orders = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">My Orders</h1>
-          <p className="text-muted-foreground">Track your order history and status</p>
+          <h1 className="text-3xl font-bold">{t('orders.title')}</h1>
+          <p className="text-muted-foreground">{t('orders.subtitle')}</p>
         </div>
 
         {loading ? (
@@ -440,7 +442,7 @@ const Orders = () => {
         ) : orders.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">You haven't placed any orders yet.</p>
+              <p className="text-muted-foreground">{t('orders.noOrders')}</p>
             </CardContent>
           </Card>
         ) : (

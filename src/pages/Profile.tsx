@@ -15,6 +15,7 @@ import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
 import { z } from 'zod';
 import { passwordSchema } from '@/lib/validation';
+import { useTranslation } from 'react-i18next';
 
 interface OrderItem {
   id: string;
@@ -36,6 +37,7 @@ interface Order {
 
 const Profile = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -188,8 +190,8 @@ const Profile = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Profile Settings</h1>
-          <p className="text-muted-foreground">Manage your account information and security</p>
+          <h1 className="text-3xl font-bold">{t('profile.title')}</h1>
+          <p className="text-muted-foreground">{t('profile.subtitle')}</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -197,14 +199,14 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5" />
-                Profile Information
+                {t('profile.profileInfo')}
               </CardTitle>
-              <CardDescription>Update your personal details</CardDescription>
+              <CardDescription>{t('profile.updateDetails')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('auth.email')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -212,10 +214,10 @@ const Profile = () => {
                     disabled
                     className="bg-muted"
                   />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                  <p className="text-xs text-muted-foreground">{t('profile.emailCannotChange')}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                   <Input
                     id="fullName"
                     value={fullName}
@@ -224,7 +226,7 @@ const Profile = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">{t('profile.phoneNumber')}</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -234,7 +236,7 @@ const Profile = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="theme">Appearance</Label>
+                  <Label htmlFor="theme">{t('profile.appearance')}</Label>
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
                       {theme === 'dark' ? (
@@ -243,9 +245,9 @@ const Profile = () => {
                         <Sun className="w-5 h-5 text-primary" />
                       )}
                       <div>
-                        <p className="font-medium">Dark Mode</p>
+                        <p className="font-medium">{t('profile.darkMode')}</p>
                         <p className="text-xs text-muted-foreground">
-                          {theme === 'dark' ? 'Enabled' : 'Disabled'}
+                          {theme === 'dark' ? t('profile.enabled') : t('profile.disabled')}
                         </p>
                       </div>
                     </div>
@@ -258,7 +260,7 @@ const Profile = () => {
                 </div>
                 <Button type="submit" disabled={loading} className="w-full gap-2">
                   <Save className="w-4 h-4" />
-                  {loading ? 'Saving...' : 'Save Changes'}
+                  {loading ? t('profile.saving') : t('profile.saveChanges')}
                 </Button>
               </form>
             </CardContent>
@@ -268,14 +270,14 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lock className="w-5 h-5" />
-                Change Password
+                {t('profile.changePassword')}
               </CardTitle>
-              <CardDescription>Update your password to keep your account secure</CardDescription>
+              <CardDescription>{t('profile.updatePasswordSecurity')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
+                  <Label htmlFor="newPassword">{t('profile.newPassword')}</Label>
                   <Input
                     id="newPassword"
                     type="password"
@@ -286,7 +288,7 @@ const Profile = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Label htmlFor="confirmPassword">{t('profile.confirmNewPassword')}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -298,7 +300,7 @@ const Profile = () => {
                 </div>
                 <Button type="submit" disabled={loading} className="w-full gap-2">
                   <Lock className="w-4 h-4" />
-                  {loading ? 'Updating...' : 'Update Password'}
+                  {loading ? t('profile.updating') : t('profile.updatePassword')}
                 </Button>
               </form>
             </CardContent>
@@ -309,13 +311,13 @@ const Profile = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
-              Order History
+              {t('profile.orderHistory')}
             </CardTitle>
-            <CardDescription>View your past orders (read-only)</CardDescription>
+            <CardDescription>{t('profile.viewPastOrders')}</CardDescription>
           </CardHeader>
           <CardContent>
             {orders.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No orders yet</p>
+              <p className="text-muted-foreground text-center py-8">{t('profile.noOrdersYet')}</p>
             ) : (
               <div className="space-y-4">
                 {orders.map(order => (
