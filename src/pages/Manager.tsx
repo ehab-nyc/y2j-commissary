@@ -142,6 +142,22 @@ const Manager = () => {
               max-width: 8.5in;
               margin: 0 auto;
               padding: 20px;
+              position: relative;
+            }
+            body::before {
+              content: '';
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 400px;
+              height: 400px;
+              background-image: url('${logoUrl}');
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
+              opacity: 0.08;
+              z-index: -1;
             }
             .header {
               display: flex;
