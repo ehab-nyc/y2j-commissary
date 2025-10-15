@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle } from 'lucide-react';
+import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -42,6 +42,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/orders', label: 'My Orders', icon: ShoppingCart, show: hasRole('customer') },
     { path: '/worker', label: 'Orders Queue', icon: Package, show: hasRole('worker') || hasRole('manager') },
     { path: '/manager', label: 'Management', icon: BarChart3, show: hasRole('manager') },
+    { path: '/violations', label: 'Violations', icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') },
     { path: '/admin', label: 'Admin Panel', icon: Users, show: hasRole('admin') },
     { path: '/profile', label: 'Profile', icon: UserCircle, show: true },
   ];

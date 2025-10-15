@@ -302,6 +302,98 @@ export type Database = {
           },
         ]
       }
+      violation_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          violation_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          violation_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          violation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "violation_images_violation_id_fkey"
+            columns: ["violation_id"]
+            isOneToOne: false
+            referencedRelation: "violations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      violations: {
+        Row: {
+          cart_name: string | null
+          cart_number: string | null
+          created_at: string
+          customer_id: string
+          description: string
+          id: string
+          inspector_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          updated_at: string
+          violation_type: string
+        }
+        Insert: {
+          cart_name?: string | null
+          cart_number?: string | null
+          created_at?: string
+          customer_id: string
+          description: string
+          id?: string
+          inspector_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          updated_at?: string
+          violation_type: string
+        }
+        Update: {
+          cart_name?: string | null
+          cart_number?: string | null
+          created_at?: string
+          customer_id?: string
+          description?: string
+          id?: string
+          inspector_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          violation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "violations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "violations_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
