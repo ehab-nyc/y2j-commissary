@@ -263,7 +263,7 @@ const Worker = () => {
           
           <div class="customer-info">
             <strong>Customer:</strong> ${order.profiles?.full_name || 'Unknown'}<br/>
-            <strong>Email:</strong> ${order.profiles?.email || 'N/A'}
+            <strong>Email:</strong> ${order.profiles?.email || 'N/A'}${order.assigned_worker ? `<br/><strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}` : ''}
           </div>
           
           <table>
@@ -285,13 +285,6 @@ const Worker = () => {
             </tbody>
           </table>
           
-          ${order.assigned_worker ? `
-            <div style="margin-top: 12px; padding: 8px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
-              <p style="margin: 0; font-size: 9px; color: #000;">
-                <strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
-              </p>
-            </div>
-          ` : ''}
           
           <script>
             window.onload = () => {
