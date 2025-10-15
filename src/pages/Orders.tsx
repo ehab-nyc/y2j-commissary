@@ -274,23 +274,22 @@ const Orders = () => {
               max-width: 8.5in;
               margin: 0 auto;
               padding: 20px;
+              position: relative;
             }
-            @media print {
-              body::before {
-                content: '';
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background-image: url('${logoUrl}');
-                background-size: 600px;
-                background-repeat: no-repeat;
-                background-position: center center;
-                opacity: 0.08;
-                z-index: -1;
-                pointer-events: none;
-              }
+            body::before {
+              content: '';
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 400px;
+              height: 400px;
+              background-image: url('${logoUrl}');
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
+              opacity: 0.08;
+              z-index: -1;
             }
             .header {
               display: flex;
@@ -306,8 +305,8 @@ const Orders = () => {
               gap: 15px;
             }
             .logo {
-              max-height: 100px;
-              max-width: 200px;
+              max-height: 60px;
+              max-width: 120px;
             }
             .company-name {
               font-size: 24px;
