@@ -435,17 +435,17 @@ const Admin = () => {
             }
             body::before {
               content: '';
-              position: fixed;
+              position: absolute;
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 60%;
-              height: 60%;
+              width: 50%;
+              height: 50%;
               background-image: url('${logoUrl}');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
-              opacity: 0.05;
+              opacity: 0.08;
               z-index: 0;
               pointer-events: none;
             }
