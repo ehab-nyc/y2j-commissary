@@ -358,13 +358,6 @@ const Orders = () => {
             </tbody>
           </table>
           
-          ${order.notes ? `
-            <div class="notes">
-              <strong>Order Notes:</strong>
-              <p>${order.notes}</p>
-            </div>
-          ` : ''}
-          
           <script>
             window.onload = () => {
               window.print();
