@@ -151,7 +151,7 @@ const Worker = () => {
                 width: 100vw;
                 height: 100vh;
                 background-image: url('${logoUrl}');
-                background-size: 400px;
+                background-size: 600px;
                 background-repeat: no-repeat;
                 background-position: center center;
                 opacity: 0.08;
