@@ -206,9 +206,11 @@ const Worker = () => {
             .customer-info {
               margin-bottom: 15px;
               padding: 10px;
-              background-color: #f9fafb;
+              background-color: #f3f4f6;
+              border: 1.5px solid #000;
               border-radius: 4px;
-              font-size: 10px;
+              font-size: 11px;
+              font-weight: 600;
             }
             table {
               width: 100%;
