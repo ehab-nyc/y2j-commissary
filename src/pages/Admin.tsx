@@ -53,6 +53,10 @@ const Admin = () => {
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -62,7 +66,26 @@ const Admin = () => {
     fetchUsers();
     fetchOrders();
     fetchSettings();
+    fetchCompanySettings();
   }, []);
+
+  const fetchCompanySettings = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('key, value')
+      .in('key', ['company_name', 'logo_url', 'company_address', 'company_email']);
+    
+    if (data) {
+      const nameEntry = data.find(s => s.key === 'company_name');
+      const logoEntry = data.find(s => s.key === 'logo_url');
+      const addressEntry = data.find(s => s.key === 'company_address');
+      const emailEntry = data.find(s => s.key === 'company_email');
+      setCompanyName(nameEntry?.value || 'Company');
+      setLogoUrl(logoEntry?.value || '');
+      setCompanyAddress(addressEntry?.value || '');
+      setCompanyEmail(emailEntry?.value || '');
+    }
+  };
 
   const fetchProducts = async () => {
     const { data } = await supabase
@@ -481,8 +504,12 @@ const Admin = () => {
         <body>
           <div class="header">
             <div class="logo-section">
-              ${settings.logo_url ? `<img src="${settings.logo_url}" alt="${settings.company_name}" class="logo" />` : ''}
-              <div class="company-name">${settings.company_name}</div>
+              ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
+              <div>
+                <div class="company-name">${companyName}</div>
+                ${companyAddress ? `<div style="font-size: 12px; margin-top: 5px;">${companyAddress}</div>` : ''}
+                ${companyEmail ? `<div style="font-size: 12px; margin-top: 2px;">${companyEmail}</div>` : ''}
+              </div>
             </div>
             <div class="order-info">
               <h2>Order #${order.id.slice(0, 8)}</h2>

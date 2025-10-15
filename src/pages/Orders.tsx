@@ -44,6 +44,8 @@ const Orders = () => {
   const [notesText, setNotesText] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -54,13 +56,17 @@ const Orders = () => {
     const { data } = await supabase
       .from('app_settings')
       .select('key, value')
-      .in('key', ['company_name', 'logo_url']);
+      .in('key', ['company_name', 'logo_url', 'company_address', 'company_email']);
     
     if (data) {
       const nameEntry = data.find(s => s.key === 'company_name');
       const logoEntry = data.find(s => s.key === 'logo_url');
+      const addressEntry = data.find(s => s.key === 'company_address');
+      const emailEntry = data.find(s => s.key === 'company_email');
       setCompanyName(nameEntry?.value || 'Company');
       setLogoUrl(logoEntry?.value || '');
+      setCompanyAddress(addressEntry?.value || '');
+      setCompanyEmail(emailEntry?.value || '');
     }
   };
 
@@ -320,7 +326,11 @@ const Orders = () => {
           <div class="header">
             <div class="logo-section">
               ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
-              <div class="company-name">${companyName}</div>
+              <div>
+                <div class="company-name">${companyName}</div>
+                ${companyAddress ? `<div style="font-size: 12px; margin-top: 5px;">${companyAddress}</div>` : ''}
+                ${companyEmail ? `<div style="font-size: 12px; margin-top: 2px;">${companyEmail}</div>` : ''}
+              </div>
             </div>
             <div class="order-info">
               <h2>Order #${order.id.slice(0, 8)}</h2>
