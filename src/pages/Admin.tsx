@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,26 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-
-// Validation schemas
-const productSchema = z.object({
-  name: z.string().trim().min(1, "Product name is required").max(200, "Product name must be less than 200 characters"),
-  description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
-  price: z.number().positive("Price must be positive").max(999999.99, "Price must be less than 1,000,000"),
-  quantity: z.number().int("Quantity must be a whole number").min(0, "Quantity cannot be negative").max(999999, "Quantity must be less than 1,000,000"),
-  category_id: z.string().uuid("Invalid category selected"),
-});
-
-const brandingSchema = z.object({
-  company_name: z.string().trim().min(1, "Company name is required").max(100, "Company name must be less than 100 characters"),
-});
+import { productSchema, categorySchema, settingsSchema } from '@/lib/validation';
+import { z } from 'zod';
 
 const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin']);
-
-const categorySchema = z.object({
-  name: z.string().trim().min(1, "Category name is required").max(100, "Category name must be less than 100 characters"),
-  description: z.string().trim().max(500, "Description must be less than 500 characters").optional(),
-});
 
 const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -1236,7 +1219,7 @@ const Admin = () => {
                   <Button 
                     onClick={async () => {
                       // Validate company name
-                      const validation = brandingSchema.safeParse({ company_name: settings.company_name });
+                      const validation = settingsSchema.pick({ company_name: true }).safeParse({ company_name: settings.company_name });
                       if (!validation.success) {
                         toast.error(validation.error.errors[0].message);
                         return;
