@@ -150,8 +150,8 @@ const Manager = () => {
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 600px;
-              height: 600px;
+              width: 800px;
+              height: 800px;
               background-image: url('${logoUrl}');
               background-size: contain;
               background-repeat: no-repeat;
