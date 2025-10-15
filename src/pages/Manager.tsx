@@ -275,7 +275,7 @@ const Manager = () => {
           ${order.assigned_worker ? `
             <div style="margin-top: 12px; padding: 8px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
               <p style="margin: 0; font-size: 9px; color: #000;">
-                <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
+                <strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
               </p>
             </div>
           ` : ''}
@@ -557,7 +557,7 @@ const Manager = () => {
                       {selectedOrder.assigned_worker && (
                         <div className="p-3 bg-muted/30 rounded-lg">
                           <p className="text-xs text-muted-foreground">
-                            Completed by: <span className="font-medium text-foreground">{selectedOrder.assigned_worker.full_name || selectedOrder.assigned_worker.email}</span>
+                            Processed by: <span className="font-medium text-foreground">{selectedOrder.assigned_worker.full_name || selectedOrder.assigned_worker.email}</span>
                           </p>
                         </div>
                       )}

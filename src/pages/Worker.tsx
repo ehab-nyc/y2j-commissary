@@ -97,7 +97,7 @@ const Worker = () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     const updateData: any = { status: newStatus };
-    if (newStatus === 'completed' && user) {
+    if ((newStatus === 'processing' || newStatus === 'completed') && user) {
       updateData.assigned_worker_id = user.id;
     }
     
@@ -285,7 +285,7 @@ const Worker = () => {
           ${order.assigned_worker ? `
             <div style="margin-top: 12px; padding: 8px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
               <p style="margin: 0; font-size: 9px; color: #000;">
-                <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
+                <strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
               </p>
             </div>
           ` : ''}
@@ -396,7 +396,7 @@ const Worker = () => {
                   {order.assigned_worker && (
                     <div className="p-3 border-t bg-muted/20">
                       <p className="text-xs text-muted-foreground">
-                        Completed by: <span className="font-medium text-foreground">{order.assigned_worker.full_name || order.assigned_worker.email}</span>
+                        Processed by: <span className="font-medium text-foreground">{order.assigned_worker.full_name || order.assigned_worker.email}</span>
                       </p>
                     </div>
                   )}
