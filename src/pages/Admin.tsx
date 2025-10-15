@@ -425,20 +425,14 @@ const Admin = () => {
           <style>
             @media print {
               @page { 
-                margin: 0.5in;
+                margin: 0;
                 size: auto;
-              }
-              @page :footer {
-                display: none;
-              }
-              @page :header {
-                display: none;
               }
             }
             body {
               font-family: system-ui, -apple-system, sans-serif;
               max-width: 8.5in;
-              margin: 0 auto;
+              margin: 0.5in auto;
               padding: 15px;
               position: relative;
               font-size: 9px;
