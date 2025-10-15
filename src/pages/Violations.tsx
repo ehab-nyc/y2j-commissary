@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertCircle, CheckCircle, Clock, X } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -43,18 +44,24 @@ interface Violation {
 }
 
 export default function Violations() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { toast } = useToast();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingViolation, setEditingViolation] = useState<Violation | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    customer_id: string;
+    violation_type: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+  }>({
     customer_id: '',
     violation_type: '',
     description: '',
-    severity: 'medium' as const,
+    severity: 'medium',
   });
 
   useEffect(() => {
@@ -209,6 +216,104 @@ export default function Violations() {
     }
   };
 
+  const handleEdit = (violation: Violation) => {
+    setEditingViolation(violation);
+    setFormData({
+      customer_id: violation.customer_id,
+      violation_type: violation.violation_type,
+      description: violation.description,
+      severity: violation.severity,
+    });
+    setOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingViolation) return;
+
+    try {
+      const selectedCustomer = customers.find(c => c.id === formData.customer_id);
+      
+      const { error } = await supabase
+        .from('violations')
+        .update({
+          customer_id: formData.customer_id,
+          cart_name: selectedCustomer?.cart_name,
+          cart_number: selectedCustomer?.cart_number,
+          violation_type: formData.violation_type,
+          description: formData.description,
+          severity: formData.severity,
+        })
+        .eq('id', editingViolation.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Violation updated',
+        description: 'The violation has been successfully updated.',
+      });
+
+      setOpen(false);
+      setEditingViolation(null);
+      setFormData({
+        customer_id: '',
+        violation_type: '',
+        description: '',
+        severity: 'medium',
+      });
+      fetchViolations();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error updating violation',
+        description: error.message,
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      // First delete associated images
+      const { error: imagesError } = await supabase
+        .from('violation_images')
+        .delete()
+        .eq('violation_id', id);
+
+      if (imagesError) throw imagesError;
+
+      // Then delete the violation
+      const { error } = await supabase
+        .from('violations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Violation deleted',
+        description: 'The violation has been successfully deleted.',
+      });
+      fetchViolations();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error deleting violation',
+        description: error.message,
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setEditingViolation(null);
+    setFormData({
+      customer_id: '',
+      violation_type: '',
+      description: '',
+      severity: 'medium',
+    });
+    setSelectedImages([]);
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical': return 'destructive';
@@ -243,15 +348,18 @@ export default function Violations() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Cart Violations</h1>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+            if (!isOpen) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button>Report Violation</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Report Cart Violation</DialogTitle>
+                <DialogTitle>{editingViolation ? 'Edit Violation' : 'Report Cart Violation'}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={editingViolation ? handleUpdate : handleSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="customer">Customer</Label>
                   <Select
@@ -314,25 +422,27 @@ export default function Violations() {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="images">Images (optional)</Label>
-                  <Input
-                    id="images"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageChange}
-                  />
-                  {selectedImages.length > 0 && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {selectedImages.length} image(s) selected
-                    </p>
-                  )}
-                </div>
+                {!editingViolation && (
+                  <div>
+                    <Label htmlFor="images">Images (optional)</Label>
+                    <Input
+                      id="images"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageChange}
+                    />
+                    {selectedImages.length > 0 && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {selectedImages.length} image(s) selected
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <Button type="submit" className="w-full">
                   <Upload className="mr-2 h-4 w-4" />
-                  Submit Report
+                  {editingViolation ? 'Update Violation' : 'Submit Report'}
                 </Button>
               </form>
             </DialogContent>
@@ -420,6 +530,41 @@ export default function Violations() {
                     </>
                   )}
                 </div>
+
+                {hasRole('admin') && (
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(violation)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete this violation and all associated images. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
 
                 <p className="text-xs text-muted-foreground">
                   Reported: {new Date(violation.created_at).toLocaleString()}
