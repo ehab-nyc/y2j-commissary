@@ -103,6 +103,7 @@ const Admin = () => {
       .select(`
         *,
         profiles!orders_customer_id_fkey(email, full_name),
+        assigned_worker:profiles!orders_assigned_worker_id_fkey(full_name, email),
         order_items(
           *,
           box_size,
@@ -483,9 +484,11 @@ const Admin = () => {
             .customer-info {
               margin-bottom: 15px;
               padding: 8px;
-              background-color: #f9fafb;
+              background-color: #f3f4f6;
+              border: 1.5px solid #000;
               border-radius: 4px;
               font-size: 9px;
+              font-weight: 600;
             }
             table {
               width: 100%;

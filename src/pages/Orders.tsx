@@ -79,6 +79,7 @@ const Orders = () => {
       .from('orders')
       .select(`
         *,
+        assigned_worker:profiles!orders_assigned_worker_id_fkey(full_name, email),
         order_items(
           id,
           quantity,
