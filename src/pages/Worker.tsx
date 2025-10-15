@@ -149,8 +149,8 @@ const Worker = () => {
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 800px;
-              height: 800px;
+              width: 1600px;
+              height: 1600px;
               background-image: url('${logoUrl}');
               background-size: contain;
               background-repeat: no-repeat;
