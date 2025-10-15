@@ -455,8 +455,8 @@ const Admin = () => {
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 400px;
-              height: 400px;
+              width: 600px;
+              height: 600px;
               background-image: url('${logoUrl}');
               background-size: contain;
               background-repeat: no-repeat;
@@ -478,8 +478,8 @@ const Admin = () => {
               gap: 15px;
             }
             .logo {
-              max-height: 60px;
-              max-width: 120px;
+              max-height: 100px;
+              max-width: 200px;
             }
             .company-name {
               font-size: 24px;
