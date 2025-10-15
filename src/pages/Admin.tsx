@@ -424,7 +424,16 @@ const Admin = () => {
           <title>Order #${order.id.slice(0, 8)}</title>
           <style>
             @media print {
-              @page { margin: 0.5in; }
+              @page { 
+                margin: 0.5in;
+                size: auto;
+              }
+              @page :footer {
+                display: none;
+              }
+              @page :header {
+                display: none;
+              }
             }
             body {
               font-family: system-ui, -apple-system, sans-serif;
