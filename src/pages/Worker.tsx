@@ -154,7 +154,7 @@ const Worker = () => {
               margin: 0 auto;
               padding: 15px;
               position: relative;
-              font-size: 11px;
+              font-size: 9px;
             }
             body::before {
               content: '';
@@ -192,52 +192,52 @@ const Worker = () => {
               max-width: 120px;
             }
             .company-name {
-              font-size: 16px;
+              font-size: 13px;
               font-weight: bold;
             }
             .order-info {
               text-align: right;
-              font-size: 11px;
+              font-size: 9px;
             }
             .order-info h2 {
-              font-size: 14px;
+              font-size: 12px;
               margin: 0 0 5px 0;
             }
             .customer-info {
               margin-bottom: 15px;
-              padding: 10px;
+              padding: 8px;
               background-color: #f3f4f6;
               border: 1.5px solid #000;
               border-radius: 4px;
-              font-size: 11px;
+              font-size: 9px;
               font-weight: 600;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin: 15px 0;
-              font-size: 10px;
+              margin: 12px 0;
+              font-size: 8px;
             }
             th {
               background-color: #f3f4f6;
-              padding: 6px;
+              padding: 5px;
               text-align: left;
               border-bottom: 1.5px solid #000;
-              font-size: 10px;
+              font-size: 8px;
             }
             td {
-              padding: 5px 6px;
+              padding: 4px 5px;
             }
             .total-row {
               font-weight: bold;
-              font-size: 12px;
+              font-size: 10px;
             }
             .notes {
-              margin-top: 20px;
-              padding: 10px;
+              margin-top: 15px;
+              padding: 8px;
               background-color: #f9fafb;
               border-left: 3px solid #000;
-              font-size: 10px;
+              font-size: 8px;
             }
           </style>
         </head>
@@ -247,8 +247,8 @@ const Worker = () => {
               ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
               <div>
                 <div class="company-name">${companyName}</div>
-                ${companyAddress ? `<div style="font-size: 9px; margin-top: 3px;">${companyAddress}</div>` : ''}
-                ${companyEmail ? `<div style="font-size: 9px; margin-top: 2px;">${companyEmail}</div>` : ''}
+                ${companyAddress ? `<div style="font-size: 8px; margin-top: 3px;">${companyAddress}</div>` : ''}
+                ${companyEmail ? `<div style="font-size: 8px; margin-top: 2px;">${companyEmail}</div>` : ''}
               </div>
             </div>
             <div class="order-info">
@@ -283,8 +283,8 @@ const Worker = () => {
           </table>
           
           ${order.assigned_worker ? `
-            <div style="margin-top: 15px; padding: 10px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
-              <p style="margin: 0; font-size: 11px; color: #000;">
+            <div style="margin-top: 12px; padding: 8px; background-color: #f3f4f6; border: 1px solid #000; border-radius: 4px;">
+              <p style="margin: 0; font-size: 9px; color: #000;">
                 <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
               </p>
             </div>
