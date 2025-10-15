@@ -58,6 +58,7 @@ const Manager = () => {
       .select(`
         *,
         profiles!orders_customer_id_fkey(email, full_name),
+        assigned_worker:profiles!orders_assigned_worker_id_fkey(full_name, email),
         order_items(
           id,
           quantity,
@@ -254,14 +255,22 @@ const Manager = () => {
                 <td style="padding: 15px 8px; text-align: right;">$${Number(order.total).toFixed(2)}</td>
               </tr>
             </tbody>
-          </table>
-          
-          <script>
-            window.onload = () => {
-              window.print();
-              window.onafterprint = () => window.close();
-            };
-          </script>
+           </table>
+           
+           ${order.assigned_worker ? `
+             <div style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
+               <p style="margin: 0; font-size: 12px; color: #666;">
+                 <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
+               </p>
+             </div>
+           ` : ''}
+           
+           <script>
+             window.onload = () => {
+               window.print();
+               window.onafterprint = () => window.close();
+             };
+           </script>
         </body>
       </html>
     `;
@@ -526,6 +535,14 @@ const Manager = () => {
                           <h3 className="font-semibold mb-2 text-sm">Customer Notes</h3>
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                             {selectedOrder.notes}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedOrder.assigned_worker && (
+                        <div className="p-3 bg-muted/30 rounded-lg">
+                          <p className="text-xs text-muted-foreground">
+                            Completed by: <span className="font-medium text-foreground">{selectedOrder.assigned_worker.full_name || selectedOrder.assigned_worker.email}</span>
                           </p>
                         </div>
                       )}

@@ -23,6 +23,10 @@ interface Order {
     full_name: string | null;
     email: string;
   } | null;
+  assigned_worker?: {
+    full_name: string | null;
+    email: string;
+  } | null;
   order_items: Array<{
     quantity: number;
     price: number;
@@ -70,6 +74,7 @@ const Worker = () => {
       .select(`
         *,
         profiles!orders_customer_id_fkey(full_name, email),
+        assigned_worker:profiles!orders_assigned_worker_id_fkey(full_name, email),
         order_items(
           quantity,
           price,
@@ -89,9 +94,16 @@ const Worker = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const updateData: any = { status: newStatus };
+    if (newStatus === 'completed' && user) {
+      updateData.assigned_worker_id = user.id;
+    }
+    
     const { error } = await supabase
       .from('orders')
-      .update({ status: newStatus })
+      .update(updateData)
       .eq('id', orderId);
 
     if (error) {
@@ -247,12 +259,20 @@ const Worker = () => {
             </thead>
             <tbody>
               ${itemsHtml}
-              <tr class="total-row">
+               <tr class="total-row">
                 <td colspan="4" style="padding: 15px 8px; text-align: right;">TOTAL:</td>
                 <td style="padding: 15px 8px; text-align: right;">$${order.total.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
+          
+          ${order.assigned_worker ? `
+            <div style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
+              <p style="margin: 0; font-size: 12px; color: #666;">
+                <strong>Completed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}
+              </p>
+            </div>
+          ` : ''}
           
           <script>
             window.onload = () => {
@@ -355,6 +375,13 @@ const Worker = () => {
                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">
                         {order.notes}
                       </div>
+                    </div>
+                  )}
+                  {order.assigned_worker && (
+                    <div className="p-3 border-t bg-muted/20">
+                      <p className="text-xs text-muted-foreground">
+                        Completed by: <span className="font-medium text-foreground">{order.assigned_worker.full_name || order.assigned_worker.email}</span>
+                      </p>
                     </div>
                   )}
                   <div className="p-4 bg-muted/50 flex gap-2">
