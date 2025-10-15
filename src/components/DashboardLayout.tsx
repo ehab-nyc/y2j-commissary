@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle } from 'lucide-react';
+import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
+import { useTranslation } from 'react-i18next';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +22,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [companyName, setCompanyName] = useState('Commissary');
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lng;
+  };
 
   useEffect(() => {
     fetchCompanyName();
@@ -38,13 +52,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const navItems = [
-    { path: '/products', label: 'Products', icon: ShoppingBag, show: true },
-    { path: '/orders', label: 'My Orders', icon: ShoppingCart, show: hasRole('customer') },
-    { path: '/worker', label: 'Orders Queue', icon: Package, show: hasRole('worker') || hasRole('manager') },
-    { path: '/manager', label: 'Management', icon: BarChart3, show: hasRole('manager') },
-    { path: '/violations', label: 'Violations', icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') },
-    { path: '/admin', label: 'Admin Panel', icon: Users, show: hasRole('admin') },
-    { path: '/profile', label: 'Profile', icon: UserCircle, show: true },
+    { path: '/products', label: t('nav.products'), icon: ShoppingBag, show: true },
+    { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
+    { path: '/worker', label: t('nav.ordersQueue'), icon: Package, show: hasRole('worker') || hasRole('manager') },
+    { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
+    { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') },
+    { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') },
+    { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];
 
   return (
@@ -81,9 +95,25 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 {user?.email}
               </span>
               <NotificationBell />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Languages className="w-4 h-4" />
+                    {i18n.language === 'ar' ? 'عربي' : 'EN'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => changeLanguage('en')}>
+                    English
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changeLanguage('ar')}>
+                    العربية
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
                 <LogOut className="w-4 h-4" />
-                Sign Out
+                {t('nav.signOut')}
               </Button>
             </div>
           </div>

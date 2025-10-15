@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "products": "المنتجات",
+    "myOrders": "طلباتي",
+    "ordersQueue": "قائمة الطلبات",
+    "management": "الإدارة",
+    "violations": "المخالفات",
+    "adminPanel": "لوحة المدير",
+    "profile": "الملف الشخصي",
+    "signOut": "تسجيل الخروج"
+  },
+  "violations": {
+    "title": "مخالفات العربات",
+    "reportViolation": "الإبلاغ عن مخالفة",
+    "customer": "العميل",
+    "violationType": "نوع المخالفة",
+    "severity": "الخطورة",
+    "description": "الوصف",
+    "images": "الصور",
+    "submit": "إرسال التقرير",
+    "status": "الحالة",
+    "pending": "قيد الانتظار",
+    "inReview": "قيد المراجعة",
+    "resolved": "تم الحل",
+    "dismissed": "مرفوض",
+    "reportedBy": "تم الإبلاغ بواسطة",
+    "cart": "العربة",
+    "resolutionNotes": "ملاحظات الحل",
+    "updateStatus": "تحديث الحالة",
+    "addResolutionNotes": "إضافة ملاحظات الحل"
+  },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف",
+    "cartName": "اسم العربة",
+    "cartNumber": "رقم العربة"
+  }
+}

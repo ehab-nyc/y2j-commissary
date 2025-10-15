@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "products": "Products",
+    "myOrders": "My Orders",
+    "ordersQueue": "Orders Queue",
+    "management": "Management",
+    "violations": "Violations",
+    "adminPanel": "Admin Panel",
+    "profile": "Profile",
+    "signOut": "Sign Out"
+  },
+  "violations": {
+    "title": "Cart Violations",
+    "reportViolation": "Report Violation",
+    "customer": "Customer",
+    "violationType": "Violation Type",
+    "severity": "Severity",
+    "description": "Description",
+    "images": "Images",
+    "submit": "Submit Report",
+    "status": "Status",
+    "pending": "Pending",
+    "inReview": "In Review",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed",
+    "reportedBy": "Reported By",
+    "cart": "Cart",
+    "resolutionNotes": "Resolution Notes",
+    "updateStatus": "Update Status",
+    "addResolutionNotes": "Add Resolution Notes"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "cartName": "Cart Name",
+    "cartNumber": "Cart Number"
+  }
+}
