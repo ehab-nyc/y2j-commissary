@@ -72,3 +72,27 @@ export const settingsSchema = z.object({
     .optional()
     .or(z.literal(''))
 });
+
+// Violation validation schema
+export const violationSchema = z.object({
+  customer_id: z.string().uuid('Invalid customer'),
+  violation_type: z.string()
+    .trim()
+    .min(1, 'Violation type is required')
+    .max(100, 'Violation type must be less than 100 characters'),
+  severity: z.enum(['low', 'medium', 'high', 'critical'], {
+    errorMap: () => ({ message: 'Invalid severity level' })
+  }),
+  description: z.string()
+    .trim()
+    .min(10, 'Description must be at least 10 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
+  cart_name: z.string()
+    .trim()
+    .max(200, 'Cart name must be less than 200 characters')
+    .optional(),
+  cart_number: z.string()
+    .trim()
+    .max(50, 'Cart number must be less than 50 characters')
+    .optional()
+});

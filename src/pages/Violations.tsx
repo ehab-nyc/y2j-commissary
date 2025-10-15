@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit } from 'lucide-react';
+import { violationSchema } from '@/lib/validation';
 
 interface Customer {
   id: string;
@@ -82,7 +83,35 @@ export default function Violations() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setViolations(data as Violation[] || []);
+      
+      // Get signed URLs for all violation images
+      const violationsWithSignedUrls = await Promise.all(
+        (data || []).map(async (violation) => {
+          const imagesWithSignedUrls = await Promise.all(
+            violation.images.map(async (image: any) => {
+              const path = image.image_url.split('/violation-images/')[1];
+              if (path) {
+                const { data: signedUrl } = await supabase.storage
+                  .from('violation-images')
+                  .createSignedUrl(path, 3600); // 1 hour expiration
+                
+                return {
+                  ...image,
+                  image_url: signedUrl?.signedUrl || image.image_url
+                };
+              }
+              return image;
+            })
+          );
+          
+          return {
+            ...violation,
+            images: imagesWithSignedUrls
+          };
+        })
+      );
+      
+      setViolations(violationsWithSignedUrls as Violation[] || []);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -125,6 +154,26 @@ export default function Violations() {
     try {
       const selectedCustomer = customers.find(c => c.id === formData.customer_id);
       
+      // Validate input data
+      const validationResult = violationSchema.safeParse({
+        customer_id: formData.customer_id,
+        violation_type: formData.violation_type,
+        severity: formData.severity,
+        description: formData.description,
+        cart_name: selectedCustomer?.cart_name || undefined,
+        cart_number: selectedCustomer?.cart_number || undefined,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          variant: 'destructive',
+          title: 'Validation Error',
+          description: firstError.message,
+        });
+        return;
+      }
+      
       const { data: violation, error: violationError } = await supabase
         .from('violations')
         .insert({
@@ -151,13 +200,10 @@ export default function Violations() {
 
           if (uploadError) throw uploadError;
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('violation-images')
-            .getPublicUrl(fileName);
-
+          // Store the path in the database, not the public URL
           await supabase.from('violation_images').insert({
             violation_id: violation.id,
-            image_url: publicUrl,
+            image_url: `violation-images/${fileName}`,
           });
         }
       }
@@ -233,6 +279,26 @@ export default function Violations() {
 
     try {
       const selectedCustomer = customers.find(c => c.id === formData.customer_id);
+      
+      // Validate input data
+      const validationResult = violationSchema.safeParse({
+        customer_id: formData.customer_id,
+        violation_type: formData.violation_type,
+        severity: formData.severity,
+        description: formData.description,
+        cart_name: selectedCustomer?.cart_name || undefined,
+        cart_number: selectedCustomer?.cart_number || undefined,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          variant: 'destructive',
+          title: 'Validation Error',
+          description: firstError.message,
+        });
+        return;
+      }
       
       const { error } = await supabase
         .from('violations')
