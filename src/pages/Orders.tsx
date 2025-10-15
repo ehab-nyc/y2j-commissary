@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { Trash2, Edit, MessageSquare } from 'lucide-react';
+import { Trash2, Edit, MessageSquare, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -42,10 +42,27 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesText, setNotesText] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
 
   useEffect(() => {
     fetchOrders();
+    fetchCompanySettings();
   }, []);
+
+  const fetchCompanySettings = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('key, value')
+      .in('key', ['company_name', 'logo_url']);
+    
+    if (data) {
+      const nameEntry = data.find(s => s.key === 'company_name');
+      const logoEntry = data.find(s => s.key === 'logo_url');
+      setCompanyName(nameEntry?.value || 'Company');
+      setLogoUrl(logoEntry?.value || '');
+    }
+  };
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
@@ -223,6 +240,135 @@ const Orders = () => {
     }
   };
 
+  const printOrder = (order: Order) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsHtml = order.order_items.map(item => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.products.name}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.box_size || '1 box'}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${item.quantity}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${item.price.toFixed(2)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${(item.quantity * item.price).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Order #${order.id.slice(0, 8)}</title>
+          <style>
+            @media print {
+              @page { margin: 0.5in; }
+            }
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              max-width: 8.5in;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #000;
+            }
+            .logo-section {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
+            .logo {
+              max-height: 60px;
+              max-width: 120px;
+            }
+            .company-name {
+              font-size: 24px;
+              font-weight: bold;
+            }
+            .order-info {
+              text-align: right;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            th {
+              background-color: #f3f4f6;
+              padding: 10px;
+              text-align: left;
+              border-bottom: 2px solid #000;
+            }
+            .total-row {
+              font-weight: bold;
+              font-size: 18px;
+            }
+            .notes {
+              margin-top: 30px;
+              padding: 15px;
+              background-color: #f9fafb;
+              border-left: 4px solid #000;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo-section">
+              ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
+              <div class="company-name">${companyName}</div>
+            </div>
+            <div class="order-info">
+              <h2>Order #${order.id.slice(0, 8)}</h2>
+              <p>${format(new Date(order.created_at), 'PPp')}</p>
+              <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th style="text-align: center;">Box Size</th>
+                <th style="text-align: right;">Quantity</th>
+                <th style="text-align: right;">Price</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+              <tr class="total-row">
+                <td colspan="4" style="padding: 15px 8px; text-align: right;">TOTAL:</td>
+                <td style="padding: 15px 8px; text-align: right;">$${order.total.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          ${order.notes ? `
+            <div class="notes">
+              <strong>Order Notes:</strong>
+              <p>${order.notes}</p>
+            </div>
+          ` : ''}
+          
+          <script>
+            window.onload = () => {
+              window.print();
+              window.onafterprint = () => window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -260,6 +406,15 @@ const Orders = () => {
                       <span className="text-lg font-bold text-primary">
                         ${order.total.toFixed(2)}
                       </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => printOrder(order)}
+                        className="gap-1"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Print
+                      </Button>
                       {order.status === 'pending' && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
