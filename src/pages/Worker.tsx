@@ -262,8 +262,7 @@ const Worker = () => {
           </div>
           
           <div class="customer-info">
-            <strong>Customer:</strong> ${order.profiles?.full_name || 'Unknown'}<br/>
-            <strong>Email:</strong> ${order.profiles?.email || 'N/A'}${order.assigned_worker ? `<br/><strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}` : ''}
+            <strong>Customer:</strong> ${order.profiles?.full_name || 'Unknown'}${order.assigned_worker ? ` | <strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}` : ''}
           </div>
           
           <table>
