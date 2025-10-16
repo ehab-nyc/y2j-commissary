@@ -29,9 +29,18 @@ const CustomerViolations = () => {
   const fetchViolations = async () => {
     if (!user) return;
 
+    // Get user's cart number for explicit filtering
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('cart_number')
+      .eq('id', user.id)
+      .single();
+
+    // Explicit filtering for defense-in-depth security
     const { data, error } = await supabase
       .from('violations')
       .select('*')
+      .or(`customer_id.eq.${user.id},cart_number.eq.${profile?.cart_number}`)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
