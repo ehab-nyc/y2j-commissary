@@ -728,8 +728,11 @@ const Admin = () => {
                         name="price"
                         type="number"
                         step="0.01"
+                        min="0"
+                        max="999999.99"
                         defaultValue={editingProduct?.price}
                         required
+                        placeholder="0.00"
                       />
                     </div>
                     <div className="space-y-2">
