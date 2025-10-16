@@ -94,6 +94,14 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Broadcast deletion event to force immediate logout on client
+    const channel = supabaseAdmin.channel('user-deletions')
+    await channel.send({
+      type: 'broadcast',
+      event: 'user-deleted',
+      payload: { userId }
+    })
+
     return new Response(
       JSON.stringify({ success: true, message: 'User deleted successfully' }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

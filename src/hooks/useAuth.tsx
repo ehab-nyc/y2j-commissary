@@ -66,8 +66,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Listen for user deletion broadcasts to force immediate logout
+    const channel = supabase.channel('user-deletions');
+    channel
+      .on('broadcast', { event: 'user-deleted' }, async (payload) => {
+        const deletedUserId = payload.payload?.userId;
+        if (deletedUserId && deletedUserId === user?.id) {
+          console.log('User deleted by admin, logging out...');
+          await supabase.auth.signOut();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      channel.unsubscribe();
+    };
+  }, [user?.id]);
 
   const hasRole = (role: UserRole) => roles.includes(role);
 
