@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 
@@ -22,6 +23,7 @@ interface Violation {
 const CustomerViolations = () => {
   const { user } = useAuth();
   const [violations, setViolations] = useState<Violation[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchViolations();
@@ -168,7 +170,8 @@ const CustomerViolations = () => {
                               key={image.id}
                               src={image.image_url}
                               alt="Violation"
-                              className="rounded-lg object-cover w-full h-32"
+                              className="rounded-lg object-cover w-full h-32 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => setSelectedImage(image.image_url)}
                             />
                           ))}
                         </div>
@@ -181,6 +184,25 @@ const CustomerViolations = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-7xl w-full p-0 bg-black/95">
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-50 bg-background text-foreground p-2"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt="Violation full screen"
+              className="w-full h-auto max-h-[90vh] object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

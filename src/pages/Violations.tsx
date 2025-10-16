@@ -53,6 +53,7 @@ export default function Violations() {
   const [open, setOpen] = useState(false);
   const [editingViolation, setEditingViolation] = useState<Violation | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
     customer_id: string;
     violation_type: string;
@@ -558,7 +559,8 @@ export default function Violations() {
                         key={image.id}
                         src={image.image_url}
                         alt="Violation"
-                        className="rounded-lg object-cover w-full h-32"
+                        className="rounded-lg object-cover w-full h-32 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setFullScreenImage(image.image_url)}
                       />
                     ))}
                   </div>
@@ -656,6 +658,25 @@ export default function Violations() {
           )}
         </div>
       </div>
+
+      <Dialog open={!!fullScreenImage} onOpenChange={() => setFullScreenImage(null)}>
+        <DialogContent className="max-w-7xl w-full p-0 bg-black/95">
+          <button
+            onClick={() => setFullScreenImage(null)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-50 bg-background text-foreground p-2"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+          {fullScreenImage && (
+            <img
+              src={fullScreenImage}
+              alt="Violation full screen"
+              className="w-full h-auto max-h-[90vh] object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
