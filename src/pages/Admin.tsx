@@ -301,6 +301,40 @@ const Admin = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    // First delete user roles
+    const { error: rolesError } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
+
+    if (rolesError) {
+      toast.error('Failed to delete user roles');
+      return;
+    }
+
+    // Then delete profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (profileError) {
+      toast.error('Failed to delete user profile');
+      return;
+    }
+
+    // Finally delete auth user using admin API
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+    if (authError) {
+      toast.error('Failed to delete user account');
+    } else {
+      toast.success(`User ${userEmail} deleted successfully`);
+      fetchUsers();
+    }
+  };
+
   const handleSaveCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -1191,29 +1225,57 @@ const Admin = () => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="gap-2">
-                                <KeyRound className="w-4 h-4" />
-                                Reset Password
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Reset Password</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will send a password reset email to {user.email}. 
-                                  Are you sure you want to continue?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleResetUserPassword(user.id, user.email)}>
-                                  Send Reset Email
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <div className="flex gap-2 justify-end">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                  <KeyRound className="w-4 h-4" />
+                                  Reset Password
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Reset Password</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will send a password reset email to {user.email}. 
+                                    Are you sure you want to continue?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleResetUserPassword(user.id, user.email)}>
+                                    Send Reset Email
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete User
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to permanently delete {user.email}? This will delete their profile, roles, and account. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteUser(user.id, user.email)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete User
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
