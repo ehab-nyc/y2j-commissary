@@ -16,6 +16,7 @@ interface Violation {
   created_at: string;
   cart_number: string | null;
   cart_name: string | null;
+  images: { id: string; image_url: string }[];
 }
 
 const CustomerViolations = () => {
@@ -39,12 +40,49 @@ const CustomerViolations = () => {
     // Explicit filtering for defense-in-depth security
     const { data, error } = await supabase
       .from('violations')
-      .select('*')
+      .select(`
+        *,
+        images:violation_images(id, image_url)
+      `)
       .or(`customer_id.eq.${user.id},cart_number.eq.${profile?.cart_number}`)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setViolations(data || []);
+      // Generate signed URLs for violation images
+      const violationsWithSignedUrls = await Promise.all(
+        (data || []).map(async (violation) => {
+          const imagesWithSignedUrls = await Promise.all(
+            (violation.images || []).map(async (image: any) => {
+              // Extract path from stored format: "violation-images/path/file.jpg"
+              const path = image.image_url.replace('violation-images/', '');
+              
+              if (path) {
+                const { data: signedUrl, error: urlError } = await supabase.storage
+                  .from('violation-images')
+                  .createSignedUrl(path, 3600); // 1 hour expiration
+                
+                if (urlError) {
+                  console.error('Error generating signed URL:', urlError);
+                  return image;
+                }
+                
+                return {
+                  ...image,
+                  image_url: signedUrl?.signedUrl || image.image_url
+                };
+              }
+              return image;
+            })
+          );
+          
+          return {
+            ...violation,
+            images: imagesWithSignedUrls
+          };
+        })
+      );
+      
+      setViolations(violationsWithSignedUrls as Violation[]);
     }
   };
 
@@ -122,6 +160,19 @@ const CustomerViolations = () => {
                         </p>
                       )}
                       <p className="text-sm">{violation.description}</p>
+                      
+                      {violation.images && violation.images.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                          {violation.images.map((image) => (
+                            <img
+                              key={image.id}
+                              src={image.image_url}
+                              alt="Violation"
+                              className="rounded-lg object-cover w-full h-32"
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
