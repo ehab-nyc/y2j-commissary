@@ -156,7 +156,7 @@ const CustomerViolations = () => {
                       </div>
                       {violation.cart_number && (
                         <p className="text-sm text-muted-foreground mb-2">
-                          Cart: {violation.cart_name || violation.cart_number}
+                          Cart: {violation.cart_name ? `${violation.cart_name} (${violation.cart_number})` : violation.cart_number}
                         </p>
                       )}
                       <p className="text-sm">{violation.description}</p>
