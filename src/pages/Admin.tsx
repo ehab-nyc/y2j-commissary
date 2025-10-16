@@ -302,36 +302,28 @@ const Admin = () => {
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
-    // First delete user roles
-    const { error: rolesError } = await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId);
+    try {
+      // Call edge function to delete user
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
 
-    if (rolesError) {
-      toast.error('Failed to delete user roles');
-      return;
-    }
+      if (error) {
+        console.error('Delete user error:', error);
+        toast.error(error.message || 'Failed to delete user');
+        return;
+      }
 
-    // Then delete profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
 
-    if (profileError) {
-      toast.error('Failed to delete user profile');
-      return;
-    }
-
-    // Finally delete auth user using admin API
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-    if (authError) {
-      toast.error('Failed to delete user account');
-    } else {
       toast.success(`User ${userEmail} deleted successfully`);
       fetchUsers();
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
+      toast.error('Failed to delete user');
     }
   };
 
