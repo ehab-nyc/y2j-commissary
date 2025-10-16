@@ -54,6 +54,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navItems = [
     { path: '/products', label: t('nav.products'), icon: ShoppingBag, show: true },
     { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
+    { path: '/my-violations', label: 'My Violations', icon: AlertCircle, show: hasRole('customer') },
     { path: '/worker', label: t('nav.ordersQueue'), icon: Package, show: hasRole('worker') || hasRole('manager') },
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
     { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') },
