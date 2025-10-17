@@ -58,11 +58,25 @@ const Orders = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
+  const [serviceFee, setServiceFee] = useState<number>(10);
 
   useEffect(() => {
     fetchOrders();
     fetchCompanySettings();
+    fetchServiceFee();
   }, []);
+
+  const fetchServiceFee = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'service_fee')
+      .single();
+    
+    if (data) {
+      setServiceFee(parseFloat(data.value) || 10);
+    }
+  };
 
   const fetchCompanySettings = async () => {
     const { data } = await supabase
@@ -405,6 +419,14 @@ const Orders = () => {
             </thead>
             <tbody>
               ${itemsHtml}
+              <tr>
+                <td colspan="4" style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">Subtotal:</td>
+                <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$${(order.total - serviceFee).toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">Service Fee:</td>
+                <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$${serviceFee.toFixed(2)}</td>
+              </tr>
               <tr class="total-row">
                 <td colspan="4" style="padding: 15px 8px; text-align: right;">TOTAL:</td>
                 <td style="padding: 15px 8px; text-align: right;">$${order.total.toFixed(2)}</td>
@@ -561,6 +583,33 @@ const Orders = () => {
                           )}
                         </TableRow>
                       ))}
+                      <TableRow className="border-t">
+                        <TableCell colSpan={order.status === 'pending' ? 4 : 4} className="text-right font-medium">
+                          Subtotal:
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          ${(order.total - serviceFee).toFixed(2)}
+                        </TableCell>
+                        {order.status === 'pending' && <TableCell></TableCell>}
+                      </TableRow>
+                      <TableRow>
+                        <TableCell colSpan={order.status === 'pending' ? 4 : 4} className="text-right font-medium">
+                          Service Fee:
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          ${serviceFee.toFixed(2)}
+                        </TableCell>
+                        {order.status === 'pending' && <TableCell></TableCell>}
+                      </TableRow>
+                      <TableRow className="bg-muted/50">
+                        <TableCell colSpan={order.status === 'pending' ? 4 : 4} className="text-right font-bold">
+                          Total:
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-primary">
+                          ${order.total.toFixed(2)}
+                        </TableCell>
+                        {order.status === 'pending' && <TableCell></TableCell>}
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </CardContent>

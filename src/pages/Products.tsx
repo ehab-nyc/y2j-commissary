@@ -366,11 +366,18 @@ const Products = () => {
           </div>
           
           {cartCount > 0 && (
-            <Button onClick={placeOrder} size="lg" className="gap-2 shadow-elevated">
-              <ShoppingCart className="w-5 h-5" />
-              {t('products.placeOrder')} (${cartTotal.toFixed(2)})
-              <Badge variant="secondary" className="ml-1">{cartCount}</Badge>
-            </Button>
+            <div className="flex flex-col gap-2 items-end">
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>Subtotal: ${cartSubtotal.toFixed(2)}</div>
+                <div>Service Fee: ${serviceFee.toFixed(2)}</div>
+                <div className="font-semibold text-foreground">Total: ${cartTotal.toFixed(2)}</div>
+              </div>
+              <Button onClick={placeOrder} size="lg" className="gap-2 shadow-elevated">
+                <ShoppingCart className="w-5 h-5" />
+                {t('products.placeOrder')}
+                <Badge variant="secondary" className="ml-1">{cartCount}</Badge>
+              </Button>
+            </div>
           )}
         </div>
 
