@@ -40,6 +40,7 @@ const Admin = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
+  const [serviceFee, setServiceFee] = useState<number>(10);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -50,7 +51,20 @@ const Admin = () => {
     fetchOrders();
     fetchSettings();
     fetchCompanySettings();
+    fetchServiceFee();
   }, []);
+
+  const fetchServiceFee = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'service_fee')
+      .single();
+    
+    if (data) {
+      setServiceFee(parseFloat(data.value) || 10);
+    }
+  };
 
   const fetchCompanySettings = async () => {
     const { data } = await supabase
@@ -584,6 +598,14 @@ const Admin = () => {
             </thead>
             <tbody>
               ${itemsHtml}
+              <tr>
+                <td colspan="4" style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">Subtotal:</td>
+                <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$${(Number(order.total) - serviceFee).toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">Service Fee:</td>
+                <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb;">$${serviceFee.toFixed(2)}</td>
+              </tr>
               <tr class="total-row">
                 <td colspan="4" style="padding: 15px 8px; text-align: right;">TOTAL:</td>
                 <td style="padding: 15px 8px; text-align: right;">$${Number(order.total).toFixed(2)}</td>
@@ -1166,6 +1188,30 @@ const Admin = () => {
                               </TableCell>
                             </TableRow>
                           ))}
+                          <TableRow className="border-t">
+                            <TableCell colSpan={4} className="text-right font-medium">
+                              Subtotal:
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ${(Number(selectedOrder.total) - serviceFee).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-right font-medium">
+                              Service Fee:
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ${serviceFee.toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow className="bg-muted/50">
+                            <TableCell colSpan={4} className="text-right font-bold">
+                              Total:
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-primary">
+                              ${Number(selectedOrder.total).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
                         </TableBody>
                       </Table>
                     </div>
