@@ -40,12 +40,26 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [boxSizes, setBoxSizes] = useState<Record<string, string>>({});
+  const [serviceFee, setServiceFee] = useState<number>(10);
 
   useEffect(() => {
     fetchProducts(true); // Reset box sizes on initial load
     fetchCategories();
     loadCartFromEdit();
+    fetchServiceFee();
   }, []);
+
+  const fetchServiceFee = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'service_fee')
+      .single();
+    
+    if (data) {
+      setServiceFee(parseFloat(data.value) || 10);
+    }
+  };
 
   const loadCartFromEdit = async () => {
     const editCartData = localStorage.getItem('editOrderCart');
@@ -247,10 +261,11 @@ const Products = () => {
     // - recalculate_order_item_price: Overrides item prices with current product prices
     // - recalculate_order_total: Recalculates order total from validated item prices
     // This ensures tampering with client-side prices has no effect on actual charges.
-    const total = cart.reduce((sum, item) => {
+    const subtotal = cart.reduce((sum, item) => {
       const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
       return sum + pricePerUnit * item.quantity;
     }, 0);
+    const total = subtotal + serviceFee;
 
     // Check if we're editing an existing order
     const editOrderId = localStorage.getItem('editOrderId');
@@ -325,10 +340,11 @@ const Products = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const cartTotal = cart.reduce((sum, item) => {
+  const cartSubtotal = cart.reduce((sum, item) => {
     const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
     return sum + pricePerUnit * item.quantity;
   }, 0);
+  const cartTotal = cartSubtotal + serviceFee;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (

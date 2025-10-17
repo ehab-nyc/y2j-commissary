@@ -29,7 +29,7 @@ const Admin = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedBoxSizes, setSelectedBoxSizes] = useState<string[]>(['1 box']);
-  const [settings, setSettings] = useState({ company_name: '', logo_url: '', login_background_url: '', login_blur_amount: '2' });
+  const [settings, setSettings] = useState({ company_name: '', logo_url: '', login_background_url: '', login_blur_amount: '2', service_fee: '10' });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bgFile, setBgFile] = useState<File | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -118,7 +118,7 @@ const Admin = () => {
     const { data } = await supabase
       .from('app_settings')
       .select('key, value')
-      .in('key', ['company_name', 'logo_url', 'login_background_url', 'login_blur_amount']);
+      .in('key', ['company_name', 'logo_url', 'login_background_url', 'login_blur_amount', 'service_fee']);
     
     if (data) {
       const settingsObj = data.reduce((acc: any, item) => {
@@ -129,7 +129,8 @@ const Admin = () => {
         company_name: settingsObj.company_name || 'Commissary System',
         logo_url: settingsObj.logo_url || '',
         login_background_url: settingsObj.login_background_url || '',
-        login_blur_amount: settingsObj.login_blur_amount || '2'
+        login_blur_amount: settingsObj.login_blur_amount || '2',
+        service_fee: settingsObj.service_fee || '10'
       });
     }
   };
@@ -1373,6 +1374,41 @@ const Admin = () => {
                     className="mt-2"
                   >
                     Upload Logo
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="serviceFee">Service Fee ($)</Label>
+                  <Input
+                    id="serviceFee"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={settings.service_fee || '0'}
+                    onChange={(e) => setSettings({ ...settings, service_fee: e.target.value })}
+                    placeholder="Enter service fee"
+                  />
+                  <Button 
+                    onClick={async () => {
+                      const fee = parseFloat(settings.service_fee || '0');
+                      if (isNaN(fee) || fee < 0) {
+                        toast.error('Please enter a valid service fee');
+                        return;
+                      }
+
+                      const { error } = await supabase
+                        .from('app_settings')
+                        .upsert({ key: 'service_fee', value: fee.toString() }, { onConflict: 'key' });
+                      
+                      if (error) {
+                        toast.error('Failed to update service fee');
+                      } else {
+                        toast.success('Service fee updated');
+                      }
+                    }}
+                    className="mt-2"
+                  >
+                    Save Service Fee
                   </Button>
                 </div>
 
