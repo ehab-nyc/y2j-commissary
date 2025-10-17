@@ -261,11 +261,20 @@ const Products = () => {
     // - recalculate_order_item_price: Overrides item prices with current product prices
     // - recalculate_order_total: Recalculates order total from validated item prices
     // This ensures tampering with client-side prices has no effect on actual charges.
+    // Fetch the latest service fee before placing order
+    const { data: feeData } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'service_fee')
+      .single();
+    
+    const currentServiceFee = feeData ? parseFloat(feeData.value) || 0 : 0;
+    
     const subtotal = cart.reduce((sum, item) => {
       const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
       return sum + pricePerUnit * item.quantity;
     }, 0);
-    const total = subtotal + serviceFee;
+    const total = subtotal + currentServiceFee;
 
     // Check if we're editing an existing order
     const editOrderId = localStorage.getItem('editOrderId');
