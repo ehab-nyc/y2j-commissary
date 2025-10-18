@@ -500,7 +500,7 @@ All colors MUST be HSL.
   font-size: 2rem;
   color: hsl(var(--accent) / 0.8);
   letter-spacing: 7rem;
-  animation: snowfall 11s linear infinite, twinkle 3s ease-in-out infinite;
+  animation: snowfall 11s linear infinite;
   pointer-events: none;
   z-index: 9999;
 }
@@ -514,7 +514,7 @@ All colors MUST be HSL.
   font-size: 1.5rem;
   color: hsl(var(--primary) / 0.6);
   letter-spacing: 9rem;
-  animation: snowfall 13s linear infinite 3s, twinkle 2s ease-in-out infinite;
+  animation: snowfall 13s linear infinite 3s;
   pointer-events: none;
   z-index: 9999;
 }
@@ -528,10 +528,11 @@ All colors MUST be HSL.
 .christmas-wonderland body::after {
   content: "❄ ❄ ❄ ❄ ❄";
   position: fixed;
+  top: -10vh;
   width: 100%;
   color: hsl(var(--accent) / 0.7);
   letter-spacing: 8rem;
-  animation: snowfall 16s linear infinite, twinkle 2.5s ease-in-out infinite;
+  animation: snowfall 16s linear infinite;
   pointer-events: none;
   z-index: 9999;
 }
@@ -539,16 +540,14 @@ All colors MUST be HSL.
 .christmas-wonderland body::before {
   left: 0;
   font-size: 1.8rem;
-  animation-delay: 4s;
-  animation-duration: 14s;
+  animation: snowfall 14s linear infinite 4s;
 }
 
 .christmas-wonderland body::after {
   left: 0;
   font-size: 1.4rem;
   letter-spacing: 10rem;
-  animation-delay: 7s;
-  animation-duration: 15s;
+  animation: snowfall 15s linear infinite 7s;
 }
 
 /* Elegant silver and blue glow effects for wonderland theme */
