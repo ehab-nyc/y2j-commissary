@@ -1459,14 +1459,17 @@ const Admin = () => {
                       const fileName = `logo.${fileExt}`;
                       const filePath = `${fileName}`;
 
+                      console.log('Uploading logo to:', filePath);
                       const { error: uploadError } = await supabase.storage
                         .from('branding')
                         .upload(filePath, logoFile, { upsert: true });
 
                       if (uploadError) {
-                        toast.error('Failed to upload logo');
+                        console.error('Logo upload error:', uploadError);
+                        toast.error(`Failed to upload logo: ${uploadError.message}`);
                         return;
                       }
+                      console.log('Logo uploaded successfully');
 
                       const { data } = supabase.storage
                         .from('branding')
@@ -1557,14 +1560,17 @@ const Admin = () => {
                       const fileName = `background.${fileExt}`;
                       const filePath = `${fileName}`;
 
+                      console.log('Uploading background to:', filePath);
                       const { error: uploadError } = await supabase.storage
                         .from('branding')
                         .upload(filePath, bgFile, { upsert: true });
 
                       if (uploadError) {
-                        toast.error('Failed to upload background');
+                        console.error('Background upload error:', uploadError);
+                        toast.error(`Failed to upload background: ${uploadError.message}`);
                         return;
                       }
+                      console.log('Background uploaded successfully');
 
                       const { data } = supabase.storage
                         .from('branding')
