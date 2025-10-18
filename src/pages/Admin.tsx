@@ -43,6 +43,8 @@ const Admin = () => {
   const [serviceFee, setServiceFee] = useState<number>(10);
   const [activeTheme, setActiveTheme] = useState<'default' | 'christmas' | 'christmas-wonderland'>('default');
   const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [showUserDialog, setShowUserDialog] = useState(false);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -374,6 +376,32 @@ const Admin = () => {
     } catch (error: any) {
       console.error('Unexpected error:', error);
       toast.error('Failed to delete user');
+    }
+  };
+
+  const handleUpdateUserProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const profileData = {
+      full_name: (formData.get('full_name') as string).trim(),
+      phone: (formData.get('phone') as string).trim() || null,
+      cart_name: (formData.get('cart_name') as string).trim() || null,
+      cart_number: (formData.get('cart_number') as string).trim() || null,
+    };
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(profileData)
+      .eq('id', editingUser.id);
+
+    if (error) {
+      toast.error('Failed to update user profile');
+    } else {
+      toast.success('User profile updated successfully');
+      setShowUserDialog(false);
+      setEditingUser(null);
+      fetchUsers();
     }
   };
 
@@ -1289,6 +1317,61 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
+            <Dialog open={showUserDialog} onOpenChange={(open) => {
+              setShowUserDialog(open);
+              if (!open) setEditingUser(null);
+            }}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit User Profile</DialogTitle>
+                  <DialogDescription>
+                    Update user profile information
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleUpdateUserProfile} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_full_name">Full Name</Label>
+                    <Input
+                      id="edit_full_name"
+                      name="full_name"
+                      defaultValue={editingUser?.full_name || ''}
+                      placeholder="Enter full name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_phone">Phone Number</Label>
+                    <Input
+                      id="edit_phone"
+                      name="phone"
+                      defaultValue={editingUser?.phone || ''}
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_cart_name">Cart Name</Label>
+                    <Input
+                      id="edit_cart_name"
+                      name="cart_name"
+                      defaultValue={editingUser?.cart_name || ''}
+                      placeholder="Enter cart name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_cart_number">Cart Number</Label>
+                    <Input
+                      id="edit_cart_number"
+                      name="cart_number"
+                      defaultValue={editingUser?.cart_number || ''}
+                      placeholder="Enter cart number"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Update Profile
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
             <Card>
               <CardHeader>
                 <CardTitle>User Management</CardTitle>
@@ -1299,6 +1382,7 @@ const Admin = () => {
                     <TableRow>
                       <TableHead>Email</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Cart Info</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -1308,6 +1392,13 @@ const Admin = () => {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.email}</TableCell>
                         <TableCell>{user.full_name || 'N/A'}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {user.cart_name && <div>{user.cart_name}</div>}
+                            {user.cart_number && <div className="text-muted-foreground">#{user.cart_number}</div>}
+                            {!user.cart_name && !user.cart_number && <span className="text-muted-foreground">—</span>}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Select
                             value={user.user_roles?.[0]?.role || 'customer'}
@@ -1325,12 +1416,21 @@ const Admin = () => {
                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
+                          <div className="flex gap-2 justify-end flex-wrap">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingUser(user);
+                                setShowUserDialog(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-2">
                                   <KeyRound className="w-4 h-4" />
-                                  Reset Password
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
@@ -1352,9 +1452,8 @@ const Admin = () => {
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2">
+                                <Button variant="outline" size="sm">
                                   <Trash2 className="w-4 h-4" />
-                                  Delete User
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
