@@ -123,10 +123,9 @@ const Admin = () => {
       `)
       .order('email');
     
-    // Filter out super_admin users
+    // Filter out super_admin users (check all roles, not just first)
     const filteredUsers = (data || []).filter(user => {
-      const userRole = user.user_roles?.[0]?.role;
-      return userRole !== 'super_admin';
+      return !user.user_roles?.some((ur: any) => ur.role === 'super_admin');
     });
     
     setUsers(filteredUsers);
