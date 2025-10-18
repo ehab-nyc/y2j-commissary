@@ -416,7 +416,7 @@ All colors MUST be HSL.
   letter-spacing: 12rem;
   animation: smoke-drift 15s linear infinite;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 1;
   filter: drop-shadow(0 0 10px hsl(22 100% 50%));
 }
 
@@ -446,7 +446,7 @@ body::before {
   letter-spacing: 10rem;
   animation: float-ghost 8s ease-in-out infinite;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 1;
   filter: drop-shadow(0 0 15px hsl(105 100% 54%));
 }
 
