@@ -83,7 +83,22 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Delete user using admin client
+    // First, handle related records before deletion
+    // 1. Nullify assigned_worker_id in orders where this user is assigned
+    const { error: ordersError } = await supabaseAdmin
+      .from('orders')
+      .update({ assigned_worker_id: null })
+      .eq('assigned_worker_id', userId)
+
+    if (ordersError) {
+      console.error('Error updating orders:', ordersError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to update related orders' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Delete user using admin client (this will cascade delete profiles and user_roles)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
     if (deleteError) {
