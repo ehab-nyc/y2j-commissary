@@ -47,7 +47,6 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [processedOrders, setProcessedOrders] = useState<Order[]>([]);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -59,9 +58,6 @@ const Profile = () => {
   useEffect(() => {
     fetchProfile();
     fetchOrders();
-    if (user && (hasRole('worker') || hasRole('manager') || hasRole('admin'))) {
-      fetchProcessedOrders();
-    }
   }, [user]);
 
   const fetchProfile = async () => {
@@ -103,32 +99,6 @@ const Profile = () => {
     }
   };
 
-  const fetchProcessedOrders = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items(
-          id,
-          quantity,
-          price,
-          box_size,
-          products(name)
-        ),
-        profiles!orders_customer_id_fkey(
-          full_name,
-          cart_number
-        )
-      `)
-      .eq('assigned_worker_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setProcessedOrders(data || []);
-    }
-  };
 
 
   const getStatusColor = (status: string) => {
@@ -443,75 +413,6 @@ const Profile = () => {
           </Card>
         )}
 
-        {(hasRole('worker') || hasRole('manager') || hasRole('admin')) && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5" />
-                Processed Orders History
-              </CardTitle>
-              <CardDescription>View orders you have processed</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {processedOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No processed orders yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {processedOrders.map(order => (
-                    <div key={order.id} className="border rounded-lg overflow-hidden">
-                      <div className="bg-muted/50 px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div>
-                          <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(order.created_at), 'PPp')}
-                          </p>
-                          {order.profiles && (
-                            <p className="text-sm text-muted-foreground">
-                              Customer: {order.profiles.full_name || 'N/A'} 
-                              {order.profiles.cart_number && ` - Cart #${order.profiles.cart_number}`}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className={getStatusColor(order.status)}>
-                            {order.status.toUpperCase()}
-                          </Badge>
-                          <span className="font-bold text-primary">
-                            ${order.total.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Product</TableHead>
-                            <TableHead>Box Size</TableHead>
-                            <TableHead className="text-right">Qty</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
-                            <TableHead className="text-right">Subtotal</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {order.order_items.map((item, idx) => (
-                            <TableRow key={idx}>
-                              <TableCell className="font-medium">{item.products.name}</TableCell>
-                              <TableCell>{item.box_size || '1 box'}</TableCell>
-                              <TableCell className="text-right">{item.quantity}</TableCell>
-                              <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                              <TableCell className="text-right">
-                                ${(item.quantity * item.price).toFixed(2)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </DashboardLayout>
   );
