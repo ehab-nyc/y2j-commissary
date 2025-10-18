@@ -14,9 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Orbitron', 'sans-serif'],
-        display: ['Audiowide', 'sans-serif'],
-        horror: ['Creepster', 'cursive'],
+        sans: ['system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
