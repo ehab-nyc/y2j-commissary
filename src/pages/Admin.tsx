@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { productSchema, categorySchema, settingsSchema } from '@/lib/validation';
 import { z } from 'zod';
 
-const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin']);
+const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin', 'super_admin']);
 
 const Admin = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -122,7 +122,14 @@ const Admin = () => {
         user_roles(role)
       `)
       .order('email');
-    setUsers(data || []);
+    
+    // Filter out super_admin users
+    const filteredUsers = (data || []).filter(user => {
+      const userRole = user.user_roles?.[0]?.role;
+      return userRole !== 'super_admin';
+    });
+    
+    setUsers(filteredUsers);
   };
 
   const fetchOrders = async () => {
