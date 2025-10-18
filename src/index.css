@@ -607,3 +607,48 @@ All colors MUST be HSL.
   box-shadow: var(--shadow-festive-glow);
   transform: translateY(-2px);
 }
+
+/* LED Christmas lights wrapping around tabs */
+.christmas-wonderland [role="tablist"] [role="tab"],
+.christmas-wonderland .tabs-trigger,
+.christmas-wonderland [data-state] {
+  position: relative;
+  overflow: visible;
+}
+
+.christmas-wonderland [role="tablist"] [role="tab"]::before,
+.christmas-wonderland .tabs-trigger::before,
+.christmas-wonderland [data-state]::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(
+    90deg,
+    hsl(210 100% 50%) 0%,
+    hsl(45 100% 60%) 12.5%,
+    hsl(120 100% 50%) 25%,
+    hsl(0 100% 60%) 37.5%,
+    hsl(210 100% 50%) 50%,
+    hsl(45 100% 60%) 62.5%,
+    hsl(120 100% 50%) 75%,
+    hsl(0 100% 60%) 87.5%,
+    hsl(210 100% 50%) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: calc(var(--radius) + 3px);
+  animation: christmas-lights 3s linear infinite;
+  opacity: 0.7;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(2px);
+}
+
+.christmas-wonderland [role="tablist"] [role="tab"][data-state="active"]::before,
+.christmas-wonderland .tabs-trigger[data-state="active"]::before {
+  opacity: 1;
+  filter: blur(1px);
+  animation: christmas-lights 2s linear infinite;
+}
