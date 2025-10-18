@@ -405,50 +405,7 @@ All colors MUST be HSL.
   }
 }
 
-/* Neon Nightmare Halloween Effects */
-:root::before {
-  content: "💀 🎃 👻 🦇 🕷️";
-  position: fixed;
-  top: -10vh;
-  left: 0;
-  width: 100%;
-  font-size: 2rem;
-  letter-spacing: 12rem;
-  animation: smoke-drift 15s linear infinite;
-  pointer-events: none;
-  z-index: 1;
-  filter: drop-shadow(0 0 10px hsl(22 100% 50%));
-}
-
-:root::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--gradient-haunted);
-  opacity: 0.3;
-  pointer-events: none;
-  z-index: -1;
-  animation: plasma-shift 10s ease infinite;
-  background-size: 200% 200%;
-}
-
-body::before {
-  content: "⚡ ⚡ ⚡ ⚡ ⚡";
-  position: fixed;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  font-size: 1.5rem;
-  color: hsl(105 100% 54% / 0.5);
-  letter-spacing: 10rem;
-  animation: float-ghost 8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
-  filter: drop-shadow(0 0 15px hsl(105 100% 54%));
-}
+/* Neon Nightmare Halloween Effects - Removed decorative overlays that block interaction */
 
 /* Neon glowing edges on cards */
 [class*="card"],
@@ -634,65 +591,7 @@ button:active, [role="button"]:active {
     0 0 25px hsl(140 100% 45% / 0.7);
 }
 
-/* Apply winter wonderland effects (Christmas Wonderland) */
-.christmas-wonderland::before {
-  content: "❄ ❄ ❄ ❄ ❄ ❄";
-  position: fixed;
-  top: -10vh;
-  left: 0;
-  width: 100%;
-  font-size: 2rem;
-  color: hsl(var(--accent) / 0.8);
-  letter-spacing: 7rem;
-  animation: snowfall 11s linear infinite;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.christmas-wonderland::after {
-  content: "✨ ✨ ✨ ✨ ✨";
-  position: fixed;
-  top: -10vh;
-  left: 0;
-  width: 100%;
-  font-size: 1.5rem;
-  color: hsl(var(--primary) / 0.6);
-  letter-spacing: 9rem;
-  animation: snowfall 13s linear infinite 3s;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-/* Additional winter wonderland effects */
-.christmas-wonderland {
-  position: relative;
-}
-
-.christmas-wonderland body::before,
-.christmas-wonderland body::after {
-  content: "❄ ❄ ❄ ❄ ❄";
-  position: fixed;
-  top: -10vh;
-  width: 100%;
-  color: hsl(var(--accent) / 0.7);
-  letter-spacing: 8rem;
-  animation: snowfall 16s linear infinite;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-.christmas-wonderland body::before {
-  left: 0;
-  font-size: 1.8rem;
-  animation: snowfall 14s linear infinite 4s;
-}
-
-.christmas-wonderland body::after {
-  left: 0;
-  font-size: 1.4rem;
-  letter-spacing: 10rem;
-  animation: snowfall 15s linear infinite 7s;
-}
+/* Winter wonderland effects - Removed decorative overlays that block interaction */
 
 /* Elegant silver and blue glow effects for wonderland theme */
 .christmas-wonderland .card,
