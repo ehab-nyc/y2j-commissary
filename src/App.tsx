@@ -40,7 +40,7 @@ const AppContent = () => {
           <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><ProcessedOrders /></ProtectedRoute>} />
           <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'super_admin']}><Violations /></ProtectedRoute>} />
           <Route path="/manager" element={<ProtectedRoute requireRole="manager"><Manager /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute requireRole="super_admin"><Admin /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><Admin /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
