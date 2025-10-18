@@ -36,7 +36,7 @@ const App = () => (
               <Route path="/orders" element={<ProtectedRoute requireRole="customer"><Orders /></ProtectedRoute>} />
               <Route path="/my-violations" element={<ProtectedRoute requireRole="customer"><CustomerViolations /></ProtectedRoute>} />
               <Route path="/worker" element={<ProtectedRoute requireAnyRole={['worker', 'manager']}><Worker /></ProtectedRoute>} />
-              <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'super_admin']}><ProcessedOrders /></ProtectedRoute>} />
+              <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><ProcessedOrders /></ProtectedRoute>} />
               <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'super_admin']}><Violations /></ProtectedRoute>} />
               <Route path="/manager" element={<ProtectedRoute requireRole="manager"><Manager /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireRole="super_admin"><Admin /></ProtectedRoute>} />
