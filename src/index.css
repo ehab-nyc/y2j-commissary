@@ -83,10 +83,14 @@ All colors MUST be HSL.
     --input: 355 25% 90%;
     --ring: 355 78% 50%;
 
+    --radius: 1rem;
+
     --gradient-primary: linear-gradient(135deg, hsl(355 78% 50%), hsl(140 50% 35%));
+    --gradient-festive: linear-gradient(135deg, hsl(355 78% 50%) 0%, hsl(45 95% 55%) 50%, hsl(140 50% 35%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(355 85% 97%), hsl(0 0% 100%));
     --shadow-card: 0 4px 6px -1px hsl(355 78% 50% / 0.12), 0 2px 4px -2px hsl(355 78% 50% / 0.08);
     --shadow-elevated: 0 10px 15px -3px hsl(355 78% 50% / 0.15), 0 4px 6px -4px hsl(355 78% 50% / 0.1);
+    --shadow-festive-glow: 0 0 20px hsl(45 95% 55% / 0.3), 0 0 40px hsl(355 78% 50% / 0.2);
 
     --sidebar-background: 140 50% 35%;
     --sidebar-foreground: 0 0% 98%;
@@ -171,11 +175,15 @@ All colors MUST be HSL.
     --border: 140 25% 20%;
     --input: 140 25% 20%;
     --ring: 355 78% 55%;
+
+    --radius: 1rem;
     
     --gradient-primary: linear-gradient(135deg, hsl(355 78% 55%), hsl(140 40% 30%));
+    --gradient-festive: linear-gradient(135deg, hsl(355 78% 55%) 0%, hsl(45 95% 60%) 50%, hsl(140 40% 30%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(140 30% 10%), hsl(140 25% 15%));
     --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.2);
     --shadow-elevated: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.3);
+    --shadow-festive-glow: 0 0 25px hsl(45 95% 60% / 0.4), 0 0 50px hsl(355 78% 55% / 0.3);
     
     --sidebar-background: 140 35% 15%;
     --sidebar-foreground: 355 85% 95%;
@@ -196,4 +204,108 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Christmas Holiday Animations & Effects */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-10vh) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) translateX(10px);
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes festive-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(var(--accent) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.6), 0 0 30px hsl(var(--primary) / 0.4);
+  }
+}
+
+/* Apply snowfall to holiday theme */
+.holiday::before {
+  content: "❄";
+  position: fixed;
+  top: -10vh;
+  left: 10%;
+  font-size: 1.5rem;
+  color: hsl(var(--accent) / 0.6);
+  animation: snowfall 10s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.holiday::after {
+  content: "❄";
+  position: fixed;
+  top: -10vh;
+  left: 60%;
+  font-size: 2rem;
+  color: hsl(var(--primary) / 0.4);
+  animation: snowfall 12s linear infinite 2s;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Additional snowflakes */
+.holiday {
+  position: relative;
+}
+
+.holiday body::before,
+.holiday body::after {
+  content: "❄";
+  position: fixed;
+  font-size: 1.2rem;
+  color: hsl(var(--accent) / 0.5);
+  animation: snowfall 15s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.holiday body::before {
+  left: 30%;
+  animation-delay: 5s;
+  animation-duration: 13s;
+}
+
+.holiday body::after {
+  left: 80%;
+  font-size: 1.8rem;
+  animation-delay: 8s;
+  animation-duration: 14s;
+  color: hsl(var(--primary) / 0.3);
+}
+
+/* Festive card effects for holiday theme */
+.holiday .card,
+.holiday [class*="card"] {
+  transition: all 0.3s ease;
+}
+
+.holiday .card:hover,
+.holiday [class*="card"]:hover {
+  animation: festive-glow 2s ease-in-out infinite;
 }
