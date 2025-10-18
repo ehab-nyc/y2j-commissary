@@ -608,17 +608,15 @@ All colors MUST be HSL.
   transform: translateY(-2px);
 }
 
-/* LED Christmas lights wrapping around tabs */
-.christmas-wonderland [role="tablist"] [role="tab"],
-.christmas-wonderland .tabs-trigger,
-.christmas-wonderland [data-state] {
+/* LED Christmas lights wrapping around ALL tabs */
+.christmas-wonderland button[role="tab"],
+.christmas-wonderland [data-radix-collection-item] {
   position: relative;
   overflow: visible;
 }
 
-.christmas-wonderland [role="tablist"] [role="tab"]::before,
-.christmas-wonderland .tabs-trigger::before,
-.christmas-wonderland [data-state]::before {
+.christmas-wonderland button[role="tab"]::before,
+.christmas-wonderland [data-radix-collection-item]::before {
   content: '';
   position: absolute;
   top: -3px;
@@ -646,8 +644,8 @@ All colors MUST be HSL.
   filter: blur(2px);
 }
 
-.christmas-wonderland [role="tablist"] [role="tab"][data-state="active"]::before,
-.christmas-wonderland .tabs-trigger[data-state="active"]::before {
+.christmas-wonderland button[role="tab"][data-state="active"]::before,
+.christmas-wonderland [data-radix-collection-item][data-state="active"]::before {
   opacity: 1;
   filter: blur(1px);
   animation: christmas-lights 2s linear infinite;
