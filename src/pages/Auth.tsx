@@ -23,9 +23,24 @@ const Auth = () => {
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [settings, setSettings] = useState({ company_name: 'Commissary System', logo_url: '', login_background_url: '', login_blur_amount: '2' });
+  const [isHalloween, setIsHalloween] = useState(false);
 
   useEffect(() => {
     fetchSettings();
+    // Check if Halloween theme is active
+    const checkHalloween = () => {
+      setIsHalloween(document.documentElement.classList.contains('halloween'));
+    };
+    checkHalloween();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkHalloween);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    
+    return () => observer.disconnect();
   }, []);
 
   const fetchSettings = async () => {
@@ -163,20 +178,25 @@ const Auth = () => {
       />
       <Card className="w-full max-w-md shadow-elevated relative z-10">
         <CardHeader className="text-center space-y-2">
-          <div className="flex justify-center mb-2 relative">
-            {settings.logo_url ? (
-              <img src={settings.logo_url} alt="Logo" className="h-16 w-auto object-contain" />
-            ) : (
-              <div className="p-3 rounded-full bg-primary/10">
-                <ShoppingBag className="w-8 h-8 text-primary" />
+          <div className="flex justify-center items-center gap-4 mb-2 relative">
+            {/* Halloween pumpkin decoration - left side */}
+            {isHalloween && (
+              <div className="text-7xl animate-pulse pointer-events-none filter drop-shadow-[0_0_25px_rgba(255,94,0,0.9)]">
+                🎃
               </div>
             )}
-            {/* Halloween pumpkin decoration */}
-            <div className="halloween:block hidden absolute -top-12 left-1/2 -translate-x-1/2 text-6xl animate-pulse pointer-events-none filter drop-shadow-[0_0_20px_rgba(255,94,0,0.8)]">
-              🎃
+            
+            <div className="flex flex-col items-center gap-2">
+              {settings.logo_url ? (
+                <img src={settings.logo_url} alt="Logo" className="h-16 w-auto object-contain" />
+              ) : (
+                <div className="p-3 rounded-full bg-primary/10">
+                  <ShoppingBag className="w-8 h-8 text-primary" />
+                </div>
+              )}
+              <CardTitle className="text-2xl font-bold">{settings.company_name}</CardTitle>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">{settings.company_name}</CardTitle>
           <CardDescription>{t('auth.signInToAccess')}</CardDescription>
         </CardHeader>
         <CardContent>
