@@ -31,11 +31,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (session?.user) {
           // Defer role fetching to prevent deadlock
           setTimeout(() => {
+            console.log('Fetching roles for user:', session.user.id);
             supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
-              .then(({ data: userRoles }) => {
+              .then(({ data: userRoles, error }) => {
+                console.log('Roles fetched:', userRoles, 'Error:', error);
                 setRoles(userRoles?.map(r => r.role) || []);
                 setLoading(false);
               });
@@ -53,11 +55,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('Initial session - Fetching roles for user:', session.user.id);
         supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
-          .then(({ data: userRoles }) => {
+          .then(({ data: userRoles, error }) => {
+            console.log('Initial roles fetched:', userRoles, 'Error:', error);
             setRoles(userRoles?.map(r => r.role) || []);
             setLoading(false);
           });
