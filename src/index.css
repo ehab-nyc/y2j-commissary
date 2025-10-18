@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 240 20% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -17,31 +17,33 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 220 90% 56%;
+    --primary: 260 100% 65%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 90% 56%;
+    --secondary: 280 70% 55%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
+    --muted: 240 15% 94%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 142 76% 36%;
+    --accent: 340 85% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 220 90% 56%;
+    --border: 240 15% 88%;
+    --input: 240 15% 88%;
+    --ring: 260 100% 65%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
     
-    --gradient-primary: linear-gradient(135deg, hsl(220 90% 56%), hsl(200 90% 60%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
-    --shadow-card: 0 4px 6px -1px hsl(220 90% 56% / 0.08), 0 2px 4px -2px hsl(220 90% 56% / 0.05);
-    --shadow-elevated: 0 10px 15px -3px hsl(220 90% 56% / 0.1), 0 4px 6px -4px hsl(220 90% 56% / 0.1);
+    --gradient-primary: linear-gradient(135deg, hsl(260 100% 65%), hsl(340 85% 55%));
+    --gradient-vibrant: linear-gradient(90deg, hsl(260 100% 65%), hsl(280 100% 60%), hsl(300 100% 60%), hsl(320 100% 60%), hsl(340 85% 55%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 20% 98%), hsl(0 0% 100%));
+    --shadow-card: 0 4px 6px -1px hsl(260 100% 65% / 0.15), 0 2px 4px -2px hsl(260 100% 65% / 0.1);
+    --shadow-elevated: 0 10px 15px -3px hsl(260 100% 65% / 0.2), 0 4px 6px -4px hsl(260 100% 65% / 0.15);
+    --shadow-glow: 0 0 30px hsl(260 100% 65% / 0.4), 0 0 60px hsl(340 85% 55% / 0.3);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -489,60 +491,58 @@ All colors MUST be HSL.
   transform: translateY(-2px);
 }
 
-/* LED lights wrapping around ALL tabs in Default theme */
+/* Vibrant Default Theme Effects */
 :root:not(.holiday):not(.christmas-wonderland) [data-radix-tabs-list] {
   overflow: visible !important;
   position: relative;
+  background: var(--gradient-vibrant) !important;
+  padding: 0.25rem !important;
 }
 
 :root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger] {
   position: relative;
   overflow: visible;
-  isolation: isolate;
+  transition: all 0.3s ease;
 }
 
 :root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger]::before {
   content: '';
   position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  background: linear-gradient(
-    90deg,
-    hsl(220 100% 60%) 0%,
-    hsl(142 100% 50%) 10%,
-    hsl(280 100% 60%) 20%,
-    hsl(45 100% 60%) 30%,
-    hsl(220 100% 60%) 40%,
-    hsl(142 100% 50%) 50%,
-    hsl(280 100% 60%) 60%,
-    hsl(45 100% 60%) 70%,
-    hsl(220 100% 60%) 80%,
-    hsl(142 100% 50%) 90%,
-    hsl(280 100% 60%) 100%
-  );
-  background-size: 300% 100%;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: var(--gradient-vibrant);
+  background-size: 200% 100%;
   border-radius: calc(var(--radius) + 4px);
-  animation: christmas-lights 2.5s linear infinite;
-  opacity: 0.7;
+  animation: christmas-lights 2s linear infinite;
+  opacity: 0;
   z-index: -1;
   pointer-events: none;
-  filter: blur(3px) brightness(1.4);
-  box-shadow: 
-    0 0 12px hsl(220 100% 60% / 0.5),
-    0 0 20px hsl(142 100% 50% / 0.4),
-    0 0 16px hsl(280 100% 60% / 0.45);
+  filter: blur(8px) brightness(1.5);
+  transition: opacity 0.3s ease;
+}
+
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger]:hover::before {
+  opacity: 0.8;
 }
 
 :root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger][data-state="active"]::before {
   opacity: 1;
-  filter: blur(2px) brightness(1.7);
-  animation: christmas-lights 1.6s linear infinite;
-  box-shadow: 
-    0 0 20px hsl(220 100% 60% / 0.8),
-    0 0 35px hsl(142 100% 50% / 0.7),
-    0 0 28px hsl(280 100% 60% / 0.75);
+  filter: blur(6px) brightness(1.8);
+  animation: christmas-lights 1.2s linear infinite;
+  box-shadow: var(--shadow-glow);
+}
+
+/* Vibrant card effects */
+:root:not(.holiday):not(.christmas-wonderland) [class*="card"] {
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-card);
+}
+
+:root:not(.holiday):not(.christmas-wonderland) [class*="card"]:hover {
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
 }
 
 /* LED Christmas lights wrapping around ALL tabs in Classic theme */
