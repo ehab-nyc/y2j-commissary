@@ -53,6 +53,51 @@ All colors MUST be HSL.
     --sidebar-ring: 220 90% 56%;
   }
 
+  /* Christmas Holiday Theme */
+  :root.holiday {
+    --background: 355 85% 97%;
+    --foreground: 140 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 140 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 140 30% 15%;
+
+    --primary: 355 78% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 140 50% 35%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 355 30% 95%;
+    --muted-foreground: 140 20% 40%;
+
+    --accent: 45 95% 55%;
+    --accent-foreground: 140 30% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 355 25% 90%;
+    --input: 355 25% 90%;
+    --ring: 355 78% 50%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(355 78% 50%), hsl(140 50% 35%));
+    --gradient-subtle: linear-gradient(180deg, hsl(355 85% 97%), hsl(0 0% 100%));
+    --shadow-card: 0 4px 6px -1px hsl(355 78% 50% / 0.12), 0 2px 4px -2px hsl(355 78% 50% / 0.08);
+    --shadow-elevated: 0 10px 15px -3px hsl(355 78% 50% / 0.15), 0 4px 6px -4px hsl(355 78% 50% / 0.1);
+
+    --sidebar-background: 140 50% 35%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 355 78% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 40% 30%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 140 30% 40%;
+    --sidebar-ring: 45 95% 55%;
+  }
+
   .dark {
     --background: 222 47% 11%;
     --foreground: 0 0% 98%;
@@ -95,6 +140,51 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 220 90% 56%;
+  }
+
+  /* Christmas Holiday Theme - Dark Mode */
+  .dark.holiday {
+    --background: 140 30% 10%;
+    --foreground: 355 85% 95%;
+
+    --card: 140 25% 15%;
+    --card-foreground: 355 85% 95%;
+
+    --popover: 140 25% 15%;
+    --popover-foreground: 355 85% 95%;
+
+    --primary: 355 78% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 140 40% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 140 25% 20%;
+    --muted-foreground: 355 30% 70%;
+
+    --accent: 45 95% 60%;
+    --accent-foreground: 140 30% 10%;
+
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 140 25% 20%;
+    --input: 140 25% 20%;
+    --ring: 355 78% 55%;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(355 78% 55%), hsl(140 40% 30%));
+    --gradient-subtle: linear-gradient(180deg, hsl(140 30% 10%), hsl(140 25% 15%));
+    --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.2);
+    --shadow-elevated: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.3);
+    
+    --sidebar-background: 140 35% 15%;
+    --sidebar-foreground: 355 85% 95%;
+    --sidebar-primary: 355 78% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 30% 20%;
+    --sidebar-accent-foreground: 355 85% 95%;
+    --sidebar-border: 140 25% 25%;
+    --sidebar-ring: 45 95% 60%;
   }
 }
 

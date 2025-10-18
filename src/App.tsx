@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useHolidayTheme } from "./hooks/useHolidayTheme";
 import Auth from "./pages/Auth";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
@@ -21,29 +22,39 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  useHolidayTheme();
+  
+  return (
+    <>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/products" replace />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute requireRole="customer"><Orders /></ProtectedRoute>} />
+          <Route path="/my-violations" element={<ProtectedRoute requireRole="customer"><CustomerViolations /></ProtectedRoute>} />
+          <Route path="/worker" element={<ProtectedRoute requireAnyRole={['worker', 'manager']}><Worker /></ProtectedRoute>} />
+          <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><ProcessedOrders /></ProtectedRoute>} />
+          <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'super_admin']}><Violations /></ProtectedRoute>} />
+          <Route path="/manager" element={<ProtectedRoute requireRole="manager"><Manager /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireRole="super_admin"><Admin /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Navigate to="/products" replace />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-              <Route path="/orders" element={<ProtectedRoute requireRole="customer"><Orders /></ProtectedRoute>} />
-              <Route path="/my-violations" element={<ProtectedRoute requireRole="customer"><CustomerViolations /></ProtectedRoute>} />
-              <Route path="/worker" element={<ProtectedRoute requireAnyRole={['worker', 'manager']}><Worker /></ProtectedRoute>} />
-              <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><ProcessedOrders /></ProtectedRoute>} />
-              <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'super_admin']}><Violations /></ProtectedRoute>} />
-              <Route path="/manager" element={<ProtectedRoute requireRole="manager"><Manager /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute requireRole="super_admin"><Admin /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <AppContent />
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>
