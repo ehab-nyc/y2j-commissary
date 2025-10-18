@@ -119,27 +119,47 @@ export default function Violations() {
       // Get signed URLs for all violation images
       const violationsWithSignedUrls = await Promise.all(
         (data || []).map(async (violation) => {
+          if (!violation.images || violation.images.length === 0) {
+            return violation;
+          }
+
           const imagesWithSignedUrls = await Promise.all(
             violation.images.map(async (image: any) => {
-              // Extract path from stored format: "violation-images/path/file.jpg"
-              const path = image.image_url.replace('violation-images/', '');
-              
-              if (path) {
-                const { data: signedUrl, error } = await supabase.storage
+              try {
+                // Extract path from stored format: "violation-images/path/file.jpg"
+                const path = image.image_url.replace('violation-images/', '');
+                
+                console.log('Generating signed URL for path:', path);
+                
+                if (!path || path === image.image_url) {
+                  console.error('Invalid image path format:', image.image_url);
+                  return image;
+                }
+                
+                const { data: signedUrlData, error } = await supabase.storage
                   .from('violation-images')
                   .createSignedUrl(path, 3600); // 1 hour expiration
                 
                 if (error) {
-                  console.error('Error generating signed URL:', error);
+                  console.error('Error generating signed URL for path', path, ':', error);
                   return image;
                 }
                 
+                if (!signedUrlData?.signedUrl) {
+                  console.error('No signed URL returned for path:', path);
+                  return image;
+                }
+                
+                console.log('Successfully generated signed URL for:', path);
+                
                 return {
                   ...image,
-                  image_url: signedUrl?.signedUrl || image.image_url
+                  image_url: signedUrlData.signedUrl
                 };
+              } catch (err) {
+                console.error('Exception generating signed URL:', err);
+                return image;
               }
-              return image;
             })
           );
           
@@ -150,6 +170,7 @@ export default function Violations() {
         })
       );
       
+      console.log('Violations with signed URLs:', violationsWithSignedUrls);
       setViolations(violationsWithSignedUrls as Violation[] || []);
     } catch (error: any) {
       toast({
