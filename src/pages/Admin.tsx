@@ -375,7 +375,7 @@ const Admin = () => {
   };
 
   const handleDeleteTheme = async () => {
-    // Reset to default theme
+    // Switch to default theme
     await handleUpdateTheme('default');
   };
 
@@ -1620,21 +1620,23 @@ const Admin = () => {
                     {activeTheme !== 'default' && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="icon">
-                            <Trash2 className="w-4 h-4" />
+                          <Button variant="outline" size="icon" className="flex-shrink-0">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Reset to Default Theme</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              Remove {activeTheme === 'christmas' ? 'Christmas Classic' : 'Christmas Wonderland'} Theme?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will reset the app theme to the default. All users will see the default theme. You can switch back to a festive theme anytime.
+                              This will switch to the default theme. You can reactivate {activeTheme === 'christmas' ? 'Christmas Classic' : 'Christmas Wonderland'} anytime by selecting it from the dropdown.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleDeleteTheme}>
-                              Reset to Default
+                              Remove Theme
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

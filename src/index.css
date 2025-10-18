@@ -370,7 +370,7 @@ All colors MUST be HSL.
   }
 }
 
-/* Apply snowfall to holiday theme (Classic Christmas) */
+/* Apply snowfall and sparkles to holiday theme (Classic Christmas) */
 .holiday::before {
   content: "❄ ❄ ❄ ❄ ❄";
   position: fixed;
@@ -386,14 +386,14 @@ All colors MUST be HSL.
 }
 
 .holiday::after {
-  content: "❄ ❄ ❄ ❄ ❄ ❄";
+  content: "✨ ✨ ✨ ✨ ✨";
   position: fixed;
   top: -10vh;
   left: 0;
   width: 100%;
-  font-size: 2rem;
-  color: hsl(var(--primary) / 0.4);
-  letter-spacing: 6rem;
+  font-size: 1.8rem;
+  color: hsl(45 95% 55% / 0.7);
+  letter-spacing: 9rem;
   animation: snowfall 12s linear infinite 2s;
   pointer-events: none;
   z-index: 9999;
@@ -406,30 +406,29 @@ All colors MUST be HSL.
 
 .holiday body::before,
 .holiday body::after {
-  content: "❄ ❄ ❄ ❄";
   position: fixed;
+  top: -10vh;
   width: 100%;
-  font-size: 1.2rem;
-  color: hsl(var(--accent) / 0.5);
   letter-spacing: 10rem;
-  animation: snowfall 15s linear infinite;
   pointer-events: none;
   z-index: 9999;
 }
 
 .holiday body::before {
+  content: "❄ ❄ ❄ ❄";
   left: 0;
-  animation-delay: 5s;
-  animation-duration: 13s;
+  font-size: 1.2rem;
+  color: hsl(var(--accent) / 0.5);
+  animation: snowfall 13s linear infinite 5s;
 }
 
 .holiday body::after {
+  content: "✨ ✨ ✨ ✨";
   left: 0;
-  font-size: 1.8rem;
-  letter-spacing: 7rem;
-  animation-delay: 8s;
-  animation-duration: 14s;
-  color: hsl(var(--primary) / 0.3);
+  font-size: 1.6rem;
+  letter-spacing: 8rem;
+  color: hsl(45 95% 55% / 0.6);
+  animation: snowfall 14s linear infinite 8s;
 }
 
 /* Christmas lights wrapping cards and buttons */
