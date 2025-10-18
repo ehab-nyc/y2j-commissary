@@ -135,7 +135,15 @@ export default function Violations() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, cart_name, cart_number')
+        .select(`
+          id, 
+          full_name, 
+          email, 
+          cart_name, 
+          cart_number,
+          user_roles!inner(role)
+        `)
+        .eq('user_roles.role', 'customer')
         .order('full_name');
 
       if (error) throw error;
