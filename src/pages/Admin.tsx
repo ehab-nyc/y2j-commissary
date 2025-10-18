@@ -41,7 +41,7 @@ const Admin = () => {
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [serviceFee, setServiceFee] = useState<number>(10);
-  const [holidayTheme, setHolidayTheme] = useState(false);
+  const [activeTheme, setActiveTheme] = useState<'default' | 'christmas'>('default');
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -53,7 +53,7 @@ const Admin = () => {
     fetchSettings();
     fetchCompanySettings();
     fetchServiceFee();
-    fetchHolidayTheme();
+    fetchActiveTheme();
   }, []);
 
   const fetchServiceFee = async () => {
@@ -68,15 +68,15 @@ const Admin = () => {
     }
   };
 
-  const fetchHolidayTheme = async () => {
+  const fetchActiveTheme = async () => {
     const { data } = await supabase
       .from('app_settings')
       .select('value')
-      .eq('key', 'holiday_theme')
+      .eq('key', 'active_theme')
       .single();
     
     if (data) {
-      setHolidayTheme(data.value === 'true');
+      setActiveTheme((data.value || 'default') as 'default' | 'christmas');
     }
   };
 
@@ -1572,39 +1572,44 @@ const Admin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="holidayTheme">Christmas Holiday Theme</Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Enable festive Christmas colors throughout the app
-                      </p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        id="holidayTheme"
-                        checked={holidayTheme}
-                        onChange={async (e) => {
-                          const newValue = e.target.checked;
-                          setHolidayTheme(newValue);
-                          
-                          const { error } = await supabase
-                            .from('app_settings')
-                            .update({ value: newValue ? 'true' : 'false' })
-                            .eq('key', 'holiday_theme');
-                          
-                          if (error) {
-                            toast.error('Failed to update holiday theme');
-                            setHolidayTheme(!newValue);
-                          } else {
-                            toast.success(newValue ? 'Holiday theme enabled! 🎄' : 'Holiday theme disabled');
-                          }
-                        }}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                    </label>
-                  </div>
+                  <Label htmlFor="activeTheme">App Theme</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Choose the visual theme for your app
+                  </p>
+                  <Select
+                    value={activeTheme}
+                    onValueChange={async (value: 'default' | 'christmas') => {
+                      setActiveTheme(value);
+                      
+                      const { error } = await supabase
+                        .from('app_settings')
+                        .upsert({ 
+                          key: 'active_theme', 
+                          value: value 
+                        }, {
+                          onConflict: 'key'
+                        });
+                      
+                      if (error) {
+                        toast.error('Failed to update theme');
+                        setActiveTheme(activeTheme); // Revert on error
+                      } else {
+                        const themeNames = {
+                          default: 'Default Theme',
+                          christmas: 'Christmas Theme 🎄'
+                        };
+                        toast.success(`Switched to ${themeNames[value]}`);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default Theme</SelectItem>
+                      <SelectItem value="christmas">Christmas Theme 🎄</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
