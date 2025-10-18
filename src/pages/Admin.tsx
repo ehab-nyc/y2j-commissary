@@ -42,6 +42,7 @@ const Admin = () => {
   const [companyEmail, setCompanyEmail] = useState('');
   const [serviceFee, setServiceFee] = useState<number>(10);
   const [activeTheme, setActiveTheme] = useState<'default' | 'christmas' | 'christmas-wonderland'>('default');
+  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -54,7 +55,21 @@ const Admin = () => {
     fetchCompanySettings();
     fetchServiceFee();
     fetchActiveTheme();
+    fetchCurrentUserRoles();
   }, []);
+
+  const fetchCurrentUserRoles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      setCurrentUserRoles(data?.map(r => r.role) || []);
+    }
+  };
+
+  const isSuperAdmin = currentUserRoles.includes('super_admin');
 
   const fetchServiceFee = async () => {
     const { data } = await supabase
@@ -1374,6 +1389,12 @@ const Admin = () => {
             <Card>
               <CardHeader>
                 <CardTitle>App Branding Settings</CardTitle>
+                {!isSuperAdmin && (
+                  <p className="text-sm text-muted-foreground">
+                    <Eye className="w-4 h-4 inline mr-1" />
+                    View Only - Contact super admin to make changes
+                  </p>
+                )}
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -1383,8 +1404,10 @@ const Admin = () => {
                     value={settings.company_name}
                     onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
                     placeholder="Enter company name"
+                    disabled={!isSuperAdmin}
                   />
-                  <Button 
+                  {isSuperAdmin && (
+                    <Button
                     onClick={async () => {
                       // Validate company name
                       const validation = settingsSchema.pick({ company_name: true }).safeParse({ company_name: settings.company_name });
@@ -1408,6 +1431,7 @@ const Admin = () => {
                   >
                     Save Company Name
                   </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1417,12 +1441,14 @@ const Admin = () => {
                       <img src={settings.logo_url} alt="Logo" className="h-20 w-auto object-contain border rounded p-2" />
                     </div>
                   )}
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-                  />
-                  <Button 
+                  {isSuperAdmin && (
+                    <>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                      />
+                      <Button
                     onClick={async () => {
                       if (!logoFile) {
                         toast.error('Please select a logo file');
@@ -1459,11 +1485,13 @@ const Admin = () => {
                         setLogoFile(null);
                       }
                     }}
-                    disabled={!logoFile}
-                    className="mt-2"
-                  >
-                    Upload Logo
-                  </Button>
+                        disabled={!logoFile}
+                        className="mt-2"
+                      >
+                        Upload Logo
+                      </Button>
+                    </>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1476,8 +1504,10 @@ const Admin = () => {
                     value={settings.service_fee || '0'}
                     onChange={(e) => setSettings({ ...settings, service_fee: e.target.value })}
                     placeholder="Enter service fee"
+                    disabled={!isSuperAdmin}
                   />
-                  <Button 
+                  {isSuperAdmin && (
+                    <Button
                     onClick={async () => {
                       const fee = parseFloat(settings.service_fee || '0');
                       if (isNaN(fee) || fee < 0) {
@@ -1499,6 +1529,7 @@ const Admin = () => {
                   >
                     Save Service Fee
                   </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1508,12 +1539,14 @@ const Admin = () => {
                       <img src={settings.login_background_url} alt="Background" className="h-32 w-auto object-cover border rounded" />
                     </div>
                   )}
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setBgFile(e.target.files?.[0] || null)}
-                  />
-                  <Button 
+                  {isSuperAdmin && (
+                    <>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setBgFile(e.target.files?.[0] || null)}
+                      />
+                      <Button
                     onClick={async () => {
                       if (!bgFile) {
                         toast.error('Please select a background image');
@@ -1550,11 +1583,13 @@ const Admin = () => {
                         setBgFile(null);
                       }
                     }}
-                    disabled={!bgFile}
-                    className="mt-2"
-                  >
-                    Upload Background
-                  </Button>
+                        disabled={!bgFile}
+                        className="mt-2"
+                      >
+                        Upload Background
+                      </Button>
+                    </>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1567,11 +1602,13 @@ const Admin = () => {
                     value={settings.login_blur_amount}
                     onChange={(e) => setSettings({ ...settings, login_blur_amount: e.target.value })}
                     placeholder="2"
+                    disabled={!isSuperAdmin}
                   />
                   <p className="text-xs text-muted-foreground">
                     Control the background blur amount (0 = no blur, 20 = maximum blur)
                   </p>
-                  <Button 
+                  {isSuperAdmin && (
+                    <Button
                     onClick={async () => {
                       const blurValue = parseInt(settings.login_blur_amount);
                       if (isNaN(blurValue) || blurValue < 0 || blurValue > 20) {
@@ -1598,6 +1635,7 @@ const Admin = () => {
                   >
                     Save Blur Amount
                   </Button>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -1612,6 +1650,7 @@ const Admin = () => {
                     <Select
                       value={activeTheme}
                       onValueChange={handleUpdateTheme}
+                      disabled={!isSuperAdmin}
                     >
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Select a theme" />
@@ -1623,7 +1662,7 @@ const Admin = () => {
                       </SelectContent>
                     </Select>
                     
-                    {activeTheme !== 'default' && (
+                    {isSuperAdmin && activeTheme !== 'default' && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="icon" className="flex-shrink-0">
