@@ -490,13 +490,13 @@ All colors MUST be HSL.
 }
 
 /* LED lights wrapping around ALL tabs in Default theme */
-:root:not(.holiday):not(.christmas-wonderland) button[role="tab"],
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger],
 :root:not(.holiday):not(.christmas-wonderland) [data-radix-collection-item] {
   position: relative;
   overflow: visible;
 }
 
-:root:not(.holiday):not(.christmas-wonderland) button[role="tab"]::before,
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger]::before,
 :root:not(.holiday):not(.christmas-wonderland) [data-radix-collection-item]::before {
   content: '';
   position: absolute;
@@ -531,7 +531,7 @@ All colors MUST be HSL.
     0 0 16px hsl(280 100% 60% / 0.45);
 }
 
-:root:not(.holiday):not(.christmas-wonderland) button[role="tab"][data-state="active"]::before,
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger][data-state="active"]::before,
 :root:not(.holiday):not(.christmas-wonderland) [data-radix-collection-item][data-state="active"]::before {
   opacity: 1;
   filter: blur(2px) brightness(1.7);
@@ -543,13 +543,13 @@ All colors MUST be HSL.
 }
 
 /* LED Christmas lights wrapping around ALL tabs in Classic theme */
-.holiday button[role="tab"],
+.holiday button[data-radix-tabs-trigger],
 .holiday [data-radix-collection-item] {
   position: relative;
   overflow: visible;
 }
 
-.holiday button[role="tab"]::before,
+.holiday button[data-radix-tabs-trigger]::before,
 .holiday [data-radix-collection-item]::before {
   content: '';
   position: absolute;
@@ -584,7 +584,7 @@ All colors MUST be HSL.
     0 0 15px hsl(140 100% 45% / 0.5);
 }
 
-.holiday button[role="tab"][data-state="active"]::before,
+.holiday button[data-radix-tabs-trigger][data-state="active"]::before,
 .holiday [data-radix-collection-item][data-state="active"]::before {
   opacity: 1;
   filter: blur(2px) brightness(1.5);
@@ -715,13 +715,13 @@ All colors MUST be HSL.
 }
 
 /* LED Christmas lights wrapping around ALL tabs */
-.christmas-wonderland button[role="tab"],
+.christmas-wonderland button[data-radix-tabs-trigger],
 .christmas-wonderland [data-radix-collection-item] {
   position: relative;
   overflow: visible;
 }
 
-.christmas-wonderland button[role="tab"]::before,
+.christmas-wonderland button[data-radix-tabs-trigger]::before,
 .christmas-wonderland [data-radix-collection-item]::before {
   content: '';
   position: absolute;
@@ -750,7 +750,7 @@ All colors MUST be HSL.
   filter: blur(2px);
 }
 
-.christmas-wonderland button[role="tab"][data-state="active"]::before,
+.christmas-wonderland button[data-radix-tabs-trigger][data-state="active"]::before,
 .christmas-wonderland [data-radix-collection-item][data-state="active"]::before {
   opacity: 1;
   filter: blur(1px);
