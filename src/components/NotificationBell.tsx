@@ -98,7 +98,7 @@ export const NotificationBell = () => {
   const handleNotificationClick = async (notification: Notification) => {
     await markAsRead(notification.id);
     
-    // Navigate based on user role
+    // Navigate based on user role and notification type
     const { data: roles } = await supabase
       .from('user_roles')
       .select('role')
@@ -106,9 +106,22 @@ export const NotificationBell = () => {
     
     const userRoles = roles?.map(r => r.role) || [];
     
-    if (userRoles.includes('worker') || userRoles.includes('manager') || userRoles.includes('super_admin')) {
-      navigate('/worker');
+    // Check if notification is about order completion for customers
+    const isCompletionNotification = notification.type === 'order_completed' || 
+                                    notification.message.toLowerCase().includes('completed') ||
+                                    notification.message.toLowerCase().includes('ready');
+    
+    // Workers, managers, and admins go to worker page for new orders
+    // Customers go to their orders page
+    if (userRoles.includes('worker') || userRoles.includes('manager') || userRoles.includes('super_admin') || userRoles.includes('admin')) {
+      // If it's a completion notification, admins should see processed orders
+      if (isCompletionNotification) {
+        navigate('/processed-orders');
+      } else {
+        navigate('/worker');
+      }
     } else {
+      // Customers always go to their orders page
       navigate('/orders');
     }
   };
