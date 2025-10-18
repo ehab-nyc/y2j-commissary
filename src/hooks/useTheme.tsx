@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppTheme = 'default' | 'christmas';
+export type AppTheme = 'default' | 'christmas' | 'christmas-wonderland';
 
 export const useTheme = () => {
   const [activeTheme, setActiveTheme] = useState<AppTheme>('default');
@@ -56,11 +56,13 @@ export const useTheme = () => {
     const root = document.documentElement;
     
     // Remove all theme classes
-    root.classList.remove('holiday', 'christmas');
+    root.classList.remove('holiday', 'christmas-wonderland');
     
     // Apply the selected theme
     if (theme === 'christmas') {
-      root.classList.add('holiday'); // Using 'holiday' class for backward compatibility with CSS
+      root.classList.add('holiday'); // Classic red & green Christmas
+    } else if (theme === 'christmas-wonderland') {
+      root.classList.add('christmas-wonderland'); // Blue, white & silver winter wonderland
     }
   };
 

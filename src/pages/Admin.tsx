@@ -41,7 +41,7 @@ const Admin = () => {
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [serviceFee, setServiceFee] = useState<number>(10);
-  const [activeTheme, setActiveTheme] = useState<'default' | 'christmas'>('default');
+  const [activeTheme, setActiveTheme] = useState<'default' | 'christmas' | 'christmas-wonderland'>('default');
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -76,7 +76,7 @@ const Admin = () => {
       .single();
     
     if (data) {
-      setActiveTheme((data.value || 'default') as 'default' | 'christmas');
+      setActiveTheme((data.value || 'default') as 'default' | 'christmas' | 'christmas-wonderland');
     }
   };
 
@@ -1578,7 +1578,7 @@ const Admin = () => {
                   </p>
                   <Select
                     value={activeTheme}
-                    onValueChange={async (value: 'default' | 'christmas') => {
+                    onValueChange={async (value: 'default' | 'christmas' | 'christmas-wonderland') => {
                       setActiveTheme(value);
                       
                       const { error } = await supabase
@@ -1596,7 +1596,8 @@ const Admin = () => {
                       } else {
                         const themeNames = {
                           default: 'Default Theme',
-                          christmas: 'Christmas Theme 🎄'
+                          christmas: 'Christmas Classic 🎄',
+                          'christmas-wonderland': 'Christmas Wonderland ❄️✨'
                         };
                         toast.success(`Switched to ${themeNames[value]}`);
                       }
@@ -1607,7 +1608,8 @@ const Admin = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="default">Default Theme</SelectItem>
-                      <SelectItem value="christmas">Christmas Theme 🎄</SelectItem>
+                      <SelectItem value="christmas">Christmas Classic 🎄 (Red & Green)</SelectItem>
+                      <SelectItem value="christmas-wonderland">Christmas Wonderland ❄️✨ (Blue & Silver)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
