@@ -20,7 +20,6 @@ const Manager = () => {
     lowStockProducts: 0,
   });
   const [orders, setOrders] = useState<any[]>([]);
-  const [processedOrders, setProcessedOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,7 +31,6 @@ const Manager = () => {
   useEffect(() => {
     fetchStats();
     fetchOrders();
-    fetchProcessedOrders();
     fetchCompanySettings();
   }, []);
 
@@ -76,34 +74,6 @@ const Manager = () => {
     setOrders(data || []);
   };
 
-  const fetchProcessedOrders = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        profiles!orders_customer_id_fkey(email, full_name, cart_name, cart_number),
-        order_items(
-          id,
-          quantity,
-          price,
-          box_size,
-          product_id,
-          order_id,
-          products(name)
-        )
-      `)
-      .eq('assigned_worker_id', user.id)
-      .eq('status', 'completed')
-      .order('updated_at', { ascending: false })
-      .limit(10);
-
-    if (data) {
-      setProcessedOrders(data);
-    }
-  };
 
   const fetchStats = async () => {
     try {
@@ -154,7 +124,6 @@ const Manager = () => {
     } else {
       toast.success(`Order marked as ${newStatus}`);
       fetchOrders();
-      fetchProcessedOrders();
       fetchStats();
     }
   };
@@ -399,10 +368,6 @@ const Manager = () => {
                 <ClipboardList className="w-4 h-4" />
                 All Orders
               </TabsTrigger>
-              <TabsTrigger value="history" className="gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                My Processed Orders
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -643,80 +608,6 @@ const Manager = () => {
               </Dialog>
             </TabsContent>
 
-            <TabsContent value="history" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Processed Orders History</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {processedOrders.length === 0 ? (
-                    <div className="py-12 text-center text-muted-foreground">
-                      No processed orders yet
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Order ID</TableHead>
-                          <TableHead>Customer</TableHead>
-                          <TableHead>Items</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead className="text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {processedOrders.map(order => (
-                          <TableRow key={order.id}>
-                            <TableCell className="font-mono text-sm">
-                              {order.id.slice(0, 8)}...
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{order.profiles?.full_name || 'N/A'}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {order.profiles?.cart_number && `Cart: ${order.profiles?.cart_name || ''} ${order.profiles?.cart_number}`}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {order.order_items?.length || 0} item(s)
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              ${Number(order.total).toFixed(2)}
-                            </TableCell>
-                            <TableCell>
-                              {format(new Date(order.created_at), 'PPp')}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex gap-2 justify-center">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => printOrder(order)}
-                                >
-                                  <Printer className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedOrder(order);
-                                    setShowOrderDialog(true);
-                                  }}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
         )}
       </div>
