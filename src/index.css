@@ -490,14 +490,18 @@ All colors MUST be HSL.
 }
 
 /* LED lights wrapping around ALL tabs in Default theme */
-:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger],
-:root:not(.holiday):not(.christmas-wonderland) [data-radix-collection-item] {
+:root:not(.holiday):not(.christmas-wonderland) [data-radix-tabs-list] {
+  overflow: visible !important;
   position: relative;
-  overflow: visible;
 }
 
-:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger]::before,
-:root:not(.holiday):not(.christmas-wonderland) [data-radix-collection-item]::before {
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger] {
+  position: relative;
+  overflow: visible;
+  isolation: isolate;
+}
+
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger]::before {
   content: '';
   position: absolute;
   top: -4px;
@@ -531,8 +535,7 @@ All colors MUST be HSL.
     0 0 16px hsl(280 100% 60% / 0.45);
 }
 
-:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger][data-state="active"]::before,
-:root:not(.holiday):not(.christmas-wonderland) [data-radix-collection-item][data-state="active"]::before {
+:root:not(.holiday):not(.christmas-wonderland) button[data-radix-tabs-trigger][data-state="active"]::before {
   opacity: 1;
   filter: blur(2px) brightness(1.7);
   animation: christmas-lights 1.6s linear infinite;
