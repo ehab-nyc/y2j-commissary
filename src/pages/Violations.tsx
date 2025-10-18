@@ -69,6 +69,37 @@ export default function Violations() {
   useEffect(() => {
     fetchViolations();
     fetchCustomers();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('violations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'violations'
+        },
+        () => {
+          fetchViolations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'violation_images'
+        },
+        () => {
+          fetchViolations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchViolations = async () => {

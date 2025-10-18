@@ -27,6 +27,37 @@ const CustomerViolations = () => {
 
   useEffect(() => {
     fetchViolations();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('customer-violations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'violations'
+        },
+        () => {
+          fetchViolations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'violation_images'
+        },
+        () => {
+          fetchViolations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchViolations = async () => {
