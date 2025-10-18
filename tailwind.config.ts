@@ -13,6 +13,11 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Orbitron', 'sans-serif'],
+        display: ['Audiowide', 'sans-serif'],
+        horror: ['Creepster', 'cursive'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
