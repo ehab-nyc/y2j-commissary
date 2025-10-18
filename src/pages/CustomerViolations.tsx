@@ -17,6 +17,10 @@ interface Violation {
   created_at: string;
   cart_number: string | null;
   cart_name: string | null;
+  inspector?: {
+    id: string;
+    full_name: string | null;
+  };
   images: { id: string; image_url: string }[];
 }
 
@@ -75,6 +79,7 @@ const CustomerViolations = () => {
       .from('violations')
       .select(`
         *,
+        inspector:profiles!violations_inspector_id_fkey(id, full_name),
         images:violation_images(id, image_url)
       `)
       .or(`customer_id.eq.${user.id},cart_number.eq.${profile?.cart_number}`)
@@ -190,6 +195,11 @@ const CustomerViolations = () => {
                       {violation.cart_number && (
                         <p className="text-sm text-muted-foreground mb-2">
                           Cart: {violation.cart_name ? `${violation.cart_name} (${violation.cart_number})` : violation.cart_number}
+                        </p>
+                      )}
+                      {violation.inspector?.full_name && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Reported by: {violation.inspector.full_name}
                         </p>
                       )}
                       <p className="text-sm">{violation.description}</p>
