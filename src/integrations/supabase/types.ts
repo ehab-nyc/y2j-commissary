@@ -399,6 +399,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_customer_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cart_name: string
+          cart_number: string
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_user_cart_number: {
         Args: { _user_id: string }
         Returns: string

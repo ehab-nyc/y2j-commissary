@@ -133,22 +133,8 @@ export default function Violations() {
 
   const fetchCustomers = async () => {
     try {
-      // First get all user IDs with customer role
-      const { data: customerRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'customer');
-
-      if (rolesError) throw rolesError;
-
-      const customerIds = customerRoles?.map(r => r.user_id) || [];
-
-      // Then fetch profiles for those users
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, cart_name, cart_number')
-        .in('id', customerIds)
-        .order('full_name');
+        .rpc('get_customer_profiles');
 
       if (error) throw error;
       setCustomers(data || []);
