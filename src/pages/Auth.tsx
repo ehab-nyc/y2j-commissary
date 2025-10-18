@@ -149,6 +149,12 @@ const Auth = () => {
           : 'linear-gradient(to bottom right, hsl(var(--background)), hsl(var(--secondary) / 0.2), hsl(var(--background)))',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'crisp-edges',
+        WebkitBackfaceVisibility: 'hidden',
+        MozBackfaceVisibility: 'hidden',
+        WebkitTransform: 'translateZ(0)',
+        MozTransform: 'translateZ(0)',
       }}
     >
       <div 
