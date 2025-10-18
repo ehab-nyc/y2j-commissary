@@ -163,7 +163,7 @@ const Auth = () => {
       />
       <Card className="w-full max-w-md shadow-elevated relative z-10">
         <CardHeader className="text-center space-y-2">
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center mb-2 relative">
             {settings.logo_url ? (
               <img src={settings.logo_url} alt="Logo" className="h-16 w-auto object-contain" />
             ) : (
@@ -171,6 +171,10 @@ const Auth = () => {
                 <ShoppingBag className="w-8 h-8 text-primary" />
               </div>
             )}
+            {/* Halloween pumpkin decoration */}
+            <div className="halloween:block hidden absolute -top-12 left-1/2 -translate-x-1/2 text-6xl animate-pulse pointer-events-none filter drop-shadow-[0_0_20px_rgba(255,94,0,0.8)]">
+              🎃
+            </div>
           </div>
           <CardTitle className="text-2xl font-bold">{settings.company_name}</CardTitle>
           <CardDescription>{t('auth.signInToAccess')}</CardDescription>

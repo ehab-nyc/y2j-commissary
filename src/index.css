@@ -338,6 +338,75 @@ All colors MUST be HSL.
   }
 }
 
+/* Halloween falling pumpkins animation */
+@keyframes fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.halloween::before,
+.halloween::after {
+  content: "🎃";
+  position: fixed;
+  top: -10vh;
+  font-size: 2.5rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: fall linear infinite;
+  filter: drop-shadow(0 0 10px hsl(25 100% 55%));
+}
+
+.halloween::before {
+  left: 20%;
+  animation-duration: 12s;
+  animation-delay: 0s;
+}
+
+.halloween::after {
+  left: 70%;
+  font-size: 3rem;
+  animation-duration: 15s;
+  animation-delay: 3s;
+}
+
+/* Additional falling pumpkins */
+.halloween body::before,
+.halloween body::after {
+  content: "🎃";
+  position: fixed;
+  top: -10vh;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: fall linear infinite;
+  filter: drop-shadow(0 0 8px hsl(25 100% 55%));
+}
+
+.halloween body::before {
+  left: 45%;
+  animation-duration: 14s;
+  animation-delay: 5s;
+}
+
+.halloween body::after {
+  left: 85%;
+  font-size: 2.8rem;
+  animation-duration: 13s;
+  animation-delay: 8s;
+}
+
 /* Halloween glow effects - safe implementation */
 [class*="card"],
 .card {
