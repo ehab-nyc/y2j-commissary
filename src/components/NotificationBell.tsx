@@ -106,7 +106,7 @@ export const NotificationBell = () => {
     
     const userRoles = roles?.map(r => r.role) || [];
     
-    if (userRoles.includes('worker') || userRoles.includes('manager') || userRoles.includes('admin')) {
+    if (userRoles.includes('worker') || userRoles.includes('manager') || userRoles.includes('super_admin')) {
       navigate('/worker');
     } else {
       navigate('/orders');

@@ -56,10 +56,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
     { path: '/my-violations', label: 'My Violations', icon: AlertCircle, show: hasRole('customer') },
     { path: '/worker', label: t('nav.ordersQueue'), icon: Package, show: hasRole('worker') || hasRole('manager') },
-    { path: '/processed-orders', label: 'My Processed Orders', icon: Package, show: hasRole('worker') || hasRole('manager') || hasRole('admin') },
-    { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') },
+    { path: '/processed-orders', label: 'My Processed Orders', icon: Package, show: hasRole('worker') || hasRole('manager') || hasRole('super_admin') },
+    { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('super_admin') },
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
-    { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') },
+    { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('super_admin') },
     { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];
 

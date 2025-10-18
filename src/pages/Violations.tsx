@@ -606,7 +606,7 @@ export default function Violations() {
                   )}
                 </div>
 
-                {hasRole('admin') && (
+                {hasRole('super_admin') && (
                   <div className="flex gap-2 pt-2 border-t">
                     <Button
                       variant="outline"
