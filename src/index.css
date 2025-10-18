@@ -49,6 +49,48 @@ All colors MUST be HSL.
     --sidebar-ring: 110 100% 50%;
   }
 
+  /* Halloween Neon Cyber Theme */
+  :root.halloween {
+    --background: 265 60% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 265 50% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 265 50% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 25 100% 55%;
+    --primary-foreground: 265 60% 8%;
+    
+    --secondary: 280 85% 55%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 265 40% 18%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 110 100% 50%;
+    --accent-foreground: 265 60% 8%;
+
+    --destructive: 340 100% 55%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 265 50% 20%;
+    --input: 265 50% 20%;
+    --ring: 25 100% 55%;
+
+    --radius: 0.75rem;
+    
+    --sidebar-background: 265 55% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 25 100% 55%;
+    --sidebar-primary-foreground: 265 60% 8%;
+    --sidebar-accent: 265 50% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 280 85% 55%;
+    --sidebar-ring: 110 100% 50%;
+  }
+
   /* Christmas Theme (Classic Red & Green) */
   :root.holiday {
     --background: 355 85% 97%;

@@ -41,7 +41,7 @@ const Admin = () => {
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [serviceFee, setServiceFee] = useState<number>(10);
-  const [activeTheme, setActiveTheme] = useState<'default' | 'christmas' | 'christmas-wonderland'>('default');
+  const [activeTheme, setActiveTheme] = useState<'default' | 'halloween' | 'christmas' | 'christmas-wonderland'>('default');
   const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
@@ -93,7 +93,7 @@ const Admin = () => {
       .single();
     
     if (data) {
-      setActiveTheme((data.value || 'default') as 'default' | 'christmas' | 'christmas-wonderland');
+      setActiveTheme((data.value || 'default') as 'default' | 'halloween' | 'christmas' | 'christmas-wonderland');
     }
   };
 
@@ -1762,6 +1762,7 @@ const Admin = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="default">Default Theme</SelectItem>
+                        <SelectItem value="halloween">🎃 Halloween Neon Cyber (Purple, Orange & Green)</SelectItem>
                         <SelectItem value="christmas">🎄 Christmas Classic (Red & Green with Lights)</SelectItem>
                         <SelectItem value="christmas-wonderland">❄️ Christmas Wonderland (Blue & Silver with Sparkles)</SelectItem>
                       </SelectContent>
@@ -1777,10 +1778,10 @@ const Admin = () => {
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>
-                              Remove {activeTheme === 'christmas' ? 'Christmas Classic' : 'Christmas Wonderland'} Theme?
+                              Remove {activeTheme === 'halloween' ? 'Halloween Neon Cyber' : activeTheme === 'christmas' ? 'Christmas Classic' : 'Christmas Wonderland'} Theme?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will switch to the default theme. You can reactivate {activeTheme === 'christmas' ? 'Christmas Classic' : 'Christmas Wonderland'} anytime by selecting it from the dropdown.
+                              This will switch to the default theme. You can reactivate {activeTheme === 'halloween' ? 'Halloween Neon Cyber' : activeTheme === 'christmas' ? 'Christmas Classic' : 'Christmas Wonderland'} anytime by selecting it from the dropdown.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -1793,6 +1794,15 @@ const Admin = () => {
                       </AlertDialog>
                     )}
                   </div>
+
+                  {activeTheme === 'halloween' && (
+                    <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+                      <p className="text-sm font-medium mb-1">🎃 Halloween Neon Cyber Theme Active</p>
+                      <p className="text-xs text-muted-foreground">
+                        Features: Dark purple background, neon orange/green accents, glowing cyber effects, and spooky vibes
+                      </p>
+                    </div>
+                  )}
 
                   {activeTheme === 'christmas' && (
                     <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
