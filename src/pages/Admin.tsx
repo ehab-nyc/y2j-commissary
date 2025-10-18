@@ -356,6 +356,29 @@ const Admin = () => {
     }
   };
 
+  const handleUpdateTheme = async (newTheme: 'default' | 'christmas' | 'christmas-wonderland') => {
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ 
+        key: 'active_theme', 
+        value: newTheme 
+      }, { 
+        onConflict: 'key' 
+      });
+
+    if (error) {
+      toast.error('Failed to update theme');
+    } else {
+      toast.success('Theme updated successfully');
+      setActiveTheme(newTheme);
+    }
+  };
+
+  const handleDeleteTheme = async () => {
+    // Reset to default theme
+    await handleUpdateTheme('default');
+  };
+
   const handleSaveCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -1571,47 +1594,71 @@ const Admin = () => {
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="activeTheme">App Theme</Label>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Choose the visual theme for your app
-                  </p>
-                  <Select
-                    value={activeTheme}
-                    onValueChange={async (value: 'default' | 'christmas' | 'christmas-wonderland') => {
-                      setActiveTheme(value);
-                      
-                      const { error } = await supabase
-                        .from('app_settings')
-                        .upsert({ 
-                          key: 'active_theme', 
-                          value: value 
-                        }, {
-                          onConflict: 'key'
-                        });
-                      
-                      if (error) {
-                        toast.error('Failed to update theme');
-                        setActiveTheme(activeTheme); // Revert on error
-                      } else {
-                        const themeNames = {
-                          default: 'Default Theme',
-                          christmas: 'Christmas Classic 🎄',
-                          'christmas-wonderland': 'Christmas Wonderland ❄️✨'
-                        };
-                        toast.success(`Switched to ${themeNames[value]}`);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="default">Default Theme</SelectItem>
-                      <SelectItem value="christmas">Christmas Classic 🎄 (Red & Green)</SelectItem>
-                      <SelectItem value="christmas-wonderland">Christmas Wonderland ❄️✨ (Blue & Silver)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="activeTheme">App Theme</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Choose and manage the visual theme for your app
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={activeTheme}
+                      onValueChange={handleUpdateTheme}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select a theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">Default Theme</SelectItem>
+                        <SelectItem value="christmas">🎄 Christmas Classic (Red & Green with Lights)</SelectItem>
+                        <SelectItem value="christmas-wonderland">❄️ Christmas Wonderland (Blue & Silver with Sparkles)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {activeTheme !== 'default' && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Reset to Default Theme</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will reset the app theme to the default. All users will see the default theme. You can switch back to a festive theme anytime.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteTheme}>
+                              Reset to Default
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
+
+                  {activeTheme === 'christmas' && (
+                    <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+                      <p className="text-sm font-medium mb-1">🎄 Christmas Classic Theme Active</p>
+                      <p className="text-xs text-muted-foreground">
+                        Features: Red & Green colors, falling snow, twinkling Christmas lights wrapping cards, and festive sparkles
+                      </p>
+                    </div>
+                  )}
+
+                  {activeTheme === 'christmas-wonderland' && (
+                    <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+                      <p className="text-sm font-medium mb-1">❄️ Christmas Wonderland Theme Active</p>
+                      <p className="text-xs text-muted-foreground">
+                        Features: Blue & Silver colors, magical snowfall, icy shimmer effects, and sparkling winter lights
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

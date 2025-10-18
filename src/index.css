@@ -307,7 +307,7 @@ All colors MUST be HSL.
 /* Christmas Holiday Animations & Effects */
 @keyframes snowfall {
   0% {
-    transform: translateY(-10vh) translateX(0);
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
     opacity: 0;
   }
   10% {
@@ -317,7 +317,7 @@ All colors MUST be HSL.
     opacity: 1;
   }
   100% {
-    transform: translateY(100vh) translateX(10px);
+    transform: translateY(100vh) translateX(15px) rotate(360deg);
     opacity: 0;
   }
 }
@@ -342,26 +342,58 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes christmas-lights {
+  0%, 100% {
+    background-position: 0% 0%;
+    filter: brightness(1) hue-rotate(0deg);
+  }
+  25% {
+    filter: brightness(1.2) hue-rotate(90deg);
+  }
+  50% {
+    background-position: 100% 0%;
+    filter: brightness(0.8) hue-rotate(180deg);
+  }
+  75% {
+    filter: brightness(1.2) hue-rotate(270deg);
+  }
+}
+
+@keyframes light-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
 /* Apply snowfall to holiday theme (Classic Christmas) */
 .holiday::before {
-  content: "❄";
+  content: "❄ ❄ ❄ ❄ ❄";
   position: fixed;
   top: -10vh;
-  left: 10%;
+  left: 0;
+  width: 100%;
   font-size: 1.5rem;
   color: hsl(var(--accent) / 0.6);
+  letter-spacing: 8rem;
   animation: snowfall 10s linear infinite;
   pointer-events: none;
   z-index: 9999;
 }
 
 .holiday::after {
-  content: "❄";
+  content: "❄ ❄ ❄ ❄ ❄ ❄";
   position: fixed;
   top: -10vh;
-  left: 60%;
+  left: 0;
+  width: 100%;
   font-size: 2rem;
   color: hsl(var(--primary) / 0.4);
+  letter-spacing: 6rem;
   animation: snowfall 12s linear infinite 2s;
   pointer-events: none;
   z-index: 9999;
@@ -374,60 +406,114 @@ All colors MUST be HSL.
 
 .holiday body::before,
 .holiday body::after {
-  content: "❄";
+  content: "❄ ❄ ❄ ❄";
   position: fixed;
+  width: 100%;
   font-size: 1.2rem;
   color: hsl(var(--accent) / 0.5);
+  letter-spacing: 10rem;
   animation: snowfall 15s linear infinite;
   pointer-events: none;
   z-index: 9999;
 }
 
 .holiday body::before {
-  left: 30%;
+  left: 0;
   animation-delay: 5s;
   animation-duration: 13s;
 }
 
 .holiday body::after {
-  left: 80%;
+  left: 0;
   font-size: 1.8rem;
+  letter-spacing: 7rem;
   animation-delay: 8s;
   animation-duration: 14s;
   color: hsl(var(--primary) / 0.3);
 }
 
-/* Festive card effects for holiday theme */
+/* Christmas lights wrapping cards and buttons */
 .holiday .card,
-.holiday [class*="card"] {
+.holiday [class*="card"],
+.holiday button[class*="button"] {
+  position: relative;
   transition: all 0.3s ease;
 }
 
+.holiday .card::before,
+.holiday [class*="card"]::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--accent)) 25%,
+    hsl(45 95% 55%) 50%,
+    hsl(var(--primary)) 75%,
+    hsl(var(--accent)) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: calc(var(--radius) + 2px);
+  animation: christmas-lights 4s linear infinite;
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.holiday .card:hover::before,
+.holiday [class*="card"]:hover::before {
+  opacity: 0.3;
+}
+
+/* Twinkling stars effect */
+.holiday .card::after,
+.holiday [class*="card"]::after {
+  content: '✨';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  opacity: 0.7;
+  animation: twinkle 3s ease-in-out infinite, light-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Festive card glow on hover */
 .holiday .card:hover,
 .holiday [class*="card"]:hover {
-  animation: festive-glow 2s ease-in-out infinite;
+  box-shadow: var(--shadow-festive-glow);
+  transform: translateY(-2px);
 }
 
 /* Apply winter wonderland effects (Christmas Wonderland) */
 .christmas-wonderland::before {
-  content: "❄";
+  content: "❄ ❄ ❄ ❄ ❄ ❄";
   position: fixed;
   top: -10vh;
-  left: 15%;
+  left: 0;
+  width: 100%;
   font-size: 2rem;
   color: hsl(var(--accent) / 0.8);
+  letter-spacing: 7rem;
   animation: snowfall 11s linear infinite, twinkle 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 9999;
 }
 
 .christmas-wonderland::after {
-  content: "✨";
+  content: "✨ ✨ ✨ ✨ ✨";
   position: fixed;
   top: -10vh;
-  left: 70%;
+  left: 0;
+  width: 100%;
   font-size: 1.5rem;
   color: hsl(var(--primary) / 0.6);
+  letter-spacing: 9rem;
   animation: snowfall 13s linear infinite 3s, twinkle 2s ease-in-out infinite;
   pointer-events: none;
   z-index: 9999;
@@ -440,33 +526,82 @@ All colors MUST be HSL.
 
 .christmas-wonderland body::before,
 .christmas-wonderland body::after {
-  content: "❄";
+  content: "❄ ❄ ❄ ❄ ❄";
   position: fixed;
+  width: 100%;
   color: hsl(var(--accent) / 0.7);
+  letter-spacing: 8rem;
   animation: snowfall 16s linear infinite, twinkle 2.5s ease-in-out infinite;
   pointer-events: none;
   z-index: 9999;
 }
 
 .christmas-wonderland body::before {
-  left: 40%;
+  left: 0;
   font-size: 1.8rem;
   animation-delay: 4s;
   animation-duration: 14s;
 }
 
 .christmas-wonderland body::after {
-  left: 85%;
+  left: 0;
   font-size: 1.4rem;
+  letter-spacing: 10rem;
   animation-delay: 7s;
   animation-duration: 15s;
 }
 
-/* Elegant silver glow effects for wonderland theme */
+/* Elegant silver and blue glow effects for wonderland theme */
 .christmas-wonderland .card,
-.christmas-wonderland [class*="card"] {
+.christmas-wonderland [class*="card"],
+.christmas-wonderland button[class*="button"] {
   transition: all 0.4s ease;
   position: relative;
+}
+
+/* Icy shimmer border effect */
+.christmas-wonderland .card::before,
+.christmas-wonderland [class*="card"]::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--accent)) 25%,
+    hsl(0 0% 100%) 50%,
+    hsl(var(--accent)) 75%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: calc(var(--radius) + 2px);
+  animation: christmas-lights 5s linear infinite;
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.christmas-wonderland .card:hover::before,
+.christmas-wonderland [class*="card"]:hover::before {
+  opacity: 0.4;
+}
+
+/* Sparkling snowflakes on cards */
+.christmas-wonderland .card::after,
+.christmas-wonderland [class*="card"]::after {
+  content: '✨❄';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.3rem;
+  opacity: 0.8;
+  animation: twinkle 2.5s ease-in-out infinite, light-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+  color: hsl(var(--accent));
 }
 
 .christmas-wonderland .card:hover,
