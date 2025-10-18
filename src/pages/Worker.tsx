@@ -41,7 +41,6 @@ interface Order {
 
 const Worker = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [processedOrders, setProcessedOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [companyName, setCompanyName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
@@ -50,7 +49,6 @@ const Worker = () => {
 
   useEffect(() => {
     fetchOrders();
-    fetchProcessedOrders();
     fetchCompanySettings();
   }, []);
 
@@ -97,31 +95,6 @@ const Worker = () => {
     setLoading(false);
   };
 
-  const fetchProcessedOrders = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        profiles!orders_customer_id_fkey(full_name, email, cart_name, cart_number),
-        order_items(
-          quantity,
-          price,
-          box_size,
-          products(name)
-        )
-      `)
-      .eq('assigned_worker_id', user.id)
-      .eq('status', 'completed')
-      .order('updated_at', { ascending: false })
-      .limit(10);
-
-    if (!error && data) {
-      setProcessedOrders(data as Order[]);
-    }
-  };
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -141,7 +114,6 @@ const Worker = () => {
     } else {
       toast.success(`Order marked as ${newStatus}`);
       fetchOrders();
-      fetchProcessedOrders();
     }
   };
 
@@ -452,74 +424,6 @@ const Worker = () => {
             ))}
           </div>
         )}
-
-        <div className="border-t pt-8">
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold">Processed Orders History</h2>
-            <p className="text-muted-foreground">Your recently completed orders</p>
-          </div>
-
-          {processedOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No processed orders yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {processedOrders.map(order => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <div>
-                        <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
-                        <CardDescription>
-                          Customer: {order.profiles?.full_name || 'Unknown'}
-                          {order.profiles?.cart_number && ` • Cart: ${order.profiles.cart_name || ''} ${order.profiles.cart_number}`}
-                        </CardDescription>
-                        <CardDescription>
-                          {format(new Date(order.created_at), 'PPp')}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-green-500/10 text-green-700 border-green-200">
-                          COMPLETED
-                        </Badge>
-                        <span className="text-lg font-bold">${order.total.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Product</TableHead>
-                          <TableHead>Box Size</TableHead>
-                          <TableHead className="text-right">Quantity</TableHead>
-                          <TableHead className="text-right">Price</TableHead>
-                          <TableHead className="text-right">Subtotal</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {order.order_items.map((item, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-medium">{item.products?.name || 'Unknown'}</TableCell>
-                            <TableCell>{item.box_size}</TableCell>
-                            <TableCell className="text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                            <TableCell className="text-right">
-                              ${(item.quantity * item.price).toFixed(2)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </DashboardLayout>
   );

@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
 import Worker from "./pages/Worker";
+import ProcessedOrders from "./pages/ProcessedOrders";
 import Manager from "./pages/Manager";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
@@ -35,9 +36,10 @@ const App = () => (
               <Route path="/orders" element={<ProtectedRoute requireRole="customer"><Orders /></ProtectedRoute>} />
               <Route path="/my-violations" element={<ProtectedRoute requireRole="customer"><CustomerViolations /></ProtectedRoute>} />
               <Route path="/worker" element={<ProtectedRoute requireAnyRole={['worker', 'manager']}><Worker /></ProtectedRoute>} />
+              <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin']}><ProcessedOrders /></ProtectedRoute>} />
+              <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin']}><Violations /></ProtectedRoute>} />
               <Route path="/manager" element={<ProtectedRoute requireRole="manager"><Manager /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute>} />
-              <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin']}><Violations /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
