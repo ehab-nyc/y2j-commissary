@@ -10,7 +10,7 @@ export const useTheme = () => {
   useEffect(() => {
     fetchActiveTheme();
 
-    // Subscribe to changes
+    // Subscribe to changes with better error handling
     const channel = supabase
       .channel('theme_changes')
       .on(
@@ -22,12 +22,15 @@ export const useTheme = () => {
           filter: 'key=eq.active_theme',
         },
         (payload) => {
+          console.log('Theme change received via realtime:', payload);
           const newTheme = (payload.new.value || 'default') as AppTheme;
           setActiveTheme(newTheme);
           applyTheme(newTheme);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
