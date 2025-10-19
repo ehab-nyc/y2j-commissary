@@ -58,6 +58,28 @@ const Admin = () => {
     fetchServiceFee();
     fetchActiveTheme();
     fetchCurrentUserRoles();
+
+    // Subscribe to theme changes
+    const channel = supabase
+      .channel('admin_theme_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'app_settings',
+          filter: 'key=eq.active_theme',
+        },
+        (payload) => {
+          const newTheme = (payload.new.value || 'default') as 'default' | 'halloween' | 'christmas' | 'christmas-wonderland';
+          setActiveTheme(newTheme);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchCurrentUserRoles = async () => {
