@@ -67,8 +67,11 @@ export const useTheme = () => {
     
     console.log('Applying theme:', theme);
     
-    // Remove all theme classes first
-    root.classList.remove('holiday', 'christmas-wonderland', 'halloween');
+    // Remove ALL theme-related classes (including old 'dark' class from next-themes)
+    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'dark', 'light');
+    
+    // Clear any theme localStorage from old next-themes system
+    localStorage.removeItem('theme');
     
     // Apply the selected theme
     if (theme === 'halloween') {
