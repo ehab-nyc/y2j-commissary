@@ -9,9 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { User, Lock, Save, Moon, Sun, ShoppingBag, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Save, ShoppingBag, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
 import { z } from 'zod';
 import { passwordSchema } from '@/lib/validation';
@@ -43,7 +42,6 @@ interface Order {
 const Profile = () => {
   const { user, hasRole } = useAuth();
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -244,29 +242,6 @@ const Profile = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter your phone number"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="theme">{t('profile.appearance')}</Label>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {theme === 'dark' ? (
-                        <Moon className="w-5 h-5 text-primary" />
-                      ) : (
-                        <Sun className="w-5 h-5 text-primary" />
-                      )}
-                      <div>
-                        <p className="font-medium">{t('profile.darkMode')}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {theme === 'dark' ? t('profile.enabled') : t('profile.disabled')}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id="theme"
-                      checked={theme === 'dark'}
-                      onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                    />
-                  </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full gap-2">
                   <Save className="w-4 h-4" />
