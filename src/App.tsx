@@ -23,7 +23,9 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  useTheme();
+  const { activeTheme, loading } = useTheme();
+  
+  console.log('App theme state:', { activeTheme, loading });
   
   return (
     <>
