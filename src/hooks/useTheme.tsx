@@ -43,6 +43,7 @@ export const useTheme = () => {
         .single();
 
       const theme = (data?.value || 'default') as AppTheme;
+      console.log('Fetched active theme:', theme);
       setActiveTheme(theme);
       applyTheme(theme);
     } catch (error) {
@@ -55,17 +56,24 @@ export const useTheme = () => {
   const applyTheme = (theme: AppTheme) => {
     const root = document.documentElement;
     
+    console.log('Applying theme:', theme);
+    
     // Remove all theme classes
     root.classList.remove('holiday', 'christmas-wonderland', 'halloween');
     
     // Apply the selected theme
     if (theme === 'halloween') {
       root.classList.add('halloween');
+      console.log('Halloween theme class added to HTML element');
     } else if (theme === 'christmas') {
       root.classList.add('holiday');
+      console.log('Christmas theme class added to HTML element');
     } else if (theme === 'christmas-wonderland') {
       root.classList.add('christmas-wonderland');
+      console.log('Christmas Wonderland theme class added to HTML element');
     }
+    
+    console.log('Current HTML classes:', root.className);
   };
 
   return { activeTheme, loading };
