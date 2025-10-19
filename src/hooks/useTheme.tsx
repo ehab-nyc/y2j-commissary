@@ -58,6 +58,22 @@ export const useTheme = () => {
 
       const theme = (data?.value || 'default') as AppTheme;
       console.log('useTheme: Fetched active theme:', theme);
+      
+      // Check if we're in PWA mode
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+      const currentTheme = document.documentElement.classList.contains('halloween') ? 'halloween' :
+                          document.documentElement.classList.contains('holiday') ? 'christmas' :
+                          document.documentElement.classList.contains('christmas-wonderland') ? 'christmas-wonderland' : 'default';
+      
+      // If in PWA and cached theme doesn't match database theme, reload once
+      if (isPWA && currentTheme !== theme && !sessionStorage.getItem('theme-reloaded')) {
+        console.log('PWA theme mismatch detected, reloading...', { currentTheme, theme });
+        sessionStorage.setItem('theme-reloaded', 'true');
+        applyTheme(theme);
+        window.location.reload();
+        return;
+      }
+      
       setActiveTheme(theme);
       applyTheme(theme);
     } catch (error) {
