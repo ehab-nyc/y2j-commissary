@@ -26,10 +26,6 @@ export const useTheme = () => {
           const newTheme = (payload.new.value || 'default') as AppTheme;
           setActiveTheme(newTheme);
           applyTheme(newTheme);
-          // Force style recalculation
-          document.documentElement.style.display = 'none';
-          document.documentElement.offsetHeight; // Trigger reflow
-          document.documentElement.style.display = '';
         }
       )
       .subscribe((status) => {
