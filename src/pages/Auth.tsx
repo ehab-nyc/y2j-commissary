@@ -165,16 +165,15 @@ const Auth = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        imageRendering: 'crisp-edges',
-        WebkitBackfaceVisibility: 'hidden',
-        MozBackfaceVisibility: 'hidden',
-        WebkitTransform: 'translateZ(0)',
-        MozTransform: 'translateZ(0)',
+        imageRendering: '-webkit-optimize-contrast',
+        WebkitFontSmoothing: 'antialiased',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)',
       }}
     >
       <div 
-        className="absolute inset-0 bg-background/40" 
-        style={{ backdropFilter: `blur(${settings.login_blur_amount}px)` }}
+        className="absolute inset-0 bg-background/20" 
+        style={{ backdropFilter: `blur(${Math.max(0, Number(settings.login_blur_amount) - 1)}px)` }}
       />
       <Card className="w-full max-w-md shadow-elevated relative z-10">
         <CardHeader className="text-center space-y-2">
