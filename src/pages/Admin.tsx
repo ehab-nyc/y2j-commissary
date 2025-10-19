@@ -405,7 +405,7 @@ const Admin = () => {
     }
   };
 
-  const handleUpdateTheme = async (newTheme: 'default' | 'christmas' | 'christmas-wonderland') => {
+  const handleUpdateTheme = async (newTheme: 'default' | 'halloween' | 'christmas' | 'christmas-wonderland') => {
     const { error } = await supabase
       .from('app_settings')
       .upsert({ 
