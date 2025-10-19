@@ -61,7 +61,7 @@ export const useTheme = () => {
     
     console.log('Applying theme:', theme);
     
-    // Remove all theme classes
+    // Remove all theme classes first
     root.classList.remove('holiday', 'christmas-wonderland', 'halloween');
     
     // Apply the selected theme
@@ -74,6 +74,8 @@ export const useTheme = () => {
     } else if (theme === 'christmas-wonderland') {
       root.classList.add('christmas-wonderland');
       console.log('Christmas Wonderland theme class added to HTML element');
+    } else {
+      console.log('Default theme applied (no theme class added)');
     }
     
     console.log('Current HTML classes:', root.className);
