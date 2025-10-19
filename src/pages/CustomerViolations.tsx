@@ -28,9 +28,23 @@ const CustomerViolations = () => {
   const { user } = useAuth();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isHalloween, setIsHalloween] = useState(false);
 
   useEffect(() => {
     fetchViolations();
+    
+    // Check if Halloween theme is active
+    const checkHalloween = () => {
+      setIsHalloween(document.documentElement.classList.contains('halloween'));
+    };
+    checkHalloween();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkHalloween);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -61,6 +75,7 @@ const CustomerViolations = () => {
 
     return () => {
       supabase.removeChannel(channel);
+      observer.disconnect();
     };
   }, [user]);
 
@@ -155,9 +170,21 @@ const CustomerViolations = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Violation History</h1>
-          <p className="text-muted-foreground">View violations associated with your cart</p>
+        <div className="flex items-center gap-4">
+          {isHalloween && (
+            <div className="text-6xl animate-pulse pointer-events-none filter drop-shadow-[0_0_25px_rgba(255,94,0,0.9)]">
+              🎃
+            </div>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold">Violation History</h1>
+            <p className="text-muted-foreground">View violations associated with your cart</p>
+          </div>
+          {isHalloween && (
+            <div className="text-6xl animate-pulse pointer-events-none filter drop-shadow-[0_0_25px_rgba(255,94,0,0.9)]">
+              🎃
+            </div>
+          )}
         </div>
 
         <Card>
