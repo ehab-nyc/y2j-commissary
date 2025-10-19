@@ -108,14 +108,23 @@ const Admin = () => {
   };
 
   const fetchActiveTheme = async () => {
-    const { data } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'active_theme')
-      .single();
-    
-    if (data) {
-      setActiveTheme((data.value || 'default') as 'default' | 'halloween' | 'christmas' | 'christmas-wonderland');
+    try {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'active_theme')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching active theme in Admin:', error);
+        return;
+      }
+      
+      const theme = (data?.value || 'default') as 'default' | 'halloween' | 'christmas' | 'christmas-wonderland';
+      console.log('Admin: Fetched active theme:', theme);
+      setActiveTheme(theme);
+    } catch (error) {
+      console.error('Exception fetching active theme in Admin:', error);
     }
   };
 

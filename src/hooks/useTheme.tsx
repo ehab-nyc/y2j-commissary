@@ -39,18 +39,24 @@ export const useTheme = () => {
 
   const fetchActiveTheme = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('app_settings')
         .select('value')
         .eq('key', 'active_theme')
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching active theme in useTheme:', error);
+        setLoading(false);
+        return;
+      }
 
       const theme = (data?.value || 'default') as AppTheme;
-      console.log('Fetched active theme:', theme);
+      console.log('useTheme: Fetched active theme:', theme);
       setActiveTheme(theme);
       applyTheme(theme);
     } catch (error) {
-      console.error('Error fetching active theme:', error);
+      console.error('Exception in fetchActiveTheme:', error);
     } finally {
       setLoading(false);
     }
