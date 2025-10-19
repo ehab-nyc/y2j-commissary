@@ -26,6 +26,11 @@ export const useTheme = () => {
           const newTheme = (payload.new.value || 'default') as AppTheme;
           setActiveTheme(newTheme);
           applyTheme(newTheme);
+          
+          // Force reload in PWA to clear cached styles
+          if (window.matchMedia('(display-mode: standalone)').matches) {
+            window.location.reload();
+          }
         }
       )
       .subscribe((status) => {
