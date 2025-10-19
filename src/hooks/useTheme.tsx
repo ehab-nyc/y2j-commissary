@@ -26,6 +26,10 @@ export const useTheme = () => {
           const newTheme = (payload.new.value || 'default') as AppTheme;
           setActiveTheme(newTheme);
           applyTheme(newTheme);
+          // Force style recalculation
+          document.documentElement.style.display = 'none';
+          document.documentElement.offsetHeight; // Trigger reflow
+          document.documentElement.style.display = '';
         }
       )
       .subscribe((status) => {
@@ -67,11 +71,12 @@ export const useTheme = () => {
     
     console.log('Applying theme:', theme);
     
-    // Remove ALL theme-related classes (including old 'dark' class from next-themes)
-    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'dark', 'light');
-    
-    // Clear any theme localStorage from old next-themes system
+    // Only clear theme-related storage (not auth!)
     localStorage.removeItem('theme');
+    localStorage.removeItem('theme-preference');
+    
+    // Remove ALL theme-related classes
+    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'dark', 'light');
     
     // Apply the selected theme
     if (theme === 'halloween') {
