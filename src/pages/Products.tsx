@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Minus, ShoppingCart, Search } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Plus, Minus, ShoppingCart, Search, Maximize2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { z } from 'zod';
@@ -41,6 +42,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [boxSizes, setBoxSizes] = useState<Record<string, string>>({});
   const [serviceFee, setServiceFee] = useState<number>(10);
+  const [fullscreenImage, setFullscreenImage] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchProducts(true); // Reset box sizes on initial load
@@ -419,12 +421,19 @@ const Products = () => {
               return (
                 <Card key={product.id} className="overflow-hidden hover:shadow-elevated transition-shadow">
                   {product.image_url && (
-                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                    <div className="aspect-video w-full overflow-hidden bg-muted relative group">
                       <img
                         src={product.image_url}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />
+                      <button
+                        onClick={() => setFullscreenImage({ url: product.image_url!, name: product.name })}
+                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                        aria-label="View fullscreen"
+                      >
+                        <Maximize2 className="w-8 h-8 text-white" />
+                      </button>
                     </div>
                   )}
                   <CardHeader className="pb-3">
@@ -497,6 +506,28 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {/* Fullscreen Image Dialog */}
+      <Dialog open={!!fullscreenImage} onOpenChange={() => setFullscreenImage(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <button
+              onClick={() => setFullscreenImage(null)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+              aria-label="Close fullscreen"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+            {fullscreenImage && (
+              <img
+                src={fullscreenImage.url}
+                alt={fullscreenImage.name}
+                className="max-w-full max-h-full object-contain animate-scale-in"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
