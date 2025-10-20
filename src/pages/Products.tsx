@@ -509,8 +509,8 @@ const Products = () => {
 
       {/* Fullscreen Image Dialog */}
       <Dialog open={!!fullscreenImage} onOpenChange={() => setFullscreenImage(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95">
-          <div className="relative w-full h-full flex items-center justify-center">
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 bg-black/95 border-none">
+          <div className="relative w-full h-full flex items-center justify-center p-4">
             <button
               onClick={() => setFullscreenImage(null)}
               className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
@@ -522,7 +522,7 @@ const Products = () => {
               <img
                 src={fullscreenImage.url}
                 alt={fullscreenImage.name}
-                className="max-w-full max-h-full object-contain animate-scale-in"
+                className="w-full h-full object-contain animate-scale-in"
               />
             )}
           </div>
