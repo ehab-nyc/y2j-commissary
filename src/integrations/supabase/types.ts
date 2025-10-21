@@ -115,6 +115,38 @@ export type Database = {
           },
         ]
       }
+      customer_phones: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          id: string
+          is_primary: boolean | null
+          phone: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          is_primary?: boolean | null
+          phone: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          is_primary?: boolean | null
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_phones_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_shifts: {
         Row: {
           clock_in: string

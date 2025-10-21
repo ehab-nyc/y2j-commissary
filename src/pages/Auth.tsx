@@ -73,6 +73,18 @@ const Auth = () => {
     const fullName = formData.get('signup-name') as string;
     const cartName = formData.get('signup-cart-name') as string;
     const cartNumber = formData.get('signup-cart-number') as string;
+    const phone = formData.get('signup-phone') as string;
+
+    // Validate phone format
+    const phoneSchema = z.string()
+      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format');
+    
+    const phoneValidation = phoneSchema.safeParse(phone);
+    if (!phoneValidation.success) {
+      toast.error(phoneValidation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
 
     // Validate password strength
     const passwordValidation = passwordSchema.safeParse(password);
@@ -96,15 +108,25 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      // Update profile with cart info
+      // Update profile with cart info and add phone number
       if (authData.user) {
         await supabase
           .from('profiles')
           .update({ 
             cart_name: cartName,
-            cart_number: cartNumber
+            cart_number: cartNumber,
+            phone: phone
           })
           .eq('id', authData.user.id);
+        
+        // Add phone number to customer_phones table
+        await supabase
+          .from('customer_phones')
+          .insert({
+            customer_id: authData.user.id,
+            phone: phone,
+            is_primary: true
+          });
       }
       toast.success('Account created successfully!');
       navigate('/');
@@ -313,6 +335,19 @@ const Auth = () => {
                     placeholder="Cart Number"
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Phone Number *</Label>
+                  <Input
+                    id="signup-phone"
+                    name="signup-phone"
+                    type="tel"
+                    placeholder="+1234567890"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Required for SMS order notifications
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">{t('auth.email')}</Label>

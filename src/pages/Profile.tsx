@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { User, Lock, Save, ShoppingBag, Eye, EyeOff, MessageSquare } from 'lucide-react';
+import { User, Lock, Save, ShoppingBag, Eye, EyeOff, Phone, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { z } from 'zod';
@@ -46,8 +46,8 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [smsNotifications, setSmsNotifications] = useState(false);
+  const [phoneNumbers, setPhoneNumbers] = useState<any[]>([]);
+  const [newPhone, setNewPhone] = useState('');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -58,6 +58,7 @@ const Profile = () => {
   useEffect(() => {
     fetchProfile();
     fetchOrders();
+    fetchPhoneNumbers();
   }, [user]);
 
   const fetchProfile = async () => {
@@ -72,9 +73,21 @@ const Profile = () => {
     if (data) {
       setProfile(data);
       setFullName(data.full_name || '');
-      setPhone(data.phone || '');
-      setSmsNotifications(data.sms_notifications || false);
       setEmailNotifications(data.email_notifications ?? true);
+    }
+  };
+
+  const fetchPhoneNumbers = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('customer_phones')
+      .select('*')
+      .eq('customer_id', user.id)
+      .order('is_primary', { ascending: false });
+    
+    if (data) {
+      setPhoneNumbers(data);
     }
   };
 
@@ -125,10 +138,6 @@ const Profile = () => {
 
     // Validation schemas
     const fullNameSchema = z.string().max(100, 'Full name cannot exceed 100 characters').trim();
-    const phoneSchema = z.string()
-      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format')
-      .optional()
-      .or(z.literal(''));
 
     // Validate full name
     const nameValidation = fullNameSchema.safeParse(fullName);
@@ -138,22 +147,10 @@ const Profile = () => {
       return;
     }
 
-    // Validate phone if provided
-    if (phone) {
-      const phoneValidation = phoneSchema.safeParse(phone);
-      if (!phoneValidation.success) {
-        toast.error(phoneValidation.error.errors[0].message);
-        setLoading(false);
-        return;
-      }
-    }
-
     const { error } = await supabase
       .from('profiles')
       .update({
         full_name: nameValidation.data,
-        phone: phone || null,
-        sms_notifications: smsNotifications,
         email_notifications: emailNotifications,
       })
       .eq('id', user?.id);
@@ -200,6 +197,56 @@ const Profile = () => {
     setLoading(false);
   };
 
+  const handleAddPhone = async () => {
+    if (!newPhone.trim()) {
+      toast.error('Please enter a phone number');
+      return;
+    }
+
+    const phoneSchema = z.string()
+      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format');
+    
+    const phoneValidation = phoneSchema.safeParse(newPhone);
+    if (!phoneValidation.success) {
+      toast.error(phoneValidation.error.errors[0].message);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('customer_phones')
+      .insert({
+        customer_id: user?.id,
+        phone: newPhone,
+        is_primary: phoneNumbers.length === 0
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast.error('This phone number is already added');
+      } else {
+        toast.error('Failed to add phone number');
+      }
+    } else {
+      toast.success('Phone number added successfully');
+      setNewPhone('');
+      fetchPhoneNumbers();
+    }
+  };
+
+  const handleDeletePhone = async (phoneId: string) => {
+    const { error } = await supabase
+      .from('customer_phones')
+      .delete()
+      .eq('id', phoneId);
+
+    if (error) {
+      toast.error('Failed to delete phone number');
+    } else {
+      toast.success('Phone number deleted successfully');
+      fetchPhoneNumbers();
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -239,35 +286,7 @@ const Profile = () => {
                     placeholder="Enter your full name"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">{t('profile.phoneNumber')}</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                
                 <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="sms-notifications" className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        SMS Notifications
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Receive order updates via SMS
-                      </p>
-                    </div>
-                    <Switch
-                      id="sms-notifications"
-                      checked={smsNotifications}
-                      onCheckedChange={setSmsNotifications}
-                    />
-                  </div>
-                  
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="email-notifications">Email Notifications</Label>
@@ -363,6 +382,65 @@ const Profile = () => {
             </CardContent>
           </Card>
         </div>
+
+        {hasRole('customer') && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="w-5 h-5" />
+                Phone Numbers for SMS Notifications
+              </CardTitle>
+              <CardDescription>
+                SMS notifications are always enabled. Add multiple phone numbers to receive order updates.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                />
+                <Button onClick={handleAddPhone} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                {phoneNumbers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    No phone numbers added yet
+                  </p>
+                ) : (
+                  phoneNumbers.map((phoneNum) => (
+                    <div
+                      key={phoneNum.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{phoneNum.phone}</span>
+                        {phoneNum.is_primary && (
+                          <Badge variant="secondary" className="text-xs">Primary</Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeletePhone(phoneNum.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {hasRole('customer') && (
           <Card>
