@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye, Folder, Printer, MessageSquare } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Package, Upload, X, KeyRound, ShoppingBag, ClipboardList, Eye, Folder, Printer, MessageSquare, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -48,6 +48,8 @@ const Admin = () => {
   const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
+  const [processedOrders, setProcessedOrders] = useState<any[]>([]);
+  const [violations, setViolations] = useState<any[]>([]);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -85,6 +87,8 @@ const Admin = () => {
     fetchServiceFee();
     fetchActiveTheme();
     fetchCurrentUserRoles();
+    fetchProcessedOrders();
+    fetchViolations();
 
     // Subscribe to theme changes
     const channel = supabase
@@ -221,6 +225,47 @@ const Admin = () => {
       `)
       .order('created_at', { ascending: false });
     setOrders(data || []);
+  };
+
+  const fetchProcessedOrders = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        profiles!orders_customer_id_fkey(full_name, email, cart_name, cart_number),
+        order_items(
+          quantity,
+          price,
+          box_size,
+          products(name)
+        )
+      `)
+      .eq('assigned_worker_id', user.id)
+      .eq('status', 'completed')
+      .order('updated_at', { ascending: false });
+
+    if (!error) {
+      setProcessedOrders(data || []);
+    }
+  };
+
+  const fetchViolations = async () => {
+    const { data, error } = await supabase
+      .from('violations')
+      .select(`
+        *,
+        customer:profiles!violations_customer_id_fkey(id, full_name, email, cart_name, cart_number),
+        inspector:profiles!violations_inspector_id_fkey(id, full_name, email),
+        images:violation_images(id, image_url)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (!error) {
+      setViolations(data || []);
+    }
   };
 
   const fetchSettings = async () => {
@@ -781,7 +826,7 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 max-w-4xl mx-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 max-w-6xl mx-auto">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -793,6 +838,14 @@ const Admin = () => {
             <TabsTrigger value="orders" className="gap-2">
               <ClipboardList className="w-4 h-4" />
               Orders
+            </TabsTrigger>
+            <TabsTrigger value="processed" className="gap-2">
+              <CheckCircle2 className="w-4 h-4" />
+              Processed
+            </TabsTrigger>
+            <TabsTrigger value="violations" className="gap-2">
+              <AlertCircle className="w-4 h-4" />
+              Violations
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
@@ -1563,6 +1616,160 @@ const Admin = () => {
                   </p>
                   <GlobalSMSManager />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="processed" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Processed Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {processedOrders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CheckCircle2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No processed orders yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {processedOrders.map((order: any) => (
+                      <Card key={order.id}>
+                        <CardHeader>
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                              <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
+                              <p className="text-sm text-muted-foreground">
+                                Customer: {order.profiles?.full_name || 'Unknown'} ({order.profiles?.email || 'N/A'})
+                              </p>
+                              {(order.profiles?.cart_name || order.profiles?.cart_number) && (
+                                <p className="text-sm text-muted-foreground">
+                                  Cart: {order.profiles?.cart_name || ''} {order.profiles?.cart_number || ''}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge className="bg-green-500/10 text-green-700 border-green-200">
+                                COMPLETED
+                              </Badge>
+                              <span className="text-lg font-bold text-primary">
+                                ${order.total.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Product</TableHead>
+                                <TableHead>Box Size</TableHead>
+                                <TableHead className="text-right">Quantity</TableHead>
+                                <TableHead className="text-right">Price</TableHead>
+                                <TableHead className="text-right">Subtotal</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {order.order_items.map((item: any, idx: number) => (
+                                <TableRow key={idx}>
+                                  <TableCell className="font-medium">{item.products?.name || 'Unknown'}</TableCell>
+                                  <TableCell>{item.box_size}</TableCell>
+                                  <TableCell className="text-right">{item.quantity}</TableCell>
+                                  <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                                  <TableCell className="text-right">
+                                    ${(item.quantity * item.price).toFixed(2)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="violations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  Cart Violations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {violations.length === 0 ? (
+                  <div className="text-center py-12">
+                    <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No violations recorded</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {violations.map((violation: any) => (
+                      <Card key={violation.id}>
+                        <CardHeader>
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                              <CardTitle className="text-lg">{violation.violation_type}</CardTitle>
+                              <p className="text-sm text-muted-foreground">
+                                Customer: {violation.customer?.full_name || 'Unknown'} ({violation.customer?.email || 'N/A'})
+                              </p>
+                              {(violation.cart_name || violation.cart_number) && (
+                                <p className="text-sm text-muted-foreground">
+                                  Cart: {violation.cart_name || ''} {violation.cart_number || ''}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground">
+                                Inspector: {violation.inspector?.full_name || violation.inspector?.email}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <Badge variant={
+                                violation.severity === 'critical' ? 'destructive' :
+                                violation.severity === 'high' ? 'destructive' :
+                                violation.severity === 'medium' ? 'default' : 'secondary'
+                              }>
+                                {violation.severity.toUpperCase()}
+                              </Badge>
+                              <Badge variant={
+                                violation.status === 'resolved' ? 'default' :
+                                violation.status === 'pending' ? 'secondary' : 'default'
+                              }>
+                                {violation.status.toUpperCase()}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm mb-2"><strong>Description:</strong> {violation.description}</p>
+                          {violation.resolution_notes && (
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Resolution Notes:</strong> {violation.resolution_notes}
+                            </p>
+                          )}
+                          {violation.images && violation.images.length > 0 && (
+                            <div className="flex gap-2 mt-4 flex-wrap">
+                              {violation.images.map((img: any) => (
+                                <img
+                                  key={img.id}
+                                  src={img.image_url}
+                                  alt="Violation"
+                                  className="w-20 h-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
