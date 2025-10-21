@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShoppingBag, Package, ShoppingCart, FileText, Wrench } from 'lucide-react';
+import { ShoppingBag, Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 // Import existing page components
@@ -10,6 +10,10 @@ import OrdersPage from './Orders';
 import PurchaseOrdersPage from './PurchaseOrders';
 import ReceiptSettingsPage from './ReceiptSettings';
 import HardwareSetupPage from './HardwareSetup';
+import CustomersPage from './Customers';
+import StockTakePage from './StockTake';
+import EmployeeShiftsPage from './EmployeeShifts';
+import AnalyticsPage from './Analytics';
 
 const POS = () => {
   const { hasRole } = useAuth();
@@ -22,7 +26,7 @@ const POS = () => {
       </div>
 
       <Tabs defaultValue="products" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 max-w-4xl mx-auto mb-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mx-auto mb-6">
           <TabsTrigger value="products" className="gap-2">
             <ShoppingBag className="w-4 h-4" />
             Products
@@ -41,10 +45,36 @@ const POS = () => {
           </TabsTrigger>
           
           {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-            <TabsTrigger value="purchase-orders" className="gap-2">
-              <ShoppingCart className="w-4 h-4" />
-              Purchase Orders
-            </TabsTrigger>
+            <>
+              <TabsTrigger value="purchase-orders" className="gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Purchase Orders
+              </TabsTrigger>
+              
+              <TabsTrigger value="customers" className="gap-2">
+                <Users className="w-4 h-4" />
+                Customers
+              </TabsTrigger>
+              
+              <TabsTrigger value="analytics" className="gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Analytics
+              </TabsTrigger>
+            </>
+          )}
+          
+          {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
+            <>
+              <TabsTrigger value="stock-take" className="gap-2">
+                <ClipboardList className="w-4 h-4" />
+                Stock Take
+              </TabsTrigger>
+              
+              <TabsTrigger value="time-clock" className="gap-2">
+                <Clock className="w-4 h-4" />
+                Time Clock
+              </TabsTrigger>
+            </>
           )}
           
           {(hasRole('admin') || hasRole('super_admin')) && (
@@ -80,6 +110,30 @@ const POS = () => {
           <TabsContent value="purchase-orders" className="mt-0">
             <PurchaseOrdersPage />
           </TabsContent>
+        )}
+
+        {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
+          <>
+            <TabsContent value="customers" className="mt-0">
+              <CustomersPage />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-0">
+              <AnalyticsPage />
+            </TabsContent>
+          </>
+        )}
+
+        {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
+          <>
+            <TabsContent value="stock-take" className="mt-0">
+              <StockTakePage />
+            </TabsContent>
+
+            <TabsContent value="time-clock" className="mt-0">
+              <EmployeeShiftsPage />
+            </TabsContent>
+          </>
         )}
 
         {(hasRole('admin') || hasRole('super_admin')) && (
