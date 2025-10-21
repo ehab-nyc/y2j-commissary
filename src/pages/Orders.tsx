@@ -183,17 +183,17 @@ const Orders = () => {
       return;
     }
 
-    // Store single item in localStorage to repopulate cart
+    // Store single item in sessionStorage to repopulate cart (cleared on tab close)
     const cartItem = {
       productId: item.product_id,
       quantity: item.quantity,
       boxSize: item.box_size,
     };
     
-    localStorage.setItem('editOrderCart', JSON.stringify([cartItem]));
-    localStorage.setItem('editOrderId', orderId);
-    localStorage.setItem('editOrderItemId', item.id);
-    localStorage.setItem('keepOrderId', 'true'); // Flag to keep same order
+    sessionStorage.setItem('editOrderCart', JSON.stringify([cartItem]));
+    sessionStorage.setItem('editOrderId', orderId);
+    sessionStorage.setItem('editOrderItemId', item.id);
+    sessionStorage.setItem('keepOrderId', 'true'); // Flag to keep same order
     
     toast.success('Redirecting to edit item...');
     navigate('/products');

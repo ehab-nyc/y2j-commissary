@@ -64,10 +64,10 @@ const Products = () => {
   };
 
   const loadCartFromEdit = async () => {
-    const editCartData = localStorage.getItem('editOrderCart');
-    const editOrderId = localStorage.getItem('editOrderId');
-    const editOrderItemId = localStorage.getItem('editOrderItemId');
-    const keepOrderId = localStorage.getItem('keepOrderId');
+    const editCartData = sessionStorage.getItem('editOrderCart');
+    const editOrderId = sessionStorage.getItem('editOrderId');
+    const editOrderItemId = sessionStorage.getItem('editOrderItemId');
+    const keepOrderId = sessionStorage.getItem('keepOrderId');
     
     if (editCartData && editOrderId) {
       try {
@@ -82,19 +82,19 @@ const Products = () => {
 
         if (orderError || !order) {
           toast.error('Order not found or already deleted');
-          localStorage.removeItem('editOrderCart');
-          localStorage.removeItem('editOrderId');
-          localStorage.removeItem('editOrderItemId');
-          localStorage.removeItem('keepOrderId');
+          sessionStorage.removeItem('editOrderCart');
+          sessionStorage.removeItem('editOrderId');
+          sessionStorage.removeItem('editOrderItemId');
+          sessionStorage.removeItem('keepOrderId');
           return;
         }
 
         if (order.status !== 'pending') {
           toast.error('Cannot edit order - it is being processed or completed');
-          localStorage.removeItem('editOrderCart');
-          localStorage.removeItem('editOrderId');
-          localStorage.removeItem('editOrderItemId');
-          localStorage.removeItem('keepOrderId');
+          sessionStorage.removeItem('editOrderCart');
+          sessionStorage.removeItem('editOrderId');
+          sessionStorage.removeItem('editOrderItemId');
+          sessionStorage.removeItem('keepOrderId');
           return;
         }
         
@@ -132,15 +132,15 @@ const Products = () => {
           }
         }
         
-        // Don't clear localStorage yet - keep editOrderId for placeOrder to use
+        // Don't clear sessionStorage yet - keep editOrderId for placeOrder to use
       } catch (error) {
         console.error('Error loading cart from edit:', error);
         toast.error('Failed to load order for editing');
-        // Clear localStorage on error to prevent retry loops
-        localStorage.removeItem('editOrderCart');
-        localStorage.removeItem('editOrderId');
-        localStorage.removeItem('editOrderItemId');
-        localStorage.removeItem('keepOrderId');
+        // Clear sessionStorage on error to prevent retry loops
+        sessionStorage.removeItem('editOrderCart');
+        sessionStorage.removeItem('editOrderId');
+        sessionStorage.removeItem('editOrderItemId');
+        sessionStorage.removeItem('keepOrderId');
       }
     }
   };
@@ -279,8 +279,8 @@ const Products = () => {
     const total = subtotal + currentServiceFee;
 
     // Check if we're editing an existing order
-    const editOrderId = localStorage.getItem('editOrderId');
-    const keepOrderId = localStorage.getItem('keepOrderId');
+    const editOrderId = sessionStorage.getItem('editOrderId');
+    const keepOrderId = sessionStorage.getItem('keepOrderId');
     
     let orderId = editOrderId && keepOrderId ? editOrderId : null;
 
@@ -334,11 +334,11 @@ const Products = () => {
       toast.success(message);
       setCart([]);
       
-      // Clear edit-related localStorage
-      localStorage.removeItem('editOrderCart');
-      localStorage.removeItem('editOrderId');
-      localStorage.removeItem('editOrderItemId');
-      localStorage.removeItem('keepOrderId');
+      // Clear edit-related sessionStorage
+      sessionStorage.removeItem('editOrderCart');
+      sessionStorage.removeItem('editOrderId');
+      sessionStorage.removeItem('editOrderItemId');
+      sessionStorage.removeItem('keepOrderId');
       
       fetchProducts(false); // Don't reset box sizes when refetching after order
     }

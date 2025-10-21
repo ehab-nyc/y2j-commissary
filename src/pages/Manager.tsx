@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,7 @@ import { format } from 'date-fns';
 import { TrendingUp, Package, Users, DollarSign, Eye, Printer, BarChart3, ClipboardList, CheckCircle2, Play } from 'lucide-react';
 
 const Manager = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
@@ -27,6 +29,30 @@ const Manager = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
+
+  // Server-side role verification for defense in depth
+  useEffect(() => {
+    const verifyManagerAccess = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['manager', 'admin', 'super_admin']);
+
+      if (error || !roles || roles.length === 0) {
+        toast.error('Access denied: Manager privileges required');
+        navigate('/');
+      }
+    };
+
+    verifyManagerAccess();
+  }, [navigate]);
 
   useEffect(() => {
     fetchStats();

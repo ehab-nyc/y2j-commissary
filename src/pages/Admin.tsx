@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { z } from 'zod';
 const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin', 'super_admin']);
 
 const Admin = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -47,6 +49,30 @@ const Admin = () => {
   const [showUserDialog, setShowUserDialog] = useState(false);
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
+
+  // Server-side role verification for defense in depth
+  useEffect(() => {
+    const verifyAdminAccess = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'super_admin']);
+
+      if (error || !roles || roles.length === 0) {
+        toast.error('Access denied: Admin privileges required');
+        navigate('/');
+      }
+    };
+
+    verifyAdminAccess();
+  }, [navigate]);
 
   useEffect(() => {
     fetchProducts();
