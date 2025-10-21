@@ -65,8 +65,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
     { path: '/analytics', label: 'Analytics', icon: BarChart3, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
-    { path: '/receipt-templates', label: 'Receipts', icon: FileText, show: hasRole('admin') || hasRole('super_admin') },
-    { path: '/hardware-setup', label: 'Hardware', icon: Wrench, show: hasRole('admin') || hasRole('super_admin') },
+    { path: '/receipt-settings', label: 'Receipt Settings', icon: FileText, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];

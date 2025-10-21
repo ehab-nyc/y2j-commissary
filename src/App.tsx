@@ -25,8 +25,7 @@ import PurchaseOrders from "./pages/PurchaseOrders";
 import StockTake from "./pages/StockTake";
 import Customers from "./pages/Customers";
 import EmployeeShifts from "./pages/EmployeeShifts";
-import ReceiptTemplates from "./pages/ReceiptTemplates";
-import HardwareSetup from "./pages/HardwareSetup";
+import ReceiptSettings from "./pages/ReceiptSettings";
 
 const queryClient = new QueryClient();
 
@@ -59,8 +58,7 @@ const AppContent = () => {
           <Route path="/stock-take" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><StockTake /></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Customers /></ProtectedRoute>} />
           <Route path="/employee-shifts" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><EmployeeShifts /></ProtectedRoute>} />
-          <Route path="/receipt-templates" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><ReceiptTemplates /></ProtectedRoute>} />
-          <Route path="/hardware-setup" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><HardwareSetup /></ProtectedRoute>} />
+          <Route path="/receipt-settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><ReceiptSettings /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
