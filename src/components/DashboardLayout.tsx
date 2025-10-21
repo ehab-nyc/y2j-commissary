@@ -52,11 +52,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const navItems = [
-    { path: '/products', label: t('nav.products'), icon: ShoppingBag, show: true },
+    { path: '/pos', label: 'POS', icon: ShoppingBag, show: true },
     { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
     { path: '/my-violations', label: 'My Violations', icon: AlertCircle, show: hasRole('customer') },
-    { path: '/inventory', label: 'Inventory', icon: Package, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
-    { path: '/purchase-orders', label: 'Purchase Orders', icon: ShoppingCart, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/stock-take', label: 'Stock Take', icon: ClipboardList, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/customers', label: 'Customers', icon: Users, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/employee-shifts', label: 'Time Clock', icon: Clock, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
@@ -65,7 +63,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
     { path: '/analytics', label: 'Analytics', icon: BarChart3, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
-    { path: '/receipt-settings', label: 'Receipt Settings', icon: FileText, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];

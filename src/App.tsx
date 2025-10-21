@@ -26,6 +26,7 @@ import StockTake from "./pages/StockTake";
 import Customers from "./pages/Customers";
 import EmployeeShifts from "./pages/EmployeeShifts";
 import ReceiptSettings from "./pages/ReceiptSettings";
+import POS from "./pages/POS";
 
 const queryClient = new QueryClient();
 
@@ -41,8 +42,9 @@ const AppContent = () => {
       <PWAUpdatePrompt />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/products" replace />} />
+          <Route path="/" element={<Navigate to="/pos" replace />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute requireRole="customer"><Orders /></ProtectedRoute>} />
           <Route path="/my-violations" element={<ProtectedRoute requireRole="customer"><CustomerViolations /></ProtectedRoute>} />
