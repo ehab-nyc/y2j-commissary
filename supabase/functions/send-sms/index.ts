@@ -19,6 +19,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authenticate using trigger secret (for database triggers)
+    const triggerSecret = req.headers.get('x-trigger-secret');
+    const expectedSecret = Deno.env.get('SMS_TRIGGER_SECRET');
+    
+    if (!triggerSecret || triggerSecret !== expectedSecret) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid trigger secret' }), 
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
     const { to, message }: SMSRequest = await req.json();
 
     console.log("Sending SMS to:", to);
