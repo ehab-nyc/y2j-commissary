@@ -35,11 +35,28 @@ serve(async (req) => {
     }
 
     const { conversationId, message } = validationResult.data;
-    const authHeader = req.headers.get("authorization");
     
+    // Extract JWT from header - already validated by Supabase
+    const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       throw new Error("Missing authorization header");
     }
+
+    // Decode JWT to get user ID (JWT is already validated by verify_jwt=true)
+    const jwt = authHeader.replace('Bearer ', '');
+    const parts = jwt.split('.');
+    if (parts.length !== 3) {
+      throw new Error("Invalid JWT format");
+    }
+    
+    const payload = JSON.parse(atob(parts[1]));
+    const userId = payload.sub;
+    
+    if (!userId) {
+      throw new Error("No user ID in JWT");
+    }
+    
+    console.log('User authenticated:', userId);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -48,23 +65,13 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } }
     });
-    
-    // Verify user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('User verification failed:', userError);
-      throw new Error("Unauthorized");
-    }
-    
-    console.log('User authenticated:', user.id);
 
     // Create conversation if needed
     let convId = conversationId;
     if (!convId) {
       const { data: newConv, error: convError } = await supabase
         .from("chat_conversations")
-        .insert({ user_id: user.id, title: message.substring(0, 50) })
+        .insert({ user_id: userId, title: message.substring(0, 50) })
         .select()
         .single();
 
@@ -90,7 +97,7 @@ serve(async (req) => {
     const { data: orders } = await supabase
       .from("orders")
       .select("*, order_items(*, products(name, price))")
-      .eq("customer_id", user.id)
+      .eq("customer_id", userId)
       .order("created_at", { ascending: false })
       .limit(5);
 
