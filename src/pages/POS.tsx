@@ -1,5 +1,6 @@
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState } from 'react';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -16,99 +17,89 @@ import AnalyticsPage from './Analytics';
 
 const POS = () => {
   const { hasRole } = useAuth();
+  const [activeTab, setActiveTab] = useState('inventory');
+
+  // Build available tabs based on user role
+  const availableTabs = [];
+  
+  if (hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
+    availableTabs.push(
+      { value: 'inventory', label: 'Inventory', icon: Package },
+      { value: 'stock-take', label: 'Stock Take', icon: ClipboardList },
+      { value: 'time-clock', label: 'Time Clock', icon: Clock }
+    );
+  }
+  
+  availableTabs.push({ value: 'orders', label: 'Orders', icon: ShoppingCart });
+  
+  if (hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
+    availableTabs.push(
+      { value: 'purchase-orders', label: 'Purchase Orders', icon: ShoppingCart },
+      { value: 'customers', label: 'Customers', icon: Users },
+      { value: 'analytics', label: 'Analytics', icon: BarChart3 }
+    );
+  }
+  
+  if (hasRole('admin') || hasRole('super_admin')) {
+    availableTabs.push(
+      { value: 'receipt-settings', label: 'Receipts', icon: FileText },
+      { value: 'hardware', label: 'Hardware', icon: Wrench }
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Point of Sale</h1>
-        <p className="text-muted-foreground">Manage all POS operations in one place</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Point of Sale</h1>
+          <p className="text-muted-foreground">Manage all POS operations in one place</p>
+        </div>
+        
+        <Select value={activeTab} onValueChange={setActiveTab}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableTabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <SelectItem key={tab.value} value={tab.value}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {tab.label}
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </div>
 
-      <Tabs defaultValue="inventory" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mx-auto mb-6">
-          {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-            <TabsTrigger value="inventory" className="gap-2">
-              <Package className="w-4 h-4" />
-              Inventory
-            </TabsTrigger>
-          )}
-          
-          <TabsTrigger value="orders" className="gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            Orders
-          </TabsTrigger>
-          
-          {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-            <>
-              <TabsTrigger value="purchase-orders" className="gap-2">
-                <ShoppingCart className="w-4 h-4" />
-                Purchase Orders
-              </TabsTrigger>
-              
-              <TabsTrigger value="customers" className="gap-2">
-                <Users className="w-4 h-4" />
-                Customers
-              </TabsTrigger>
-              
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Analytics
-              </TabsTrigger>
-            </>
-          )}
-          
-          {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-            <>
-              <TabsTrigger value="stock-take" className="gap-2">
-                <ClipboardList className="w-4 h-4" />
-                Stock Take
-              </TabsTrigger>
-              
-              <TabsTrigger value="time-clock" className="gap-2">
-                <Clock className="w-4 h-4" />
-                Time Clock
-              </TabsTrigger>
-            </>
-          )}
-          
-          {(hasRole('admin') || hasRole('super_admin')) && (
-            <>
-              <TabsTrigger value="receipt-settings" className="gap-2">
-                <FileText className="w-4 h-4" />
-                Receipts
-              </TabsTrigger>
-              
-              <TabsTrigger value="hardware" className="gap-2">
-                <Wrench className="w-4 h-4" />
-                Hardware
-              </TabsTrigger>
-            </>
-          )}
-        </TabsList>
+      <Tabs value={activeTab} className="w-full">
 
         {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-          <TabsContent value="inventory" className="mt-0">
+          <TabsContent value="inventory">
             <InventoryPage />
           </TabsContent>
         )}
 
-        <TabsContent value="orders" className="mt-0">
+        <TabsContent value="orders">
           <OrdersPage />
         </TabsContent>
 
         {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-          <TabsContent value="purchase-orders" className="mt-0">
+          <TabsContent value="purchase-orders">
             <PurchaseOrdersPage />
           </TabsContent>
         )}
 
         {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
           <>
-            <TabsContent value="customers" className="mt-0">
+            <TabsContent value="customers">
               <CustomersPage />
             </TabsContent>
 
-            <TabsContent value="analytics" className="mt-0">
+            <TabsContent value="analytics">
               <AnalyticsPage />
             </TabsContent>
           </>
@@ -116,11 +107,11 @@ const POS = () => {
 
         {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
           <>
-            <TabsContent value="stock-take" className="mt-0">
+            <TabsContent value="stock-take">
               <StockTakePage />
             </TabsContent>
 
-            <TabsContent value="time-clock" className="mt-0">
+            <TabsContent value="time-clock">
               <EmployeeShiftsPage />
             </TabsContent>
           </>
@@ -128,11 +119,11 @@ const POS = () => {
 
         {(hasRole('admin') || hasRole('super_admin')) && (
           <>
-            <TabsContent value="receipt-settings" className="mt-0">
+            <TabsContent value="receipt-settings">
               <ReceiptSettingsPage />
             </TabsContent>
 
-            <TabsContent value="hardware" className="mt-0">
+            <TabsContent value="hardware">
               <HardwareSetupPage />
             </TabsContent>
           </>
