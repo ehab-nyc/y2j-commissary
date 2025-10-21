@@ -11,7 +11,7 @@ import { useAITranslate } from '@/hooks/useAITranslate';
 
 interface TranslateButtonProps {
   text: string;
-  onTranslated: (translatedText: string, language: string) => void;
+  onTranslated: (translatedText: string) => void;
   context?: string;
   size?: 'sm' | 'default' | 'lg';
 }
@@ -37,7 +37,7 @@ export const TranslateButton = ({
   const handleTranslate = async (langCode: string, langName: string) => {
     setSelectedLang(langCode);
     const translated = await translate(text, langCode, context);
-    onTranslated(translated, langCode);
+    onTranslated(translated);
     setSelectedLang(null);
   };
 
