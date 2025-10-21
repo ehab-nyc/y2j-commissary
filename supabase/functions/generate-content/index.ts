@@ -38,6 +38,24 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
+    // ACTUALLY check the role from database
+    const { data: roles, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'manager', 'super_admin'])
+      .single();
+
+    if (roleError || !roles) {
+      console.error('Role verification failed:', roleError);
+      return new Response(
+        JSON.stringify({ error: "Forbidden: Admin or Manager role required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log('User authorized with role:', roles.role);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY not configured");

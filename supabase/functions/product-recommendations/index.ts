@@ -19,14 +19,15 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     
-    // Create client with service role key for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    // Use anon key with user's JWT - RLS policies enforce access control
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
     
-    // Verify user using the JWT from the auth header
-    const jwt = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    // Verify user authentication
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
       console.error('User verification failed:', userError);
@@ -35,16 +36,16 @@ serve(async (req) => {
     
     console.log('User authenticated:', user.id);
 
-    // Get user's order history
-    const { data: orders } = await supabaseAdmin
+    // Get user's order history - RLS ensures they can only see their own orders
+    const { data: orders } = await supabase
       .from("orders")
       .select("*, order_items(*, products(name, price, category_id, description))")
       .eq("customer_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Get all available products
-    const { data: allProducts } = await supabaseAdmin
+    // Get all available products - RLS allows viewing active products
+    const { data: allProducts } = await supabase
       .from("products")
       .select("*")
       .eq("active", true);
