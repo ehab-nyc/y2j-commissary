@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,20 +12,42 @@ serve(async (req) => {
   }
 
   try {
-    const { text, targetLanguage, context } = await req.json();
+    const translateSchema = z.object({
+      text: z.string()
+        .min(1, "Text cannot be empty")
+        .max(5000, "Text must be less than 5000 characters for translation")
+        .trim(),
+      targetLanguage: z.string()
+        .min(2, "Language code must be at least 2 characters")
+        .max(5, "Language code must be at most 5 characters")
+        .regex(/^[a-z]{2,5}$/, "Invalid language code format"),
+      context: z.string()
+        .max(200, "Context must be less than 200 characters")
+        .optional()
+    });
+
+    const body = await req.json();
     
     console.log('=== AI Translate Edge Function Called ===');
-    console.log('Target Language:', targetLanguage);
-    console.log('Text to translate:', text);
-    console.log('Context:', context);
+    console.log('Request body:', body);
     
-    if (!text || !targetLanguage) {
-      console.error('Missing required fields');
+    const validationResult = translateSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      console.error('Validation failed:', validationResult.error.errors);
       return new Response(
-        JSON.stringify({ error: "Text and targetLanguage are required" }),
+        JSON.stringify({ 
+          error: "Invalid input",
+          details: validationResult.error.errors 
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const { text, targetLanguage, context } = validationResult.data;
+    
+    console.log('Validated - Target Language:', targetLanguage);
+    console.log('Validated - Text length:', text.length);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

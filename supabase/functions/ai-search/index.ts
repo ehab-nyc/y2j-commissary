@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,28 @@ serve(async (req) => {
   }
 
   try {
-    const { query, type = "products" } = await req.json();
+    const searchSchema = z.object({
+      query: z.string()
+        .min(1, "Query cannot be empty")
+        .max(500, "Query must be less than 500 characters")
+        .trim(),
+      type: z.enum(["products", "orders"]).optional()
+    });
+
+    const body = await req.json();
+    const validationResult = searchSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid input",
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { query, type = "products" } = validationResult.data;
     
     if (!query) {
       return new Response(

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,28 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationId, message } = await req.json();
+    const chatSchema = z.object({
+      conversationId: z.string().uuid().optional(),
+      message: z.string()
+        .min(1, "Message cannot be empty")
+        .max(2000, "Message must be less than 2000 characters")
+        .trim()
+    });
+
+    const body = await req.json();
+    const validationResult = chatSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid input",
+          details: validationResult.error.errors 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { conversationId, message } = validationResult.data;
     const authHeader = req.headers.get("authorization");
     
     if (!authHeader) {
