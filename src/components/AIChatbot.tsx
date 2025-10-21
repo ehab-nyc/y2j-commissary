@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { TranslateButton } from '@/components/TranslateButton';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,6 +21,7 @@ export const AIChatbot = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [translatedMessages, setTranslatedMessages] = useState<Record<number, string>>({});
 
   useEffect(() => {
     console.log('AIChatbot mounted, isOpen:', isOpen);
@@ -136,7 +138,7 @@ export const AIChatbot = () => {
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex flex-col gap-1 ${message.role === 'user' ? 'items-end' : 'items-start'}`}
                   >
                     <div
                       className={`max-w-[80%] rounded-lg p-3 ${
@@ -145,8 +147,25 @@ export const AIChatbot = () => {
                           : 'bg-muted'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {translatedMessages[index] || message.content}
+                      </p>
                     </div>
+                    {message.content.length > 20 && (
+                      <div className="px-1">
+                        <TranslateButton
+                          text={message.content}
+                          context="chat message"
+                          size="sm"
+                          onTranslated={(translated) => {
+                            setTranslatedMessages(prev => ({
+                              ...prev,
+                              [index]: translated
+                            }));
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
                 {isLoading && (

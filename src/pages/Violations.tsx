@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit } from 'lucide-react';
 import { violationSchema } from '@/lib/validation';
+import { TranslateButton } from '@/components/TranslateButton';
 
 interface Customer {
   id: string;

@@ -106,10 +106,19 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => changeLanguage('en')}>
-                    English
+                    🇬🇧 English
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => changeLanguage('ar')}>
-                    العربية
+                    🇸🇦 العربية (Arabic)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="opacity-50 text-xs">
+                    ━━━ AI Translation Available ━━━
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="text-xs opacity-70">
+                    🇪🇸 Spanish • 🇫🇷 French • 🇩🇪 German
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="text-xs opacity-70">
+                    🇨🇳 Chinese • And more via translate buttons
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

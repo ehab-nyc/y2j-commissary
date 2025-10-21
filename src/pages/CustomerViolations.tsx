@@ -7,6 +7,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { TranslateButton } from '@/components/TranslateButton';
 
 interface Violation {
   id: string;
@@ -29,6 +30,7 @@ const CustomerViolations = () => {
   const [violations, setViolations] = useState<Violation[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isHalloween, setIsHalloween] = useState(false);
+  const [translatedViolations, setTranslatedViolations] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchViolations();
@@ -229,7 +231,24 @@ const CustomerViolations = () => {
                           Reported by: {violation.inspector.full_name}
                         </p>
                       )}
-                      <p className="text-sm">{violation.description}</p>
+                      <div className="flex items-start gap-2">
+                        <p className="text-sm flex-1">
+                          {translatedViolations[violation.id] || violation.description}
+                        </p>
+                        {violation.description && (
+                          <TranslateButton
+                            text={violation.description}
+                            context="violation description"
+                            size="sm"
+                            onTranslated={(translated) => {
+                              setTranslatedViolations(prev => ({
+                                ...prev,
+                                [violation.id]: translated
+                              }));
+                            }}
+                          />
+                        )}
+                      </div>
                       
                       {violation.images && violation.images.length > 0 && (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">

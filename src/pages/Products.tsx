@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { ProductRecommendations } from '@/components/ProductRecommendations';
 import { AIChatbot } from '@/components/AIChatbot';
+import { TranslateButton } from '@/components/TranslateButton';
 
 interface Product {
   id: string;
@@ -25,6 +26,11 @@ interface Product {
   image_url: string | null;
   categories: { name: string } | null;
   box_sizes: string[];
+}
+
+interface TranslatedContent {
+  name?: string;
+  description?: string;
 }
 
 interface CartItem {
@@ -45,6 +51,7 @@ const Products = () => {
   const [boxSizes, setBoxSizes] = useState<Record<string, string>>({});
   const [serviceFee, setServiceFee] = useState<number>(10);
   const [fullscreenImage, setFullscreenImage] = useState<{ url: string; name: string } | null>(null);
+  const [translatedProducts, setTranslatedProducts] = useState<Record<string, TranslatedContent>>({});
 
   useEffect(() => {
     fetchProducts(true); // Reset box sizes on initial load
@@ -450,11 +457,34 @@ const Products = () => {
                     </div>
                   )}
                   <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{product.name}</CardTitle>
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-1">
+                          {translatedProducts[product.id]?.name || product.name}
+                        </CardTitle>
+                        <div className="flex items-start gap-2">
+                          <CardDescription className="line-clamp-2 flex-1">
+                            {translatedProducts[product.id]?.description || product.description}
+                          </CardDescription>
+                          <TranslateButton
+                            text={`${product.name}\n\n${product.description}`}
+                            context="product"
+                            size="sm"
+                            onTranslated={(translated) => {
+                              const [name, ...descParts] = translated.split('\n\n');
+                              setTranslatedProducts(prev => ({
+                                ...prev,
+                                [product.id]: {
+                                  name: name.trim(),
+                                  description: descParts.join('\n\n').trim()
+                                }
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
                       <Badge variant="outline">{product.categories?.name}</Badge>
                     </div>
-                    <CardDescription className="line-clamp-2">{product.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="pb-3 space-y-3">
                     <div className="flex justify-between items-center">

@@ -14,6 +14,7 @@ import { Trash2, Edit, MessageSquare, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { TranslateButton } from '@/components/TranslateButton';
 
 interface OrderItem {
   id: string;
@@ -59,6 +60,7 @@ const Orders = () => {
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [serviceFee, setServiceFee] = useState<number>(10);
+  const [translatedNotes, setTranslatedNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchOrders();
@@ -650,9 +652,26 @@ const Orders = () => {
                           </Button>
                         </div>
                       </div>
+                    ) : order.notes ? (
+                      <div className="space-y-2">
+                        <div className="text-sm text-muted-foreground">
+                          {translatedNotes[order.id] || order.notes}
+                        </div>
+                        <TranslateButton
+                          text={order.notes}
+                          context="order notes"
+                          size="sm"
+                          onTranslated={(translated) => {
+                            setTranslatedNotes(prev => ({
+                              ...prev,
+                              [order.id]: translated
+                            }));
+                          }}
+                        />
+                      </div>
                     ) : (
                       <div className="text-sm text-muted-foreground">
-                        {order.notes || 'No notes added'}
+                        No notes added
                       </div>
                     )}
                   </div>
