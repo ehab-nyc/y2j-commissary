@@ -22,7 +22,7 @@ export const BackButton = ({ to, label = 'Back' }: BackButtonProps) => {
     <Button
       variant="outline"
       onClick={handleBack}
-      className="mb-4"
+      className="mb-4 mt-2 md:mt-0"
     >
       <ArrowLeft className="mr-2 h-4 w-4" />
       {label}
