@@ -44,12 +44,13 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
-    // Create client with service role key for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    // Create client with the user's JWT for proper auth context
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
     
-    // Verify user using the JWT from the auth header
-    const jwt = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    // Verify user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
       console.error('User verification failed:', userError);
@@ -61,7 +62,7 @@ serve(async (req) => {
     // Create conversation if needed
     let convId = conversationId;
     if (!convId) {
-      const { data: newConv, error: convError } = await supabaseAdmin
+      const { data: newConv, error: convError } = await supabase
         .from("chat_conversations")
         .insert({ user_id: user.id, title: message.substring(0, 50) })
         .select()
@@ -72,21 +73,21 @@ serve(async (req) => {
     }
 
     // Save user message
-    await supabaseAdmin.from("chat_messages").insert({
+    await supabase.from("chat_messages").insert({
       conversation_id: convId,
       role: "user",
       content: message,
     });
 
     // Get conversation history
-    const { data: messages } = await supabaseAdmin
+    const { data: messages } = await supabase
       .from("chat_messages")
       .select("*")
       .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
 
     // Get user's recent orders for context
-    const { data: orders } = await supabaseAdmin
+    const { data: orders } = await supabase
       .from("orders")
       .select("*, order_items(*, products(name, price))")
       .eq("customer_id", user.id)
@@ -94,7 +95,7 @@ serve(async (req) => {
       .limit(5);
 
     // Get available products for context
-    const { data: products } = await supabaseAdmin
+    const { data: products } = await supabase
       .from("products")
       .select("name, price, description, box_sizes")
       .eq("active", true);
@@ -155,7 +156,7 @@ Be friendly, concise, and helpful. If you don't know something, admit it.`;
     const aiMessage = aiData.choices?.[0]?.message?.content || "I'm having trouble responding right now.";
 
     // Save AI response
-    await supabaseAdmin.from("chat_messages").insert({
+    await supabase.from("chat_messages").insert({
       conversation_id: convId,
       role: "assistant",
       content: aiMessage,
