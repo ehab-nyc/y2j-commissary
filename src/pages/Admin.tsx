@@ -1547,7 +1547,24 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="sms" className="space-y-4">
-            <GlobalSMSManager />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  SMS Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center py-8">
+                  <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">Send Bulk SMS Messages</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Send SMS notifications to all customers or staff members at once
+                  </p>
+                  <GlobalSMSManager />
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">

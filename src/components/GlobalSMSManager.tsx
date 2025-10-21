@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MessageSquare, Send, Users, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const GlobalSMSManager = () => {
+  const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [targetGroup, setTargetGroup] = useState<'all_customers' | 'staff'>('all_customers');
   const [loading, setLoading] = useState(false);
@@ -41,6 +42,7 @@ export const GlobalSMSManager = () => {
         }`
       );
       setMessage('');
+      setOpen(false); // Close dialog after successful send
     } catch (error: any) {
       console.error('Error sending bulk SMS:', error);
       toast.error(error.message || 'Failed to send SMS');
@@ -53,17 +55,24 @@ export const GlobalSMSManager = () => {
   const smsCount = Math.ceil(characterCount / 160) || 1;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="lg" className="gap-2">
           <MessageSquare className="w-5 h-5" />
           Send Global SMS
-        </CardTitle>
-        <CardDescription>
-          Send SMS notifications to all customers or staff members
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Send Global SMS
+          </DialogTitle>
+          <DialogDescription>
+            Send SMS notifications to all customers or staff members
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 pt-4">
         <div className="space-y-3">
           <Label>Target Group</Label>
           <RadioGroup value={targetGroup} onValueChange={(value: any) => setTargetGroup(value)}>
@@ -110,15 +119,25 @@ export const GlobalSMSManager = () => {
           </div>
         </div>
 
-        <Button 
-          onClick={handleSendSMS} 
-          disabled={loading || !message.trim()} 
-          className="w-full gap-2"
-        >
-          <Send className="w-4 h-4" />
-          {loading ? 'Sending...' : 'Send SMS'}
-        </Button>
-      </CardContent>
-    </Card>
+        <div className="flex gap-2 pt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setOpen(false)} 
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSendSMS} 
+            disabled={loading || !message.trim()} 
+            className="flex-1 gap-2"
+          >
+            <Send className="w-4 h-4" />
+            {loading ? 'Sending...' : 'Send SMS'}
+          </Button>
+        </div>
+      </div>
+      </DialogContent>
+    </Dialog>
   );
 };
