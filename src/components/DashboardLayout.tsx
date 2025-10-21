@@ -52,7 +52,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const navItems = [
-    { path: '/pos', label: 'POS', icon: ShoppingBag, show: true },
+    { path: '/products', label: 'Products', icon: ShoppingBag, show: true },
     { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
     { path: '/my-violations', label: 'My Violations', icon: AlertCircle, show: hasRole('customer') },
     { path: '/worker', label: t('nav.ordersQueue'), icon: Package, show: hasRole('worker') || hasRole('manager') },
@@ -60,6 +60,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
     { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') || hasRole('super_admin') },
+    { path: '/pos', label: 'POS', icon: BarChart3, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];
 

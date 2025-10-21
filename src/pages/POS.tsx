@@ -1,10 +1,9 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShoppingBag, Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
+import { Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 // Import existing page components
-import ProductsPage from './Products';
 import InventoryPage from './Inventory';
 import OrdersPage from './Orders';
 import PurchaseOrdersPage from './PurchaseOrders';
@@ -25,13 +24,8 @@ const POS = () => {
         <p className="text-muted-foreground">Manage all POS operations in one place</p>
       </div>
 
-      <Tabs defaultValue="products" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mx-auto mb-6">
-          <TabsTrigger value="products" className="gap-2">
-            <ShoppingBag className="w-4 h-4" />
-            Products
-          </TabsTrigger>
-          
+      <Tabs defaultValue="inventory" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mx-auto mb-6">
           {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
             <TabsTrigger value="inventory" className="gap-2">
               <Package className="w-4 h-4" />
@@ -91,10 +85,6 @@ const POS = () => {
             </>
           )}
         </TabsList>
-
-        <TabsContent value="products" className="mt-0">
-          <ProductsPage />
-        </TabsContent>
 
         {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
           <TabsContent value="inventory" className="mt-0">
