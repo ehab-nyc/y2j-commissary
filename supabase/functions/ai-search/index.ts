@@ -43,19 +43,60 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Verify authentication
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Fetch data based on type
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    
+    // Create client with user's JWT to enforce RLS
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify user is authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check user roles for order searches
+    if (type === "orders") {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["worker", "manager", "admin", "super_admin"]);
+
+      if (!roles || roles.length === 0) {
+        return new Response(
+          JSON.stringify({ error: "Insufficient permissions to search orders" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Fetch data based on type - RLS will automatically filter based on user permissions
     let data: any[] = [];
     if (type === "products") {
       const { data: products } = await supabase
         .from("products")
         .select("*")
-        .eq("is_available", true);
+        .eq("active", true)
+        .order("name");
       data = products || [];
     } else if (type === "orders") {
+      // RLS policies will ensure users only see orders they have access to
       const { data: orders } = await supabase
         .from("orders")
         .select("*, profiles(full_name, cart_number)")
