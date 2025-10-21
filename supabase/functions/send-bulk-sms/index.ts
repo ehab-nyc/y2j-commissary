@@ -83,30 +83,30 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Fetch phone numbers based on target group
     if (targetGroup === 'all_customers') {
-      const { data: phones } = await supabaseService
+      const { data: phones } = await supabase
         .from('customer_phones')
         .select('phone');
       
-      phoneNumbers = phones?.map(p => p.phone) || [];
+      phoneNumbers = phones?.map((p: any) => p.phone) || [];
     } else if (targetGroup === 'staff') {
       // Get staff phone numbers
-      const { data: staffProfiles } = await supabaseService
+      const { data: staffProfiles } = await supabase
         .from('profiles')
         .select('phone, id')
         .not('phone', 'is', null);
       
       if (staffProfiles) {
         // Filter to only include staff (workers, managers, admins)
-        const { data: staffRoles } = await supabaseService
+        const { data: staffRoles } = await supabase
           .from('user_roles')
           .select('user_id')
           .in('role', ['worker', 'manager', 'admin', 'super_admin'])
-          .in('user_id', staffProfiles.map(p => p.id));
+          .in('user_id', staffProfiles.map((p: any) => p.id));
         
-        const staffIds = new Set(staffRoles?.map(r => r.user_id) || []);
+        const staffIds = new Set(staffRoles?.map((r: any) => r.user_id) || []);
         phoneNumbers = staffProfiles
-          .filter(p => staffIds.has(p.id) && p.phone)
-          .map(p => p.phone!);
+          .filter((p: any) => staffIds.has(p.id) && p.phone)
+          .map((p: any) => p.phone!);
       }
     }
 
