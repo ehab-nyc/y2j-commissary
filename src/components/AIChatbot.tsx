@@ -21,7 +21,13 @@ export const AIChatbot = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  console.log('AIChatbot render - isOpen:', isOpen);
+  useEffect(() => {
+    console.log('AIChatbot mounted, isOpen:', isOpen);
+  }, []);
+
+  useEffect(() => {
+    console.log('isOpen changed to:', isOpen);
+  }, [isOpen]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -71,90 +77,97 @@ export const AIChatbot = () => {
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
-      // Remove the failed user message
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={() => {
-          console.log('Chatbot button clicked, opening chat...');
-          setIsOpen(true);
-        }}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] pointer-events-auto"
-        size="icon"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
-    );
-  }
+  const handleToggle = () => {
+    console.log('Toggle clicked! Current isOpen:', isOpen, 'New value:', !isOpen);
+    setIsOpen(!isOpen);
+  };
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl z-[9999] pointer-events-auto">
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          <h3 className="font-semibold">Support Chat</h3>
-        </div>
-        <Button onClick={() => setIsOpen(false)} variant="ghost" size="icon">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        {messages.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
-            <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Hi! How can I help you today?</p>
-            <p className="text-sm mt-2">Ask about products, orders, or anything else!</p>
-          </div>
-        )}
-        
-        <div className="space-y-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg p-3">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-
-      <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Type your message..."
-            disabled={isLoading}
-          />
-          <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon">
-            <Send className="h-4 w-4" />
+    <>
+      {!isOpen && (
+        <div className="fixed bottom-6 right-6 z-[9999]">
+          <Button
+            onClick={handleToggle}
+            className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+            size="icon"
+          >
+            <MessageCircle className="h-6 w-6" />
           </Button>
         </div>
-      </div>
-    </Card>
+      )}
+
+      {isOpen && (
+        <div className="fixed bottom-6 right-6 z-[9999]">
+          <Card className="w-96 h-[600px] flex flex-col shadow-2xl bg-background">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                <h3 className="font-semibold">Support Chat</h3>
+              </div>
+              <Button onClick={handleToggle} variant="ghost" size="icon">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+              {messages.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Hi! How can I help you today?</p>
+                  <p className="text-sm mt-2">Ask about products, orders, or anything else!</p>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-lg p-3">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  placeholder="Type your message..."
+                  disabled={isLoading}
+                />
+                <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+    </>
   );
 };
