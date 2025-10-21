@@ -1,0 +1,96 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+interface SMSRequest {
+  to: string;
+  message: string;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { to, message }: SMSRequest = await req.json();
+
+    console.log("Sending SMS to:", to);
+
+    // Validate input
+    if (!to || !message) {
+      throw new Error("Missing required fields: to and message");
+    }
+
+    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+
+    if (!accountSid || !authToken || !twilioPhone) {
+      throw new Error("Twilio credentials not configured");
+    }
+
+    // Send SMS using Twilio API
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+    
+    const formData = new URLSearchParams();
+    formData.append("To", to);
+    formData.append("From", twilioPhone);
+    formData.append("Body", message);
+
+    const twilioResponse = await fetch(twilioUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${btoa(`${accountSid}:${authToken}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData,
+    });
+
+    const twilioData = await twilioResponse.json();
+
+    if (!twilioResponse.ok) {
+      console.error("Twilio error:", twilioData);
+      throw new Error(`Twilio API error: ${twilioData.message || 'Unknown error'}`);
+    }
+
+    console.log("SMS sent successfully:", twilioData.sid);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        messageSid: twilioData.sid 
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
+  } catch (error: any) {
+    console.error("Error in send-sms function:", error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        success: false 
+      }),
+      {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json", 
+          ...corsHeaders 
+        },
+      }
+    );
+  }
+};
+
+serve(handler);
