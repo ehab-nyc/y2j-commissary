@@ -13,13 +13,21 @@ export const useAITranslate = () => {
   ): Promise<string> => {
     if (!text.trim()) return text;
 
+    console.log('=== useAITranslate ===');
+    console.log('Translating to:', targetLanguage);
+    console.log('Text:', text);
+
     setIsTranslating(true);
     try {
+      console.log('Calling ai-translate function...');
       const { data, error } = await supabase.functions.invoke('ai-translate', {
         body: { text, targetLanguage, context }
       });
 
+      console.log('Translation response:', { data, error });
+
       if (error) {
+        console.error('Translation error:', error);
         if (error.message?.includes('Rate limit')) {
           toast({
             title: "Rate Limit",

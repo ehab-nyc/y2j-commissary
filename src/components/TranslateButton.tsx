@@ -35,8 +35,15 @@ export const TranslateButton = ({
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
 
   const handleTranslate = async (langCode: string, langName: string) => {
+    console.log('=== Translation Started ===');
+    console.log('Language:', langName, langCode);
+    console.log('Text to translate:', text);
+    console.log('Context:', context);
+    
     setSelectedLang(langCode);
     const translated = await translate(text, langCode, context);
+    
+    console.log('Translated result:', translated);
     onTranslated(translated);
     setSelectedLang(null);
   };
