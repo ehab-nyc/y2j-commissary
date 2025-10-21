@@ -36,35 +36,35 @@ serve(async (req) => {
 
     const { conversationId, message } = validationResult.data;
     
-    // Extract JWT from header - already validated by Supabase
+    // Verify authentication
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      throw new Error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-
-    // Decode JWT to get user ID (JWT is already validated by verify_jwt=true)
-    const jwt = authHeader.replace('Bearer ', '');
-    const parts = jwt.split('.');
-    if (parts.length !== 3) {
-      throw new Error("Invalid JWT format");
-    }
-    
-    const payload = JSON.parse(atob(parts[1]));
-    const userId = payload.sub;
-    
-    if (!userId) {
-      throw new Error("No user ID in JWT");
-    }
-    
-    console.log('User authenticated:', userId);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     
-    // Create client with the user's JWT
+    // Create client with the user's JWT to enforce RLS
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } }
     });
+
+    // Properly verify the user and get user ID
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const userId = user.id;
+    console.log('User authenticated:', userId);
 
     // Create conversation if needed
     let convId = conversationId;
