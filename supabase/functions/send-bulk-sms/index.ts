@@ -83,21 +83,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Fetch phone numbers based on target group
     if (targetGroup === 'all_customers') {
-      const { data: phones } = await supabase
+      const { data: phones } = await supabaseService
         .from('customer_phones')
         .select('phone');
       
       phoneNumbers = phones?.map(p => p.phone) || [];
     } else if (targetGroup === 'staff') {
       // Get staff phone numbers
-      const { data: staffProfiles } = await supabase
+      const { data: staffProfiles } = await supabaseService
         .from('profiles')
         .select('phone, id')
         .not('phone', 'is', null);
       
       if (staffProfiles) {
         // Filter to only include staff (workers, managers, admins)
-        const { data: staffRoles } = await supabase
+        const { data: staffRoles } = await supabaseService
           .from('user_roles')
           .select('user_id')
           .in('role', ['worker', 'manager', 'admin', 'super_admin'])
