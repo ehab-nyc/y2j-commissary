@@ -85,7 +85,7 @@ export const AIChatbot = () => {
           console.log('Chatbot button clicked, opening chat...');
           setIsOpen(true);
         }}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999] pointer-events-auto"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -94,7 +94,7 @@ export const AIChatbot = () => {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl z-50">
+    <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl z-[9999] pointer-events-auto">
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5" />
