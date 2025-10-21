@@ -59,7 +59,10 @@ export const AIChatbot = () => {
       }
       
       const { data, error } = await supabase.functions.invoke('ai-chatbot', {
-        body: { conversationId, message: userMessage }
+        body: { conversationId, message: userMessage },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        }
       });
 
       console.log('Edge function response:', { data, error });
