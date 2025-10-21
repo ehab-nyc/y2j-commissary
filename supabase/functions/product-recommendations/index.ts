@@ -19,19 +19,24 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    // Verify user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Create client with service role key for admin operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Verify user using the JWT from the auth header
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    
     if (userError || !user) {
+      console.error('User verification failed:', userError);
       throw new Error("Unauthorized");
     }
+    
+    console.log('User authenticated:', user.id);
 
     // Get user's order history
-    const { data: orders } = await supabase
+    const { data: orders } = await supabaseAdmin
       .from("orders")
       .select("*, order_items(*, products(name, price, category_id, description))")
       .eq("customer_id", user.id)
@@ -39,7 +44,7 @@ serve(async (req) => {
       .limit(10);
 
     // Get all available products
-    const { data: allProducts } = await supabase
+    const { data: allProducts } = await supabaseAdmin
       .from("products")
       .select("*")
       .eq("active", true);
