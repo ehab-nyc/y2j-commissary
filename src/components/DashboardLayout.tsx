@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages, ClipboardList, Clock, FileText, Wrench } from 'lucide-react';
+import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages, ClipboardList, Clock, FileText, Wrench, MapPin } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -61,6 +61,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
     { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/pos', label: 'POS', icon: BarChart3, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
+    { path: '/gps', label: 'GPS', icon: MapPin, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];
 
