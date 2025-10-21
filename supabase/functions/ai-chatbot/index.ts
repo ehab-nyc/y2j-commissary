@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const chatSchema = z.object({
-      conversationId: z.string().uuid().optional(),
+      conversationId: z.string().uuid().nullish(),
       message: z.string()
         .min(1, "Message cannot be empty")
         .max(2000, "Message must be less than 2000 characters")
