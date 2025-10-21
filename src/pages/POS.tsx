@@ -62,7 +62,9 @@ const POS = () => {
         
         <Select value={activeTab} onValueChange={setActiveTab}>
           <SelectTrigger className="w-[220px]">
-            <SelectValue />
+            <SelectValue>
+              {availableTabs.find(tab => tab.value === activeTab)?.label || 'Select Section'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {availableTabs.map((tab) => {
