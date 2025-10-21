@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const { conversationId, message } = validationResult.data;
     
-    // Verify authentication
+    // JWT is already verified by Supabase (verify_jwt = true in config.toml)
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return new Response(
@@ -45,29 +45,26 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
-    // Extract JWT token from Authorization header
+    // Extract user ID from JWT token
     const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userId = payload.sub;
     
-    // Create client with the user's JWT to enforce RLS
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Properly verify the user and get user ID by passing the JWT token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
+    if (!userId) {
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    const userId = user.id;
     console.log('User authenticated:', userId);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
 
     // Create conversation if needed
     let convId = conversationId;
