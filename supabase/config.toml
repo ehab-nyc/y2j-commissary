@@ -11,3 +11,9 @@ verify_jwt = true
 
 [functions.product-recommendations]
 verify_jwt = true
+
+[functions.generate-content]
+verify_jwt = true
+
+[functions.analyze-image]
+verify_jwt = false
