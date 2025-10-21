@@ -11,13 +11,12 @@ export function LowStockAlerts() {
       const { data, error } = await supabase
         .from("products")
         .select("*")
-        .filter("quantity", "lte", "low_stock_threshold")
         .eq("active", true)
         .order("quantity", { ascending: true });
 
       if (error) throw error;
       // Filter in memory for products where quantity <= low_stock_threshold
-      return data?.filter(p => p.quantity <= p.low_stock_threshold) || [];
+      return data?.filter(p => p.quantity <= (p.low_stock_threshold || 0)) || [];
     },
   });
 
