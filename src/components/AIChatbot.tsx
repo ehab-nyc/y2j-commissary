@@ -44,8 +44,13 @@ export const AIChatbot = () => {
     setIsLoading(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('ai-chatbot', {
-        body: { conversationId, message: userMessage }
+        body: { conversationId, message: userMessage },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
       });
 
       if (error) {
