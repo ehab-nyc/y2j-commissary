@@ -1006,6 +1006,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_notification: {
+        Args: {
+          p_message: string
+          p_order_id?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_customer_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
