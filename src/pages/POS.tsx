@@ -1,142 +1,118 @@
-import React, { useState, useMemo } from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-
-// Import existing page components
-import InventoryPage from './Inventory';
-import OrdersPage from './Orders';
-import PurchaseOrdersPage from './PurchaseOrders';
-import ReceiptSettingsPage from './ReceiptSettings';
-import HardwareSetupPage from './HardwareSetup';
-import CustomersPage from './Customers';
-import StockTakePage from './StockTake';
-import EmployeeShiftsPage from './EmployeeShifts';
-import AnalyticsPage from './Analytics';
+import { DashboardLayout } from '@/components/DashboardLayout';
 
 const POS = () => {
   const { hasRole } = useAuth();
+  const navigate = useNavigate();
 
-  // Build available tabs based on user role
-  const availableTabs = useMemo(() => {
-    const tabs = [];
-    
-    if (hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
-      tabs.push(
-        { value: 'inventory', label: 'Inventory', icon: Package },
-        { value: 'stock-take', label: 'Stock Take', icon: ClipboardList },
-        { value: 'time-clock', label: 'Time Clock', icon: Clock }
-      );
-    }
-    
-    tabs.push({ value: 'orders', label: 'Orders', icon: ShoppingCart });
-    
-    if (hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
-      tabs.push(
-        { value: 'purchase-orders', label: 'Purchase Orders', icon: ShoppingCart },
-        { value: 'customers', label: 'Customers', icon: Users },
-        { value: 'analytics', label: 'Analytics', icon: BarChart3 }
-      );
-    }
-    
-    if (hasRole('admin') || hasRole('super_admin')) {
-      tabs.push(
-        { value: 'receipt-settings', label: 'Receipts', icon: FileText },
-        { value: 'hardware', label: 'Hardware', icon: Wrench }
-      );
-    }
-    
-    return tabs;
-  }, [hasRole]);
+  const sections = [
+    {
+      title: 'Inventory',
+      description: 'Manage products and stock levels',
+      icon: Package,
+      path: '/inventory',
+      roles: ['worker', 'manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Orders',
+      description: 'View and process customer orders',
+      icon: ShoppingCart,
+      path: '/orders',
+      roles: ['customer', 'worker', 'manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Purchase Orders',
+      description: 'Manage supplier orders',
+      icon: ShoppingCart,
+      path: '/purchase-orders',
+      roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Customers',
+      description: 'View and manage customers',
+      icon: Users,
+      path: '/customers',
+      roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Analytics',
+      description: 'View sales and performance metrics',
+      icon: BarChart3,
+      path: '/analytics',
+      roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Stock Take',
+      description: 'Perform inventory counts',
+      icon: ClipboardList,
+      path: '/stock-take',
+      roles: ['worker', 'manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Time Clock',
+      description: 'Employee shift management',
+      icon: Clock,
+      path: '/employee-shifts',
+      roles: ['worker', 'manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Receipt Settings',
+      description: 'Configure receipt templates',
+      icon: FileText,
+      path: '/receipt-settings',
+      roles: ['admin', 'super_admin']
+    },
+    {
+      title: 'Hardware Setup',
+      description: 'Configure POS hardware',
+      icon: Wrench,
+      path: '/hardware-setup',
+      roles: ['admin', 'super_admin']
+    },
+  ];
 
-  const [activeTab, setActiveTab] = useState(availableTabs[0]?.value || 'orders');
+  const availableSections = sections.filter(section =>
+    section.roles.some(role => hasRole(role as any))
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <DashboardLayout>
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Point of Sale</h1>
           <p className="text-muted-foreground">Manage all POS operations in one place</p>
         </div>
-        
-        <Select value={activeTab} onValueChange={setActiveTab}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue>
-              {availableTabs.find(tab => tab.value === activeTab)?.label || 'Select Section'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {availableTabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <SelectItem key={tab.value} value={tab.value}>
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {availableSections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <Card 
+                key={section.path}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate(section.path)}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle>{section.title}</CardTitle>
                   </div>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>{section.description}</CardDescription>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
-
-      <Tabs value={activeTab} className="w-full">
-
-        {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-          <TabsContent value="inventory">
-            <InventoryPage />
-          </TabsContent>
-        )}
-
-        <TabsContent value="orders">
-          <OrdersPage />
-        </TabsContent>
-
-        {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-          <TabsContent value="purchase-orders">
-            <PurchaseOrdersPage />
-          </TabsContent>
-        )}
-
-        {(hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-          <>
-            <TabsContent value="customers">
-              <CustomersPage />
-            </TabsContent>
-
-            <TabsContent value="analytics">
-              <AnalyticsPage />
-            </TabsContent>
-          </>
-        )}
-
-        {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
-          <>
-            <TabsContent value="stock-take">
-              <StockTakePage />
-            </TabsContent>
-
-            <TabsContent value="time-clock">
-              <EmployeeShiftsPage />
-            </TabsContent>
-          </>
-        )}
-
-        {(hasRole('admin') || hasRole('super_admin')) && (
-          <>
-            <TabsContent value="receipt-settings">
-              <ReceiptSettingsPage />
-            </TabsContent>
-
-            <TabsContent value="hardware">
-              <HardwareSetupPage />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
-    </div>
+    </DashboardLayout>
   );
 };
 

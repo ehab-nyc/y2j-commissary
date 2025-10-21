@@ -26,6 +26,7 @@ import StockTake from "./pages/StockTake";
 import Customers from "./pages/Customers";
 import EmployeeShifts from "./pages/EmployeeShifts";
 import ReceiptSettings from "./pages/ReceiptSettings";
+import HardwareSetup from "./pages/HardwareSetup";
 import POS from "./pages/POS";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const AppContent = () => {
           <Route path="/customers" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Customers /></ProtectedRoute>} />
           <Route path="/employee-shifts" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><EmployeeShifts /></ProtectedRoute>} />
           <Route path="/receipt-settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><ReceiptSettings /></ProtectedRoute>} />
+          <Route path="/hardware-setup" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><HardwareSetup /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
