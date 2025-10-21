@@ -31,7 +31,20 @@ export const ProductRecommendations = ({ onAddToCart }: ProductRecommendationsPr
   const loadRecommendations = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('product-recommendations');
+      // Get current session to ensure auth headers are included
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.log('No active session, skipping recommendations');
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('product-recommendations', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
       if (error) {
         console.error('Recommendations error:', error);
