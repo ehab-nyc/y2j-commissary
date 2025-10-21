@@ -72,13 +72,15 @@ serve(async (req) => {
 
     // Check user roles for order searches
     if (type === "orders") {
-      const { data: roles } = await supabase
+      const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .in("role", ["worker", "manager", "admin", "super_admin"]);
 
-      if (!roles || roles.length === 0) {
+      // Deny access if query failed or no staff roles found
+      if (rolesError || !roles || roles.length === 0) {
+        console.error("Role check failed:", rolesError);
         return new Response(
           JSON.stringify({ error: "Insufficient permissions to search orders" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
