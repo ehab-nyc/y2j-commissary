@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
@@ -17,35 +17,40 @@ import AnalyticsPage from './Analytics';
 
 const POS = () => {
   const { hasRole } = useAuth();
-  const [activeTab, setActiveTab] = useState('inventory');
 
   // Build available tabs based on user role
-  const availableTabs = [];
-  
-  if (hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
-    availableTabs.push(
-      { value: 'inventory', label: 'Inventory', icon: Package },
-      { value: 'stock-take', label: 'Stock Take', icon: ClipboardList },
-      { value: 'time-clock', label: 'Time Clock', icon: Clock }
-    );
-  }
-  
-  availableTabs.push({ value: 'orders', label: 'Orders', icon: ShoppingCart });
-  
-  if (hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
-    availableTabs.push(
-      { value: 'purchase-orders', label: 'Purchase Orders', icon: ShoppingCart },
-      { value: 'customers', label: 'Customers', icon: Users },
-      { value: 'analytics', label: 'Analytics', icon: BarChart3 }
-    );
-  }
-  
-  if (hasRole('admin') || hasRole('super_admin')) {
-    availableTabs.push(
-      { value: 'receipt-settings', label: 'Receipts', icon: FileText },
-      { value: 'hardware', label: 'Hardware', icon: Wrench }
-    );
-  }
+  const availableTabs = useMemo(() => {
+    const tabs = [];
+    
+    if (hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
+      tabs.push(
+        { value: 'inventory', label: 'Inventory', icon: Package },
+        { value: 'stock-take', label: 'Stock Take', icon: ClipboardList },
+        { value: 'time-clock', label: 'Time Clock', icon: Clock }
+      );
+    }
+    
+    tabs.push({ value: 'orders', label: 'Orders', icon: ShoppingCart });
+    
+    if (hasRole('manager') || hasRole('admin') || hasRole('super_admin')) {
+      tabs.push(
+        { value: 'purchase-orders', label: 'Purchase Orders', icon: ShoppingCart },
+        { value: 'customers', label: 'Customers', icon: Users },
+        { value: 'analytics', label: 'Analytics', icon: BarChart3 }
+      );
+    }
+    
+    if (hasRole('admin') || hasRole('super_admin')) {
+      tabs.push(
+        { value: 'receipt-settings', label: 'Receipts', icon: FileText },
+        { value: 'hardware', label: 'Hardware', icon: Wrench }
+      );
+    }
+    
+    return tabs;
+  }, [hasRole]);
+
+  const [activeTab, setActiveTab] = useState(availableTabs[0]?.value || 'orders');
 
   return (
     <div className="space-y-6">
