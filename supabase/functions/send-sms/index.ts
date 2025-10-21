@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,10 +8,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface SMSRequest {
-  to: string;
-  message: string;
-}
+// Validation schema for SMS requests
+const smsSchema = z.object({
+  to: z.string()
+    .trim()
+    .regex(/^\+?[1-9]\d{10,14}$/, 'Invalid phone number format (must be E.164 format, e.g., +1234567890)'),
+  message: z.string()
+    .trim()
+    .min(1, 'Message is required')
+    .max(1600, 'Message too long (Twilio maximum is 1600 characters)')
+});
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -30,14 +37,31 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { to, message }: SMSRequest = await req.json();
+    // Parse and validate request body
+    const requestBody = await req.json();
+    const validationResult = smsSchema.safeParse(requestBody);
 
-    console.log("Sending SMS to:", to);
-
-    // Validate input
-    if (!to || !message) {
-      throw new Error("Missing required fields: to and message");
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0].message;
+      console.error("SMS validation error:", errorMessage);
+      return new Response(
+        JSON.stringify({ 
+          error: errorMessage,
+          success: false 
+        }),
+        {
+          status: 400,
+          headers: { 
+            "Content-Type": "application/json", 
+            ...corsHeaders 
+          },
+        }
+      );
     }
+
+    const { to, message } = validationResult.data;
+
+    console.log("Sending SMS to:", to, "- Message length:", message.length);
 
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
