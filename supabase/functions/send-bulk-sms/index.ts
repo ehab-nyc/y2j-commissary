@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,10 +8,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface BulkSMSRequest {
-  message: string;
-  targetGroup: 'all_customers' | 'staff';
-}
+// Validation schema for bulk SMS requests
+const bulkSMSSchema = z.object({
+  message: z.string()
+    .trim()
+    .min(1, 'Message is required')
+    .max(320, 'Message too long (max 320 characters for 2 SMS segments)')
+    .refine(
+      (msg) => !/\n\n\n/.test(msg),
+      'Message contains too many line breaks'
+    ),
+  targetGroup: z.enum(['all_customers', 'staff'], {
+    errorMap: () => ({ message: 'Target group must be either "all_customers" or "staff"' })
+  })
+});
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -58,14 +69,31 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { message, targetGroup }: BulkSMSRequest = await req.json();
+    // Parse and validate request body
+    const requestBody = await req.json();
+    const validationResult = bulkSMSSchema.safeParse(requestBody);
 
-    console.log("Sending bulk SMS to:", targetGroup);
-
-    // Validate input
-    if (!message || !targetGroup) {
-      throw new Error("Missing required fields: message and targetGroup");
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0].message;
+      console.error("Validation error:", errorMessage);
+      return new Response(
+        JSON.stringify({ 
+          error: errorMessage,
+          success: false 
+        }),
+        {
+          status: 400,
+          headers: { 
+            "Content-Type": "application/json", 
+            ...corsHeaders 
+          },
+        }
+      );
     }
+
+    const { message, targetGroup } = validationResult.data;
+
+    console.log("Sending bulk SMS to:", targetGroup, "- Message length:", message.length);
 
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
