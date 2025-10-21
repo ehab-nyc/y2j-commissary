@@ -12,35 +12,35 @@ serve(async (req) => {
   }
 
   try {
+    // JWT is already verified by Supabase (verify_jwt = true in config.toml)
     const authHeader = req.headers.get("authorization");
-    
     if (!authHeader) {
       throw new Error("Missing authorization header");
     }
 
+    // Extract user ID from JWT token
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userId = payload.sub;
+    
+    if (!userId) {
+      throw new Error("Invalid token");
+    }
+    
+    console.log('Request authenticated for user:', userId);
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     
-    // Use anon key with user's JWT - RLS policies enforce access control
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } }
     });
-    
-    // Verify user authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('User verification failed:', userError);
-      throw new Error("Unauthorized");
-    }
-    
-    console.log('User authenticated:', user.id);
 
     // Get user's order history - RLS ensures they can only see their own orders
     const { data: orders } = await supabase
       .from("orders")
       .select("*, order_items(*, products(name, price, category_id, description))")
-      .eq("customer_id", user.id)
+      .eq("customer_id", userId)
       .order("created_at", { ascending: false })
       .limit(10);
 
