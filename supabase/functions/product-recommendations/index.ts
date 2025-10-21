@@ -12,29 +12,26 @@ serve(async (req) => {
   }
 
   try {
-    // JWT is already verified by Supabase (verify_jwt = true in config.toml)
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      throw new Error("Missing authorization header");
-    }
-
-    // Extract user ID from JWT token
-    const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const userId = payload.sub;
-    
-    if (!userId) {
-      throw new Error("Invalid token");
-    }
-    
-    console.log('Request authenticated for user:', userId);
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authHeader = req.headers.get("authorization");
     
     const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader || "" } }
     });
+
+    // Properly validate JWT using Supabase auth
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const userId = user.id;
+    console.log('Request authenticated for user:', userId);
 
     // Get user's order history - RLS ensures they can only see their own orders
     const { data: orders } = await supabase

@@ -36,35 +36,26 @@ serve(async (req) => {
 
     const { conversationId, message } = validationResult.data;
     
-    // JWT is already verified by Supabase (verify_jwt = true in config.toml)
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Missing authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Extract user ID from JWT token
-    const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const userId = payload.sub;
-    
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    console.log('User authenticated:', userId);
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authHeader = req.headers.get("authorization");
     
     const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
+      global: { headers: { Authorization: authHeader || "" } }
     });
+
+    // Properly validate JWT using Supabase auth
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const userId = user.id;
+    console.log('User authenticated:', userId);
 
     // Create conversation if needed
     let convId = conversationId;

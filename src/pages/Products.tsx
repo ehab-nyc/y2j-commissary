@@ -267,25 +267,11 @@ const Products = () => {
       }
     }
 
-    // SECURITY NOTE: Client-side price calculation for UX only.
-    // Price integrity is enforced server-side via database triggers:
+    // SECURITY NOTE: Order total is calculated server-side via database triggers:
     // - recalculate_order_item_price: Overrides item prices with current product prices
-    // - recalculate_order_total: Recalculates order total from validated item prices
-    // This ensures tampering with client-side prices has no effect on actual charges.
-    // Fetch the latest service fee before placing order
-    const { data: feeData } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'service_fee')
-      .single();
-    
-    const currentServiceFee = feeData ? parseFloat(feeData.value) || 0 : 0;
-    
-    const subtotal = cart.reduce((sum, item) => {
-      const pricePerUnit = item.product.price * getBoxSizeMultiplier(item.boxSize);
-      return sum + pricePerUnit * item.quantity;
-    }, 0);
-    const total = subtotal + currentServiceFee;
+    // - recalculate_order_total: Recalculates order total from validated item prices + service fee
+    // Client-side total is for UX display only. Server trigger is the source of truth.
+    // Tampering with client-side values has no effect on actual charges.
 
     // Check if we're editing an existing order
     const editOrderId = sessionStorage.getItem('editOrderId');
@@ -295,11 +281,12 @@ const Products = () => {
 
     // If not editing or keeping order, create a new one
     if (!orderId) {
+      // SECURITY: Total is set to 0 and will be calculated by server-side trigger
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           customer_id: user?.id,
-          total,
+          total: 0, // Trigger will recalculate
           status: 'pending',
         })
         .select()
@@ -310,17 +297,6 @@ const Products = () => {
         return;
       }
       orderId = order.id;
-    } else {
-      // Update existing order total
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ total })
-        .eq('id', orderId);
-
-      if (updateError) {
-        toast.error('Failed to update order');
-        return;
-      }
     }
 
     // SECURITY NOTE: Client-provided prices are overridden by recalculate_order_item_price trigger
