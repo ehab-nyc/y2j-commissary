@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages, ClipboardList, Clock } from 'lucide-react';
+import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages, ClipboardList, Clock, FileText, Wrench } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -65,6 +65,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/manager', label: t('nav.management'), icon: BarChart3, show: hasRole('manager') },
     { path: '/analytics', label: 'Analytics', icon: BarChart3, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
+    { path: '/receipt-templates', label: 'Receipts', icon: FileText, show: hasRole('admin') || hasRole('super_admin') },
+    { path: '/hardware-setup', label: 'Hardware', icon: Wrench, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/admin', label: t('nav.adminPanel'), icon: Users, show: hasRole('admin') || hasRole('super_admin') },
     { path: '/profile', label: t('nav.profile'), icon: UserCircle, show: true },
   ];

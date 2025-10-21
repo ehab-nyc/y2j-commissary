@@ -470,6 +470,48 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_templates: {
+        Row: {
+          created_at: string | null
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          paper_width: number | null
+          show_barcode: boolean | null
+          show_company_info: boolean | null
+          show_logo: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          paper_width?: number | null
+          show_barcode?: boolean | null
+          show_company_info?: boolean | null
+          show_logo?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          paper_width?: number | null
+          show_barcode?: boolean | null
+          show_company_info?: boolean | null
+          show_logo?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       stock_take_items: {
         Row: {
           actual_quantity: number | null
