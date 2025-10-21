@@ -44,9 +44,9 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallback: null,
-        maximumFileSizeToCacheInBytes: 3000000, // 3MB limit per file
+        maximumFileSizeToCacheInBytes: 2000000, // 2MB limit per file
         runtimeCaching: [
           {
             urlPattern: /\.html$/,
@@ -55,8 +55,8 @@ export default defineConfig(({ mode }) => ({
               cacheName: "html-cache",
               networkTimeoutSeconds: 2,
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxEntries: 5,
+                maxAgeSeconds: 60 * 60 * 12 // 12 hours
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -70,8 +70,8 @@ export default defineConfig(({ mode }) => ({
               cacheName: "css-cache",
               networkTimeoutSeconds: 3,
               expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -85,8 +85,8 @@ export default defineConfig(({ mode }) => ({
               cacheName: "js-cache",
               networkTimeoutSeconds: 3,
               expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxEntries: 15,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -99,8 +99,22 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "supabase-cache",
               expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 2 // 2 hours
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 30 // 30 minutes
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(png|jpg|jpeg|svg|gif|webp)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images-cache",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
               },
               cacheableResponse: {
                 statuses: [0, 200]
