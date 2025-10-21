@@ -44,16 +44,16 @@ export const AIChatbot = () => {
     setIsLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Sending message to AI chatbot...');
       
       const { data, error } = await supabase.functions.invoke('ai-chatbot', {
-        body: { conversationId, message: userMessage },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        body: { conversationId, message: userMessage }
       });
 
+      console.log('Response from edge function:', { data, error });
+
       if (error) {
+        console.error('Edge function error:', error);
         if (error.message?.includes('Rate limit')) {
           toast({
             title: "Rate Limit",
@@ -64,6 +64,12 @@ export const AIChatbot = () => {
           toast({
             title: "Service Unavailable",
             description: "AI service temporarily unavailable.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error.message || "Failed to send message. Please try again.",
             variant: "destructive",
           });
         }
@@ -77,11 +83,6 @@ export const AIChatbot = () => {
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
     } catch (error) {
       console.error('Chat error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
