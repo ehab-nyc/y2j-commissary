@@ -145,6 +145,185 @@ export type Database = {
         }
         Relationships: []
       }
+      geofence_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          geofence_id: string
+          id: string
+          latitude: number
+          longitude: number
+          timestamp: string
+          vehicle_id: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          geofence_id: string
+          id?: string
+          latitude: number
+          longitude: number
+          timestamp?: string
+          vehicle_id: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          geofence_id?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          timestamp?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geofence_alerts_geofence_id_fkey"
+            columns: ["geofence_id"]
+            isOneToOne: false
+            referencedRelation: "geofences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geofence_alerts_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geofences: {
+        Row: {
+          active: boolean | null
+          alert_on_enter: boolean | null
+          alert_on_exit: boolean | null
+          center_lat: number | null
+          center_lng: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          polygon_coords: Json | null
+          radius: number | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          alert_on_enter?: boolean | null
+          alert_on_exit?: boolean | null
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          polygon_coords?: Json | null
+          radius?: number | null
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          alert_on_enter?: boolean | null
+          alert_on_exit?: boolean | null
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          polygon_coords?: Json | null
+          radius?: number | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gps_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
+      location_history: {
+        Row: {
+          accuracy: number | null
+          altitude: number | null
+          created_at: string | null
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          speed: number | null
+          timestamp: string
+          tracking_source: string
+          vehicle_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          altitude?: number | null
+          created_at?: string | null
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          speed?: number | null
+          timestamp?: string
+          tracking_source: string
+          vehicle_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          altitude?: number | null
+          created_at?: string | null
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          speed?: number | null
+          timestamp?: string
+          tracking_source?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_history_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -618,6 +797,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vehicles: {
+        Row: {
+          assigned_driver_id: string | null
+          created_at: string | null
+          device_id: string | null
+          id: string
+          license_plate: string | null
+          make: string | null
+          model: string | null
+          name: string
+          status: string | null
+          tracking_type: string
+          type: string
+          updated_at: string | null
+          vehicle_number: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          assigned_driver_id?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          license_plate?: string | null
+          make?: string | null
+          model?: string | null
+          name: string
+          status?: string | null
+          tracking_type?: string
+          type: string
+          updated_at?: string | null
+          vehicle_number: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          assigned_driver_id?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          license_plate?: string | null
+          make?: string | null
+          model?: string | null
+          name?: string
+          status?: string | null
+          tracking_type?: string
+          type?: string
+          updated_at?: string | null
+          vehicle_number?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
       }
       violation_images: {
         Row: {

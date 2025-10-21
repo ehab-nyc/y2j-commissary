@@ -28,6 +28,13 @@ import EmployeeShifts from "./pages/EmployeeShifts";
 import ReceiptSettings from "./pages/ReceiptSettings";
 import HardwareSetup from "./pages/HardwareSetup";
 import POS from "./pages/POS";
+import GPS from "./pages/GPS";
+import FleetMap from "./pages/FleetMap";
+import FleetVehicles from "./pages/FleetVehicles";
+import FleetHistory from "./pages/FleetHistory";
+import Geofencing from "./pages/Geofencing";
+import GPSAlerts from "./pages/GPSAlerts";
+import GPSSettings from "./pages/GPSSettings";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +70,16 @@ const AppContent = () => {
           <Route path="/employee-shifts" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><EmployeeShifts /></ProtectedRoute>} />
           <Route path="/receipt-settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><ReceiptSettings /></ProtectedRoute>} />
           <Route path="/hardware-setup" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><HardwareSetup /></ProtectedRoute>} />
+          
+          {/* GPS Routes */}
+          <Route path="/gps" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><GPS /></ProtectedRoute>} />
+          <Route path="/gps/fleet-map" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><FleetMap /></ProtectedRoute>} />
+          <Route path="/gps/vehicles" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><FleetVehicles /></ProtectedRoute>} />
+          <Route path="/gps/history" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><FleetHistory /></ProtectedRoute>} />
+          <Route path="/gps/geofencing" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Geofencing /></ProtectedRoute>} />
+          <Route path="/gps/alerts" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><GPSAlerts /></ProtectedRoute>} />
+          <Route path="/gps/settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><GPSSettings /></ProtectedRoute>} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
