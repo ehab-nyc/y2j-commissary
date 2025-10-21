@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation schema
+const generateSchema = z.object({
+  productId: z.string().uuid().optional(),
+  productName: z.string().trim().min(1, "Product name is required").max(200, "Product name must be less than 200 characters"),
+  categoryName: z.string().trim().max(100, "Category name must be less than 100 characters").optional(),
+  existingDescription: z.string().max(2000, "Description must be less than 2000 characters").optional(),
+  tone: z.enum(['professional', 'casual', 'luxury', 'concise']).default('professional')
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,14 +22,25 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, productName, categoryName, existingDescription, tone = "professional" } = await req.json();
+    const body = await req.json();
     
-    if (!productName) {
+    // Validate input
+    const validationResult = generateSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Input validation failed:', validationResult.error.errors);
       return new Response(
-        JSON.stringify({ error: "Product name is required" }),
+        JSON.stringify({ 
+          error: "Invalid input", 
+          details: validationResult.error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    const { productId, productName, categoryName, existingDescription, tone } = validationResult.data;
 
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
@@ -68,7 +89,8 @@ serve(async (req) => {
       concise: "brief and to-the-point",
     };
 
-    const selectedTone = toneMap[tone] || toneMap.professional;
+    // tone is now guaranteed to be one of the enum values from validation
+    const selectedTone = toneMap[tone];
 
     const prompt = existingDescription
       ? `Improve this product description for "${productName}" (Category: ${categoryName || "General"})
