@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { User, Lock, Save, ShoppingBag, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Save, ShoppingBag, Eye, EyeOff, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { z } from 'zod';
@@ -47,6 +47,8 @@ const Profile = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [smsNotifications, setSmsNotifications] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -71,6 +73,8 @@ const Profile = () => {
       setProfile(data);
       setFullName(data.full_name || '');
       setPhone(data.phone || '');
+      setSmsNotifications(data.sms_notifications || false);
+      setEmailNotifications(data.email_notifications ?? true);
     }
   };
 
@@ -149,6 +153,8 @@ const Profile = () => {
       .update({
         full_name: nameValidation.data,
         phone: phone || null,
+        sms_notifications: smsNotifications,
+        email_notifications: emailNotifications,
       })
       .eq('id', user?.id);
 
@@ -243,6 +249,40 @@ const Profile = () => {
                     placeholder="Enter your phone number"
                   />
                 </div>
+                
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sms-notifications" className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        SMS Notifications
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Receive order updates via SMS
+                      </p>
+                    </div>
+                    <Switch
+                      id="sms-notifications"
+                      checked={smsNotifications}
+                      onCheckedChange={setSmsNotifications}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Receive order updates via email
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-notifications"
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                    />
+                  </div>
+                </div>
+                
                 <Button type="submit" disabled={loading} className="w-full gap-2">
                   <Save className="w-4 h-4" />
                   {loading ? t('profile.saving') : t('profile.saveChanges')}
