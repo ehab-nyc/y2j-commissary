@@ -24,7 +24,22 @@ export const productSchema = z.object({
     .int('Quantity must be a whole number')
     .min(0, 'Quantity cannot be negative')
     .max(999999, 'Quantity must be less than 1,000,000'),
-  category_id: z.string().uuid('Invalid category')
+  category_id: z.string().uuid('Invalid category'),
+  low_stock_threshold: z.number()
+    .int('Low stock threshold must be a whole number')
+    .min(0, 'Low stock threshold cannot be negative')
+    .max(99999, 'Low stock threshold too large')
+    .optional(),
+  reorder_point: z.number()
+    .int('Reorder point must be a whole number')
+    .min(0, 'Reorder point cannot be negative')
+    .max(99999, 'Reorder point too large')
+    .optional(),
+  reorder_quantity: z.number()
+    .int('Reorder quantity must be a whole number')
+    .min(0, 'Reorder quantity cannot be negative')
+    .max(99999, 'Reorder quantity too large')
+    .optional()
 });
 
 // Category validation schema

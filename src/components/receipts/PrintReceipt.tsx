@@ -4,6 +4,7 @@ import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 
 interface PrintReceiptProps {
   orderNumber: string;
@@ -80,6 +81,12 @@ export function PrintReceipt({
     const receiptContent = document.getElementById("receipt-content");
     if (!receiptContent) return;
 
+    // Sanitize HTML to prevent XSS attacks
+    const sanitizedHTML = DOMPurify.sanitize(receiptContent.innerHTML, {
+      ALLOWED_TAGS: ['div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+      ALLOWED_ATTR: ['class', 'style'],
+    });
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -94,7 +101,7 @@ export function PrintReceipt({
           </style>
         </head>
         <body>
-          ${receiptContent.innerHTML}
+          ${sanitizedHTML}
         </body>
       </html>
     `);
