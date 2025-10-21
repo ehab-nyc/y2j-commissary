@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => ({
         skipWaiting: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallback: null,
-        maximumFileSizeToCacheInBytes: 2000000, // 2MB limit per file
+        maximumFileSizeToCacheInBytes: 5000000, // 5MB limit per file
         runtimeCaching: [
           {
             urlPattern: /\.html$/,
