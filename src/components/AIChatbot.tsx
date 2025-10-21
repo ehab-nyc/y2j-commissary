@@ -100,21 +100,18 @@ export const AIChatbot = () => {
 
   return (
     <>
-      {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-[9999]">
-          <Button
-            onClick={handleToggle}
-            className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
-            size="icon"
-          >
-            <MessageCircle className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
+      <div className={`fixed bottom-6 right-6 z-[9999] transition-all duration-300 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}>
+        <Button
+          onClick={handleToggle}
+          className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+          size="icon"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      </div>
 
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[9999]">
-          <Card className="w-96 h-[600px] flex flex-col shadow-2xl bg-background">
+      <div className={`fixed bottom-6 right-6 z-[9999] transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
+        <Card className="w-96 h-[600px] flex flex-col shadow-2xl bg-background origin-bottom-right">
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" />
@@ -194,7 +191,6 @@ export const AIChatbot = () => {
             </div>
           </Card>
         </div>
-      )}
     </>
   );
 };
