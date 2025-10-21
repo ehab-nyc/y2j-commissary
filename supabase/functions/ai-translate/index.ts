@@ -13,7 +13,13 @@ serve(async (req) => {
   try {
     const { text, targetLanguage, context } = await req.json();
     
+    console.log('=== AI Translate Edge Function Called ===');
+    console.log('Target Language:', targetLanguage);
+    console.log('Text to translate:', text);
+    console.log('Context:', context);
+    
     if (!text || !targetLanguage) {
+      console.error('Missing required fields');
       return new Response(
         JSON.stringify({ error: "Text and targetLanguage are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -38,6 +44,7 @@ serve(async (req) => {
     const targetLangName = languageMap[targetLanguage] || targetLanguage;
     const contextNote = context ? `\n\nContext: ${context}` : "";
 
+    console.log('Calling Lovable AI gateway...');
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -59,6 +66,8 @@ serve(async (req) => {
       }),
     });
 
+    console.log('AI Gateway response status:', response.status);
+
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
@@ -77,6 +86,9 @@ serve(async (req) => {
 
     const data = await response.json();
     const translatedText = data.choices?.[0]?.message?.content || text;
+
+    console.log('Translation successful, returning result');
+    console.log('Translated text:', translatedText);
 
     return new Response(
       JSON.stringify({ translatedText, originalText: text, targetLanguage }),
