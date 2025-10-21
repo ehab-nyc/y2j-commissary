@@ -52,12 +52,15 @@ export const AIChatbot = () => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       console.log('Session:', session ? 'exists' : 'null', sessionError);
       
-      if (!session) {
+      if (!session?.access_token) {
         throw new Error('Not authenticated. Please log in.');
       }
       
       const { data, error } = await supabase.functions.invoke('ai-chatbot', {
-        body: { conversationId, message: userMessage }
+        body: { conversationId, message: userMessage },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       console.log('Edge function response:', { data, error });
