@@ -44,42 +44,44 @@ export const AIChatbot = () => {
     setIsLoading(true);
 
     try {
-      console.log('Sending message to AI chatbot...');
+      console.log('=== Chatbot Debug ===');
+      console.log('Sending message:', userMessage);
+      console.log('Conversation ID:', conversationId);
+      
+      // Check if user is authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('Session:', session ? 'exists' : 'null', sessionError);
+      
+      if (!session) {
+        throw new Error('Not authenticated. Please log in.');
+      }
       
       const { data, error } = await supabase.functions.invoke('ai-chatbot', {
         body: { conversationId, message: userMessage }
       });
 
-      console.log('Response from edge function:', { data, error });
+      console.log('Edge function response:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
-        if (error.message?.includes('Rate limit')) {
-          toast({
-            title: "Rate Limit",
-            description: "Too many requests. Please wait a moment.",
-            variant: "destructive",
-          });
-        } else if (error.message?.includes('credits')) {
-          toast({
-            title: "Service Unavailable",
-            description: "AI service temporarily unavailable.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message || "Failed to send message. Please try again.",
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Error",
+          description: error.message || "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
         throw error;
       }
 
+      if (!data) {
+        throw new Error('No response from chatbot');
+      }
+
       if (!conversationId && data.conversationId) {
+        console.log('Setting conversation ID:', data.conversationId);
         setConversationId(data.conversationId);
       }
 
+      console.log('AI response:', data.message);
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
     } catch (error) {
       console.error('Chat error:', error);
