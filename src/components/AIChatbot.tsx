@@ -21,6 +21,8 @@ export const AIChatbot = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  console.log('AIChatbot render - isOpen:', isOpen);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -79,7 +81,10 @@ export const AIChatbot = () => {
   if (!isOpen) {
     return (
       <Button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          console.log('Chatbot button clicked, opening chat...');
+          setIsOpen(true);
+        }}
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
         size="icon"
       >
