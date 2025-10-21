@@ -114,7 +114,7 @@ export default function StockTake() {
           </Dialog>
         </div>
 
-        <Card>
+        <Card className="max-w-4xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardList className="h-5 w-5" />

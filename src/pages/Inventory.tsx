@@ -43,7 +43,7 @@ export default function Inventory() {
           <h1 className="text-3xl font-bold">Inventory Management</h1>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 max-w-4xl">
           <Card>
             <CardHeader>
               <CardTitle>Search Products</CardTitle>
@@ -67,7 +67,7 @@ export default function Inventory() {
           <LowStockAlerts />
         </div>
 
-        <Card>
+        <Card className="max-w-4xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />

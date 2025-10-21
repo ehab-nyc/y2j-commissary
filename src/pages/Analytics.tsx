@@ -158,7 +158,7 @@ export default function Analytics() {
     <DashboardLayout>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Sales Analytics</h1>
-        <Card>
+        <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle>Date Range</CardTitle>
           </CardHeader>
@@ -213,12 +213,14 @@ export default function Analytics() {
               totalItemsSold={data.totalItemsSold}
             />
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 max-w-5xl">
               <SalesChart data={data.dailySales} />
               <CategoryBreakdown data={data.categoryBreakdown} />
             </div>
 
-            <TopProducts products={data.topProducts} />
+            <div className="max-w-5xl">
+              <TopProducts products={data.topProducts} />
+            </div>
           </>
         )}
       </div>

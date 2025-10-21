@@ -397,7 +397,7 @@ const Manager = () => {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl">
                 {statCards.map((stat) => {
                   const Icon = stat.icon;
                   return (
@@ -419,7 +419,7 @@ const Manager = () => {
               </div>
 
               {stats.lowStockProducts > 0 && (
-                <Card className="border-yellow-200 bg-yellow-500/5">
+                <Card className="border-yellow-200 bg-yellow-500/5 max-w-6xl">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-yellow-700">
                       <Package className="w-5 h-5" />
@@ -437,11 +437,11 @@ const Manager = () => {
             </TabsContent>
 
             <TabsContent value="orders" className="space-y-4">
-              <Card>
+              <Card className="max-w-6xl">
                 <CardHeader>
                   <CardTitle>All Orders</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
+                <CardContent className="p-0 overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>

@@ -143,7 +143,7 @@ export default function PurchaseOrders() {
           </Dialog>
         </div>
 
-        <Card>
+        <Card className="max-w-4xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />

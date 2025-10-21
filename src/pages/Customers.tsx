@@ -38,7 +38,7 @@ export default function Customers() {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Customer Management</h1>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 max-w-4xl">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
@@ -74,7 +74,7 @@ export default function Customers() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="max-w-4xl">
           <CardHeader>
             <CardTitle>Customer List</CardTitle>
           </CardHeader>
