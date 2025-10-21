@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => ({
         skipWaiting: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2}"],
         navigateFallback: null,
+        maximumFileSizeToCacheInBytes: 3000000, // 3MB limit per file
         runtimeCaching: [
           {
             urlPattern: /\.html$/,
@@ -53,6 +54,10 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "html-cache",
               networkTimeoutSeconds: 2,
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
               cacheableResponse: {
                 statuses: [0, 200]
               }
@@ -64,6 +69,10 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "css-cache",
               networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              },
               cacheableResponse: {
                 statuses: [0, 200]
               }
@@ -75,6 +84,10 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "js-cache",
               networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              },
               cacheableResponse: {
                 statuses: [0, 200]
               }
@@ -86,8 +99,8 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "supabase-cache",
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 2 // 2 hours
               },
               cacheableResponse: {
                 statuses: [0, 200]
