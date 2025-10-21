@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { AISearchBar } from '@/components/AISearchBar';
 import { ProductRecommendations } from '@/components/ProductRecommendations';
 import { AIChatbot } from '@/components/AIChatbot';
 
@@ -386,39 +385,28 @@ const Products = () => {
           )}
         </div>
 
-        <div className="space-y-4">
-          <AISearchBar 
-            type="products" 
-            onResults={(results) => {
-              setProducts(results);
-              setSelectedCategory('all');
-            }}
-            placeholder="Try 'cheap fruits' or 'fresh vegetables'..."
-          />
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('products.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder={t('products.category')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('products.allCategories')}</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('products.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
+          
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder={t('products.category')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('products.allCategories')}</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <ProductRecommendations 
