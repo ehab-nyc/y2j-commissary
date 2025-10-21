@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useTheme } from "./hooks/useTheme";
+import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import Auth from "./pages/Auth";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
@@ -30,6 +31,7 @@ const AppContent = () => {
     <>
       <Toaster />
       <Sonner />
+      <PWAUpdatePrompt />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/products" replace />} />

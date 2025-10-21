@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["icon-192.png", "icon-512.png"],
       manifest: {
         name: "Y2J Commissary",
@@ -42,6 +42,8 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2}"],
         navigateFallback: null,
         runtimeCaching: [
