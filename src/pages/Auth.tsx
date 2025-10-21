@@ -75,13 +75,49 @@ const Auth = () => {
     const cartNumber = formData.get('signup-cart-number') as string;
     const phone = formData.get('signup-phone') as string;
 
-    // Validate phone format
+    // Normalize phone to E.164 format
+    const normalizePhone = (phone: string): string => {
+      const digits = phone.replace(/\D/g, '');
+      // Assume US numbers if not starting with country code
+      return digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
+    };
+
+    // Validate and normalize phone format
     const phoneSchema = z.string()
       .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format');
     
     const phoneValidation = phoneSchema.safeParse(phone);
     if (!phoneValidation.success) {
       toast.error(phoneValidation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+
+    // Validate cart information
+    const cartNameSchema = z.string()
+      .trim()
+      .min(1, 'Cart name is required')
+      .max(100, 'Cart name too long')
+      .regex(/^[a-zA-Z0-9\s-]+$/, 'Cart name can only contain letters, numbers, spaces, and hyphens');
+    
+    const cartNumberSchema = z.string()
+      .trim()
+      .min(1, 'Cart number is required')
+      .max(20, 'Cart number too long')
+      .regex(/^[a-zA-Z0-9-]+$/, 'Cart number can only contain letters, numbers, and hyphens');
+
+    const cartNameValidation = cartNameSchema.safeParse(cartName);
+    if (!cartNameValidation.success) {
+      toast.error(cartNameValidation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
+    const cartNumberValidation = cartNumberSchema.safeParse(cartNumber);
+    if (!cartNumberValidation.success) {
+      toast.error(cartNumberValidation.error.errors[0].message);
       setLoading(false);
       return;
     }
@@ -113,9 +149,9 @@ const Auth = () => {
         await supabase
           .from('profiles')
           .update({ 
-            cart_name: cartName,
-            cart_number: cartNumber,
-            phone: phone
+            cart_name: cartName.trim(),
+            cart_number: cartNumber.trim(),
+            phone: normalizedPhone
           })
           .eq('id', authData.user.id);
         
@@ -124,7 +160,7 @@ const Auth = () => {
           .from('customer_phones')
           .insert({
             customer_id: authData.user.id,
-            phone: phone,
+            phone: normalizedPhone,
             is_primary: true
           });
       }
