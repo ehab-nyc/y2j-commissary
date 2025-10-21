@@ -42,7 +42,7 @@ const AppContent = () => {
       <PWAUpdatePrompt />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/pos" replace />} />
+          <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
