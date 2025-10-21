@@ -14,7 +14,15 @@ import Orders from "./pages/Orders";
 import Worker from "./pages/Worker";
 import ProcessedOrders from "./pages/ProcessedOrders";
 import Manager from "./pages/Manager";
-import Admin from "./pages/Admin";
+import AdminHub from "./pages/AdminHub";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminProcessedOrders from "./pages/admin/AdminProcessedOrders";
+import AdminViolations from "./pages/admin/AdminViolations";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSMS from "./pages/admin/AdminSMS";
+import AdminSettings from "./pages/admin/AdminSettings";
 import Profile from "./pages/Profile";
 import Violations from "./pages/Violations";
 import CustomerViolations from "./pages/CustomerViolations";
@@ -60,7 +68,17 @@ const AppContent = () => {
           <Route path="/processed-orders" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><ProcessedOrders /></ProtectedRoute>} />
           <Route path="/violations" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Violations /></ProtectedRoute>} />
           <Route path="/manager" element={<ProtectedRoute requireRole="manager"><Manager /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><Admin /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminHub /></ProtectedRoute>} />
+          
+          {/* Admin Sub-Routes */}
+          <Route path="/admin/products" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminProducts /></ProtectedRoute>} />
+          <Route path="/admin/categories" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminCategories /></ProtectedRoute>} />
+          <Route path="/admin/orders" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminOrders /></ProtectedRoute>} />
+          <Route path="/admin/processed-orders" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminProcessedOrders /></ProtectedRoute>} />
+          <Route path="/admin/violations" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminViolations /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/sms" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSMS /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Analytics /></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Inventory /></ProtectedRoute>} />
