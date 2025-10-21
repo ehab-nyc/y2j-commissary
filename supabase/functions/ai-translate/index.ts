@@ -13,34 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
+    // JWT is already verified by Supabase (verify_jwt = true in config.toml)
+    // We can extract user info from the JWT token if needed
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Missing authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
-    // Create client with user's JWT to enforce RLS
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    console.log('User authenticated:', user.id);
+    console.log('Request authenticated via JWT verification');
 
     const translateSchema = z.object({
       text: z.string()
