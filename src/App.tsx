@@ -20,6 +20,11 @@ import Violations from "./pages/Violations";
 import CustomerViolations from "./pages/CustomerViolations";
 import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
+import Inventory from "./pages/Inventory";
+import PurchaseOrders from "./pages/PurchaseOrders";
+import StockTake from "./pages/StockTake";
+import Customers from "./pages/Customers";
+import EmployeeShifts from "./pages/EmployeeShifts";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +52,11 @@ const AppContent = () => {
           <Route path="/admin" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><Admin /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Analytics /></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Inventory /></ProtectedRoute>} />
+          <Route path="/purchase-orders" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><PurchaseOrders /></ProtectedRoute>} />
+          <Route path="/stock-take" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><StockTake /></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Customers /></ProtectedRoute>} />
+          <Route path="/employee-shifts" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><EmployeeShifts /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

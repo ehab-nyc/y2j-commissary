@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages } from 'lucide-react';
+import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircle, AlertCircle, Languages, ClipboardList, Clock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -55,6 +55,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/products', label: t('nav.products'), icon: ShoppingBag, show: true },
     { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
     { path: '/my-violations', label: 'My Violations', icon: AlertCircle, show: hasRole('customer') },
+    { path: '/inventory', label: 'Inventory', icon: Package, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
+    { path: '/purchase-orders', label: 'Purchase Orders', icon: ShoppingCart, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
+    { path: '/stock-take', label: 'Stock Take', icon: ClipboardList, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
+    { path: '/customers', label: 'Customers', icon: Users, show: hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
+    { path: '/employee-shifts', label: 'Time Clock', icon: Clock, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/worker', label: t('nav.ordersQueue'), icon: Package, show: hasRole('worker') || hasRole('manager') },
     { path: '/processed-orders', label: 'My Processed Orders', icon: Package, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },
     { path: '/violations', label: t('nav.violations'), icon: AlertCircle, show: hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin') },

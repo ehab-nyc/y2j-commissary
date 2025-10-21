@@ -115,6 +115,36 @@ export type Database = {
           },
         ]
       }
+      employee_shifts: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string | null
+          employee_id: string
+          hours_worked: number | null
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string | null
+          employee_id: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string | null
+          employee_id?: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -249,41 +279,59 @@ export type Database = {
       products: {
         Row: {
           active: boolean | null
+          barcode: string | null
           box_sizes: string[] | null
           category_id: string | null
+          cost_price: number | null
           created_at: string | null
           description: string | null
           id: string
           image_url: string | null
+          low_stock_threshold: number | null
           name: string
           price: number
           quantity: number
+          reorder_point: number | null
+          reorder_quantity: number | null
+          supplier_name: string | null
           updated_at: string | null
         }
         Insert: {
           active?: boolean | null
+          barcode?: string | null
           box_sizes?: string[] | null
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
+          low_stock_threshold?: number | null
           name: string
           price: number
           quantity?: number
+          reorder_point?: number | null
+          reorder_quantity?: number | null
+          supplier_name?: string | null
           updated_at?: string | null
         }
         Update: {
           active?: boolean | null
+          barcode?: string | null
           box_sizes?: string[] | null
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
+          low_stock_threshold?: number | null
           name?: string
           price?: number
           quantity?: number
+          reorder_point?: number | null
+          reorder_quantity?: number | null
+          supplier_name?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -301,31 +349,202 @@ export type Database = {
           cart_name: string | null
           cart_number: string | null
           created_at: string | null
+          customer_tier: string | null
           email: string
+          email_notifications: boolean | null
           full_name: string | null
           id: string
+          loyalty_points: number | null
           phone: string | null
+          sms_notifications: boolean | null
+          total_spent: number | null
           updated_at: string | null
         }
         Insert: {
           cart_name?: string | null
           cart_number?: string | null
           created_at?: string | null
+          customer_tier?: string | null
           email: string
+          email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          loyalty_points?: number | null
           phone?: string | null
+          sms_notifications?: boolean | null
+          total_spent?: number | null
           updated_at?: string | null
         }
         Update: {
           cart_name?: string | null
           cart_number?: string | null
           created_at?: string | null
+          customer_tier?: string | null
           email?: string
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          loyalty_points?: number | null
           phone?: string | null
+          sms_notifications?: boolean | null
+          total_spent?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      purchase_order_items: {
+        Row: {
+          cost_price: number
+          created_at: string | null
+          id: string
+          product_id: string
+          purchase_order_id: string
+          quantity: number
+        }
+        Insert: {
+          cost_price: number
+          created_at?: string | null
+          id?: string
+          product_id: string
+          purchase_order_id: string
+          quantity: number
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          purchase_order_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          notes: string | null
+          received_at: string | null
+          status: string
+          supplier_name: string
+          total: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          status?: string
+          supplier_name: string
+          total?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          notes?: string | null
+          received_at?: string | null
+          status?: string
+          supplier_name?: string
+          total?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      stock_take_items: {
+        Row: {
+          actual_quantity: number | null
+          created_at: string | null
+          expected_quantity: number
+          id: string
+          product_id: string
+          stock_take_id: string
+          updated_at: string | null
+          variance: number | null
+        }
+        Insert: {
+          actual_quantity?: number | null
+          created_at?: string | null
+          expected_quantity: number
+          id?: string
+          product_id: string
+          stock_take_id: string
+          updated_at?: string | null
+          variance?: number | null
+        }
+        Update: {
+          actual_quantity?: number | null
+          created_at?: string | null
+          expected_quantity?: number
+          id?: string
+          product_id?: string
+          stock_take_id?: string
+          updated_at?: string | null
+          variance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_take_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_take_items_stock_take_id_fkey"
+            columns: ["stock_take_id"]
+            isOneToOne: false
+            referencedRelation: "stock_takes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_takes: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          name: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          name: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -455,6 +674,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_low_stock: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_customer_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
