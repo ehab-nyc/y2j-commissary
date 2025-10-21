@@ -1,9 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation schema
+const imageAnalysisSchema = z.object({
+  imageUrl: z.string()
+    .url({ message: "Invalid URL format" })
+    .max(2000, { message: "URL too long (max 2000 characters)" })
+    .refine((url) => url.startsWith("https://"), { message: "Only HTTPS URLs are allowed" }),
+  analysisType: z.enum(["product", "quality", "classification"], {
+    errorMap: () => ({ message: "Invalid analysis type. Must be 'product', 'quality', or 'classification'" })
+  }).default("product")
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,14 +23,23 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, analysisType = "product" } = await req.json();
+    const body = await req.json();
     
-    if (!imageUrl) {
+    // Validate input
+    const validationResult = imageAnalysisSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error.format());
       return new Response(
-        JSON.stringify({ error: "Image URL is required" }),
+        JSON.stringify({ 
+          error: "Invalid input", 
+          details: validationResult.error.errors.map(e => e.message)
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    const { imageUrl, analysisType } = validationResult.data;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
