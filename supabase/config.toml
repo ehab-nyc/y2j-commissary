@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.ai-translate]
 verify_jwt = false
+
+[functions.ai-chatbot]
+verify_jwt = true
+
+[functions.product-recommendations]
+verify_jwt = true
