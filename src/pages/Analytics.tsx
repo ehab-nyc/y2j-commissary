@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { BackButton } from "@/components/BackButton";
 import { SalesMetrics } from "@/components/analytics/SalesMetrics";
 import { SalesChart } from "@/components/analytics/SalesChart";
 import { TopProducts } from "@/components/analytics/TopProducts";
@@ -157,6 +158,7 @@ export default function Analytics() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <h1 className="text-3xl font-bold">Sales Analytics</h1>
         <Card className="max-w-2xl">
           <CardHeader>

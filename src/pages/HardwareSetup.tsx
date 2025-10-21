@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ export default function HardwareSetup() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <h1 className="text-3xl font-bold">Hardware Integration</h1>
 
         <Alert>

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Award, DollarSign } from "lucide-react";
@@ -36,6 +37,7 @@ export default function Customers() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <h1 className="text-3xl font-bold">Customer Management</h1>
 
         <div className="grid gap-4 md:grid-cols-3 max-w-4xl">

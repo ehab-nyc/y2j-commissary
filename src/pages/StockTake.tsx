@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,7 @@ export default function StockTake() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Stock Take</h1>
           <Dialog open={isCreating} onOpenChange={setIsCreating}>

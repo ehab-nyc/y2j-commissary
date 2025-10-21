@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -471,6 +472,7 @@ export default function Violations() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Cart Violations</h1>
           <Dialog open={open} onOpenChange={(isOpen) => {

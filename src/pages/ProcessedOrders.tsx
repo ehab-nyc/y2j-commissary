@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -78,6 +79,7 @@ const ProcessedOrders = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <CheckCircle2 className="w-8 h-8 text-green-600" />

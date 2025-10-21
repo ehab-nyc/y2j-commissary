@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,7 @@ export default function EmployeeShifts() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <h1 className="text-3xl font-bold">Employee Time Tracking</h1>
 
         <Card>

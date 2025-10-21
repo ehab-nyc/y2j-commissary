@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -454,6 +455,7 @@ const Orders = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton />
         <div>
           <h1 className="text-3xl font-bold">{t('orders.title')}</h1>
           <p className="text-muted-foreground">{t('orders.subtitle')}</p>
