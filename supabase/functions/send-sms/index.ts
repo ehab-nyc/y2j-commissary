@@ -8,6 +8,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// SMS message sanitization helper
+function sanitizeSMSMessage(message: string): string {
+  // Remove control characters and potentially harmful sequences
+  return message
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
+    .replace(/\r\n/g, ' ') // Replace newlines with spaces
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, ' ')
+    .trim()
+    .slice(0, 1600); // Ensure max length
+}
+
 // Validation schema for SMS requests
 const smsSchema = z.object({
   to: z.string()
@@ -17,6 +29,7 @@ const smsSchema = z.object({
     .trim()
     .min(1, 'Message is required')
     .max(1600, 'Message too long (Twilio maximum is 1600 characters)')
+    .transform(sanitizeSMSMessage) // Sanitize the message
 });
 
 const handler = async (req: Request): Promise<Response> => {

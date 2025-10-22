@@ -8,16 +8,25 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// SMS message sanitization helper
+function sanitizeSMSMessage(message: string): string {
+  // Remove control characters and potentially harmful sequences
+  return message
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
+    .replace(/\r\n/g, ' ') // Replace newlines with spaces
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, ' ')
+    .trim()
+    .slice(0, 320); // Ensure max length
+}
+
 // Validation schema for bulk SMS requests
 const bulkSMSSchema = z.object({
   message: z.string()
     .trim()
     .min(1, 'Message is required')
     .max(320, 'Message too long (max 320 characters for 2 SMS segments)')
-    .refine(
-      (msg) => !/\n\n\n/.test(msg),
-      'Message contains too many line breaks'
-    ),
+    .transform(sanitizeSMSMessage), // Sanitize the message
   targetGroup: z.enum(['all_customers', 'staff'], {
     errorMap: () => ({ message: 'Target group must be either "all_customers" or "staff"' })
   })
@@ -179,6 +188,18 @@ const handler = async (req: Request): Promise<Response> => {
           const error = await response.json();
           console.error(`Failed to send SMS to ${phoneNumber}:`, error);
           throw new Error(`Failed to send to ${phoneNumber}`);
+        }
+
+        // Log successful SMS send for rate limiting tracking
+        try {
+          await supabase
+            .from('sms_rate_limit')
+            .insert({
+              phone_number: phoneNumber,
+              message_type: 'bulk_sms',
+            });
+        } catch (logError) {
+          console.error('Failed to log SMS send:', logError);
         }
 
         return response.json();

@@ -723,6 +723,57 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_audit: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role: Database["public"]["Enums"]["app_role"] | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_role?: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sms_rate_limit: {
+        Row: {
+          id: string
+          message_type: string
+          order_id: string | null
+          phone_number: string
+          sent_at: string
+        }
+        Insert: {
+          id?: string
+          message_type: string
+          order_id?: string | null
+          phone_number: string
+          sent_at?: string
+        }
+        Update: {
+          id?: string
+          message_type?: string
+          order_id?: string | null
+          phone_number?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       stock_take_items: {
         Row: {
           actual_quantity: number | null
@@ -1003,6 +1054,10 @@ export type Database = {
     }
     Functions: {
       check_low_stock: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_old_sms_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
