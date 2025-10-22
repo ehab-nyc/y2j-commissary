@@ -49,12 +49,15 @@ serve(async (req) => {
       );
     }
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     // Extract JWT token from Bearer header
     const token = authHeader.replace('Bearer ', '');
     
-    // Properly validate JWT using Supabase auth with explicit token
+    // Create Supabase client with user's JWT for proper RLS context
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { authorization: authHeader } }
+    });
+    
+    // Validate JWT using Supabase auth with explicit token
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
