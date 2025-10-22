@@ -356,6 +356,36 @@ export type Database = {
           },
         ]
       }
+      login_backgrounds: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          name: string
+          quality: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          name: string
+          quality?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          name?: string
+          quality?: number | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -870,6 +900,30 @@ export type Database = {
           key?: string
           updated_at?: string | null
           value?: string
+        }
+        Relationships: []
+      }
+      themes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_system: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
         }
         Relationships: []
       }

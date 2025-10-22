@@ -9,18 +9,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Save, Upload, Image as ImageIcon, Palette } from "lucide-react";
+import { Save, Upload, Image as ImageIcon, Palette, Plus, Trash2, Check } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState({
     company_name: "",
     logo_url: "",
-    login_background_url: "",
     login_blur_amount: "0",
     active_theme: "default",
   });
+  const [newThemeName, setNewThemeName] = useState("");
+  const [newBackgroundName, setNewBackgroundName] = useState("");
+  const [newBackgroundQuality, setNewBackgroundQuality] = useState(80);
+  const [themeToDelete, setThemeToDelete] = useState<string | null>(null);
+  const [backgroundToDelete, setBackgroundToDelete] = useState<string | null>(null);
 
   const { data: appSettings } = useQuery({
     queryKey: ["app-settings"],
@@ -28,13 +42,7 @@ const AdminSettings = () => {
       const { data, error } = await supabase
         .from("app_settings")
         .select("*")
-        .in("key", [
-          "company_name",
-          "logo_url",
-          "login_background_url",
-          "login_blur_amount",
-          "active_theme",
-        ]);
+        .in("key", ["company_name", "logo_url", "login_blur_amount", "active_theme"]);
 
       if (error) throw error;
       
@@ -46,7 +54,6 @@ const AdminSettings = () => {
       setSettings({
         company_name: settingsMap.company_name || "",
         logo_url: settingsMap.logo_url || "",
-        login_background_url: settingsMap.login_background_url || "",
         login_blur_amount: settingsMap.login_blur_amount || "0",
         active_theme: settingsMap.active_theme || "default",
       });
@@ -55,12 +62,35 @@ const AdminSettings = () => {
     },
   });
 
+  const { data: themes } = useQuery({
+    queryKey: ["themes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("themes")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: backgrounds } = useQuery({
+    queryKey: ["login-backgrounds"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("login_backgrounds")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const saveSettingsMutation = useMutation({
     mutationFn: async () => {
       const settingsToUpdate = [
         { key: "company_name", value: settings.company_name },
         { key: "logo_url", value: settings.logo_url },
-        { key: "login_background_url", value: settings.login_background_url },
         { key: "login_blur_amount", value: settings.login_blur_amount },
         { key: "active_theme", value: settings.active_theme },
       ];
@@ -75,7 +105,6 @@ const AdminSettings = () => {
       queryClient.invalidateQueries({ queryKey: ["app-settings"] });
       toast.success("Settings saved successfully");
       
-      // Reload page if theme changed
       if (settings.active_theme !== appSettings?.active_theme) {
         setTimeout(() => window.location.reload(), 500);
       }
@@ -86,9 +115,146 @@ const AdminSettings = () => {
     },
   });
 
-  const handleFileUpload = async (file: File, type: 'logo' | 'background') => {
+  const addThemeMutation = useMutation({
+    mutationFn: async (themeName: string) => {
+      const { error } = await supabase
+        .from("themes")
+        .insert({ name: themeName, is_system: false });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["themes"] });
+      toast.success("Theme added successfully");
+      setNewThemeName("");
+    },
+    onError: (error) => {
+      toast.error("Failed to add theme");
+      console.error(error);
+    },
+  });
+
+  const deleteThemeMutation = useMutation({
+    mutationFn: async (themeId: string) => {
+      const { error } = await supabase
+        .from("themes")
+        .delete()
+        .eq("id", themeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["themes"] });
+      toast.success("Theme deleted successfully");
+      setThemeToDelete(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete theme");
+      console.error(error);
+    },
+  });
+
+  const addBackgroundMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `bg-${Date.now()}.${fileExt}`;
+      const filePath = `backgrounds/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('branding')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('branding')
+        .getPublicUrl(filePath);
+
+      const { error } = await supabase
+        .from("login_backgrounds")
+        .insert({
+          name: newBackgroundName || file.name,
+          image_url: publicUrl,
+          quality: newBackgroundQuality,
+          is_active: false,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["login-backgrounds"] });
+      toast.success("Background uploaded successfully");
+      setNewBackgroundName("");
+      setNewBackgroundQuality(80);
+    },
+    onError: (error) => {
+      toast.error("Failed to upload background");
+      console.error(error);
+    },
+  });
+
+  const setActiveBackgroundMutation = useMutation({
+    mutationFn: async (backgroundId: string) => {
+      await supabase
+        .from("login_backgrounds")
+        .update({ is_active: false })
+        .neq("id", backgroundId);
+
+      const { error } = await supabase
+        .from("login_backgrounds")
+        .update({ is_active: true })
+        .eq("id", backgroundId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["login-backgrounds"] });
+      toast.success("Active background updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update active background");
+      console.error(error);
+    },
+  });
+
+  const updateBackgroundQualityMutation = useMutation({
+    mutationFn: async ({ id, quality }: { id: string; quality: number }) => {
+      const { error } = await supabase
+        .from("login_backgrounds")
+        .update({ quality })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["login-backgrounds"] });
+      toast.success("Background quality updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update quality");
+      console.error(error);
+    },
+  });
+
+  const deleteBackgroundMutation = useMutation({
+    mutationFn: async (backgroundId: string) => {
+      const { error } = await supabase
+        .from("login_backgrounds")
+        .delete()
+        .eq("id", backgroundId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["login-backgrounds"] });
+      toast.success("Background deleted successfully");
+      setBackgroundToDelete(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete background");
+      console.error(error);
+    },
+  });
+
+  const handleLogoUpload = async (file: File) => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${type}.${fileExt}`;
+    const fileName = `logo.${fileExt}`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -96,7 +262,7 @@ const AdminSettings = () => {
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      toast.error(`Failed to upload ${type}`);
+      toast.error("Failed to upload logo");
       return;
     }
 
@@ -104,13 +270,8 @@ const AdminSettings = () => {
       .from('branding')
       .getPublicUrl(filePath);
 
-    if (type === 'logo') {
-      setSettings({ ...settings, logo_url: publicUrl });
-    } else {
-      setSettings({ ...settings, login_background_url: publicUrl });
-    }
-
-    toast.success(`${type === 'logo' ? 'Logo' : 'Background'} uploaded successfully`);
+    setSettings({ ...settings, logo_url: publicUrl });
+    toast.success("Logo uploaded successfully");
   };
 
   return (
@@ -158,7 +319,7 @@ const AdminSettings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette className="h-5 w-5" />
-                Theme
+                Theme Management
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -174,12 +335,44 @@ const AdminSettings = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="halloween">Halloween</SelectItem>
-                    <SelectItem value="christmas">Christmas</SelectItem>
-                    <SelectItem value="christmas-wonderland">Christmas Wonderland</SelectItem>
+                    {themes?.map((theme) => (
+                      <SelectItem key={theme.id} value={theme.name}>
+                        {theme.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Custom Themes</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Theme name"
+                    value={newThemeName}
+                    onChange={(e) => setNewThemeName(e.target.value)}
+                  />
+                  <Button
+                    onClick={() => newThemeName && addThemeMutation.mutate(newThemeName)}
+                    disabled={!newThemeName || addThemeMutation.isPending}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2 mt-2">
+                  {themes?.filter(t => !t.is_system).map((theme) => (
+                    <div key={theme.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                      <span>{theme.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setThemeToDelete(theme.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -209,43 +402,102 @@ const AdminSettings = () => {
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) handleFileUpload(file, 'logo');
+                    if (file) handleLogoUpload(file);
                   }}
                 />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
-                Login Background
+                Login Backgrounds
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {settings.login_background_url && (
-                <div className="border rounded-lg p-4 bg-muted">
-                  <img
-                    src={settings.login_background_url}
-                    alt="Login Background"
-                    className="max-h-32 w-full object-cover rounded"
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {backgrounds?.map((bg) => (
+                  <div key={bg.id} className="border rounded-lg p-3 space-y-2">
+                    <div className="relative">
+                      <img
+                        src={bg.image_url}
+                        alt={bg.name}
+                        className="w-full h-32 object-cover rounded"
+                      />
+                      {bg.is_active && (
+                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="font-medium truncate">{bg.name}</p>
+                      <div>
+                        <Label className="text-xs">Quality: {bg.quality}%</Label>
+                        <Slider
+                          min={1}
+                          max={100}
+                          step={1}
+                          value={[bg.quality]}
+                          onValueChange={(value) =>
+                            updateBackgroundQualityMutation.mutate({ id: bg.id, quality: value[0] })
+                          }
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        {!bg.is_active && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setActiveBackgroundMutation.mutate(bg.id)}
+                          >
+                            Set Active
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setBackgroundToDelete(bg.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <Label>Add New Background</Label>
+                <Input
+                  placeholder="Background name"
+                  value={newBackgroundName}
+                  onChange={(e) => setNewBackgroundName(e.target.value)}
+                />
+                <div>
+                  <Label>Quality: {newBackgroundQuality}%</Label>
+                  <Slider
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={[newBackgroundQuality]}
+                    onValueChange={(value) => setNewBackgroundQuality(value[0])}
                   />
                 </div>
-              )}
-              <div>
-                <Label htmlFor="bg-upload">Upload Background Image</Label>
                 <Input
-                  id="bg-upload"
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) handleFileUpload(file, 'background');
+                    if (file) addBackgroundMutation.mutate(file);
                   }}
                 />
               </div>
-              <div>
+
+              <div className="border-t pt-4">
                 <Label htmlFor="blur-amount">Background Blur: {settings.login_blur_amount}px</Label>
                 <Slider
                   id="blur-amount"
@@ -262,6 +514,44 @@ const AdminSettings = () => {
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={!!themeToDelete} onOpenChange={() => setThemeToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Theme</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this theme? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => themeToDelete && deleteThemeMutation.mutate(themeToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!backgroundToDelete} onOpenChange={() => setBackgroundToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Background</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this background? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => backgroundToDelete && deleteBackgroundMutation.mutate(backgroundToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
