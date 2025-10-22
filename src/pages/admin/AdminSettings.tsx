@@ -345,21 +345,8 @@ const AdminSettings = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Custom Themes</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Theme name"
-                    value={newThemeName}
-                    onChange={(e) => setNewThemeName(e.target.value)}
-                  />
-                  <Button
-                    onClick={() => newThemeName && addThemeMutation.mutate(newThemeName)}
-                    disabled={!newThemeName || addThemeMutation.isPending}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-2 mt-2">
+                <Label>Manage Themes</Label>
+                <div className="space-y-2">
                   {themes?.filter(t => !t.is_system).map((theme) => (
                     <div key={theme.id} className="flex items-center justify-between p-2 bg-muted rounded">
                       <span>{theme.name}</span>
