@@ -75,7 +75,7 @@ const AdminSettings = () => {
   });
 
   const { data: backgrounds } = useQuery({
-    queryKey: ["login-backgrounds"],
+    queryKey: ["login-backgrounds", appSettings?.login_background_url],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("login_backgrounds")
@@ -85,23 +85,26 @@ const AdminSettings = () => {
 
       // Migrate old background from app_settings if needed
       if (data && data.length === 0 && appSettings?.login_background_url) {
-        await supabase.from("login_backgrounds").insert({
-          name: "Migrated Background",
+        const { error: insertError } = await supabase.from("login_backgrounds").insert({
+          name: "Existing Background",
           image_url: appSettings.login_background_url,
-          quality: 80,
+          quality: parseInt(appSettings.login_blur_amount) || 80,
           is_active: true,
         });
         
-        // Refetch after migration
-        const { data: newData } = await supabase
-          .from("login_backgrounds")
-          .select("*")
-          .order("created_at", { ascending: false });
-        return newData || [];
+        if (!insertError) {
+          // Refetch after migration
+          const { data: newData } = await supabase
+            .from("login_backgrounds")
+            .select("*")
+            .order("created_at", { ascending: false });
+          return newData || [];
+        }
       }
 
       return data;
     },
+    enabled: !!appSettings,
   });
 
   const saveSettingsMutation = useMutation({
