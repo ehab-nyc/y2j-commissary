@@ -233,16 +233,22 @@ const Products = () => {
   };
 
   const placeOrder = async () => {
+    console.log('placeOrder called - cart length:', cart.length, 'user:', user?.id);
+    
     if (cart.length === 0) {
+      console.error('Order failed: Cart is empty');
       toast.error(t('products.cartEmpty'));
       return;
     }
 
     // Check authentication
     if (!user?.id) {
+      console.error('Order failed: User not authenticated');
       toast.error('Please log in to place an order');
       return;
     }
+    
+    console.log('Starting order validation for', cart.length, 'items');
 
     // Validation schema for order items
     const orderItemSchema = z.object({
@@ -255,6 +261,8 @@ const Products = () => {
 
     // Validate all cart items
     for (const item of cart) {
+      console.log('Validating item:', item.product.name, 'quantity:', item.quantity, 'box_size:', item.boxSize);
+      
       const validation = orderItemSchema.safeParse({
         product_id: item.product.id,
         quantity: item.quantity,
@@ -262,16 +270,20 @@ const Products = () => {
       });
 
       if (!validation.success) {
+        console.error('Validation failed for item:', item.product.name, validation.error);
         toast.error(validation.error.errors[0].message);
         return;
       }
 
       // Check stock availability
       if (item.quantity > item.product.quantity) {
+        console.error('Insufficient stock for:', item.product.name, 'needed:', item.quantity, 'available:', item.product.quantity);
         toast.error(`Insufficient stock for ${item.product.name}. Available: ${item.product.quantity}`);
         return;
       }
     }
+    
+    console.log('All items validated successfully');
 
     // SECURITY NOTE: Order total is calculated server-side via database triggers:
     // - recalculate_order_item_price: Overrides item prices with current product prices
@@ -287,6 +299,8 @@ const Products = () => {
 
     // If not editing or keeping order, create a new one
     if (!orderId) {
+      console.log('Creating new order for customer:', user.id);
+      
       // SECURITY: Total is set to 0 and will be calculated by server-side trigger
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -300,10 +314,14 @@ const Products = () => {
 
       if (orderError || !order) {
         console.error('Order creation error:', orderError);
+        console.error('Error details:', JSON.stringify(orderError, null, 2));
         toast.error(orderError?.message || 'Failed to create order. Please try again.');
         return;
       }
+      console.log('Order created successfully with ID:', order.id);
       orderId = order.id;
+    } else {
+      console.log('Using existing order ID:', orderId);
     }
 
     // SECURITY NOTE: Client-provided prices are overridden by recalculate_order_item_price trigger
@@ -315,14 +333,18 @@ const Products = () => {
       box_size: item.boxSize,
     }));
 
+    console.log('Inserting', orderItems.length, 'order items');
+
     const { error: itemsError } = await supabase
       .from('order_items')
       .insert(orderItems);
 
     if (itemsError) {
       console.error('Order items error:', itemsError);
+      console.error('Items error details:', JSON.stringify(itemsError, null, 2));
       toast.error(itemsError?.message || 'Failed to add items to order');
     } else {
+      console.log('Order items added successfully');
       const message = keepOrderId ? 'Order updated successfully!' : 'Order placed successfully!';
       toast.success(message);
       setCart([]);
