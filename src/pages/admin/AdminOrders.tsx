@@ -82,7 +82,7 @@ const AdminOrders = () => {
                     {order.status}
                   </Badge>
                 </TableCell>
-                <TableCell>${Number(order.total_amount).toFixed(2)}</TableCell>
+                <TableCell>${Number(order.total).toFixed(2)}</TableCell>
                 <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <Button
@@ -145,7 +145,7 @@ const AdminOrders = () => {
                 </div>
                 <div className="pt-4 border-t">
                   <p className="text-lg font-bold text-right">
-                    Total: ${Number(selectedOrder.total_amount).toFixed(2)}
+                    Total: ${Number(selectedOrder.total).toFixed(2)}
                   </p>
                 </div>
               </div>

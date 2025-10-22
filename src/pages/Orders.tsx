@@ -100,7 +100,7 @@ const Orders = () => {
   };
 
   const fetchOrders = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('orders')
       .select(`
         *,
@@ -115,9 +115,21 @@ const Orders = () => {
           order_id,
           products(name)
         )
-      `)
-      .eq('customer_id', user?.id)
-      .order('created_at', { ascending: false });
+      `);
+
+    // Only filter by customer_id for customers, staff see all orders
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user?.id);
+    
+    const isStaff = roles?.some(r => ['worker', 'manager', 'admin', 'super_admin'].includes(r.role));
+    
+    if (!isStaff) {
+      query = query.eq('customer_id', user?.id);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       toast.error('Failed to load orders');
