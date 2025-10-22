@@ -82,6 +82,24 @@ const AdminSettings = () => {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
+
+      // Migrate old background from app_settings if needed
+      if (data && data.length === 0 && appSettings?.login_background_url) {
+        await supabase.from("login_backgrounds").insert({
+          name: "Migrated Background",
+          image_url: appSettings.login_background_url,
+          quality: 80,
+          is_active: true,
+        });
+        
+        // Refetch after migration
+        const { data: newData } = await supabase
+          .from("login_backgrounds")
+          .select("*")
+          .order("created_at", { ascending: false });
+        return newData || [];
+      }
+
       return data;
     },
   });
