@@ -43,7 +43,18 @@ const handler = async (req: Request): Promise<Response> => {
     const triggerSecret = req.headers.get('x-trigger-secret');
     const expectedSecret = Deno.env.get('SMS_TRIGGER_SECRET');
     
+    console.log('SMS Request received - Secret provided:', !!triggerSecret, 'Expected secret exists:', !!expectedSecret);
+    
+    if (!expectedSecret) {
+      console.error('SMS_TRIGGER_SECRET not configured in environment');
+      return new Response(
+        JSON.stringify({ error: 'SMS service not configured' }), 
+        { status: 500, headers: corsHeaders }
+      );
+    }
+    
     if (!triggerSecret || triggerSecret !== expectedSecret) {
+      console.error('Invalid or missing trigger secret');
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Invalid trigger secret' }), 
         { status: 401, headers: corsHeaders }
