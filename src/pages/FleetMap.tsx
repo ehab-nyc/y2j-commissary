@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { BackButton } from '@/components/BackButton';
 import MapComponent from '@/components/MapComponent';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,6 +115,7 @@ const FleetMap = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4 h-[calc(100vh-6rem)]">
+        <BackButton to="/gps" label="Back to GPS Hub" />
         <div>
           <h1 className="text-3xl font-bold">Live Fleet Map</h1>
           <p className="text-muted-foreground">Real-time tracking of all vehicles</p>

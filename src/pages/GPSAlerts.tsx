@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,7 @@ const GPSAlerts = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton to="/gps" label="Back to GPS Hub" />
         <div>
           <h1 className="text-3xl font-bold">GPS Alerts</h1>
           <p className="text-muted-foreground">Geofence and tracking alerts</p>

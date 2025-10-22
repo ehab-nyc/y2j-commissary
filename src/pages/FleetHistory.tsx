@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -70,6 +71,7 @@ const FleetHistory = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <BackButton to="/gps" label="Back to GPS Hub" />
         <div>
           <h1 className="text-3xl font-bold">Route History</h1>
           <p className="text-muted-foreground">View historical routes and trips</p>
