@@ -234,15 +234,15 @@ const Auth = () => {
               </div>
             )}
             
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-4">
               {settings.logo_url ? (
-                <img src={settings.logo_url} alt="Logo" className="h-16 w-auto object-contain" />
+                <img src={settings.logo_url} alt="Logo" className="h-16 w-16 rounded-full object-cover" />
               ) : (
                 <div className="p-3 rounded-full bg-primary/10">
                   <ShoppingBag className="w-8 h-8 text-primary" />
                 </div>
               )}
-              <CardTitle className="text-2xl font-bold">{settings.company_name}</CardTitle>
+              <CardTitle className="text-2xl font-bold">Y2J Commissary</CardTitle>
             </div>
           </div>
           <CardDescription>{t('auth.signInToAccess')}</CardDescription>
