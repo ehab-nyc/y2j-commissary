@@ -248,6 +248,24 @@ const Profile = () => {
     }
   };
 
+  const handleTestSMS = async (phoneNumber: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          to: phoneNumber,
+          message: 'Test SMS from Y2J Commissary! If you received this, SMS notifications are working correctly.'
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Test SMS sent to ${phoneNumber}!`);
+    } catch (error: any) {
+      console.error('SMS test error:', error);
+      toast.error(`Failed to send test SMS: ${error.message}`);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -427,14 +445,23 @@ const Profile = () => {
                           <Badge variant="secondary" className="text-xs">Primary</Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeletePhone(phoneNum.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleTestSMS(phoneNum.phone_number)}
+                        >
+                          Test SMS
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeletePhone(phoneNum.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}

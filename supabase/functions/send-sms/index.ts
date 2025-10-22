@@ -39,24 +39,41 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Authenticate using trigger secret (for database triggers)
+    // Two authentication methods:
+    // 1. JWT token (from authenticated frontend users)
+    // 2. Trigger secret (from database triggers)
+    const authHeader = req.headers.get('Authorization');
     const triggerSecret = req.headers.get('x-trigger-secret');
     const expectedSecret = Deno.env.get('SMS_TRIGGER_SECRET');
     
-    console.log('SMS Request received - Secret provided:', !!triggerSecret, 'Expected secret exists:', !!expectedSecret);
+    let isAuthenticated = false;
     
-    if (!expectedSecret) {
-      console.error('SMS_TRIGGER_SECRET not configured in environment');
-      return new Response(
-        JSON.stringify({ error: 'SMS service not configured' }), 
-        { status: 500, headers: corsHeaders }
-      );
+    // Check JWT authentication
+    if (authHeader) {
+      const jwt = authHeader.replace('Bearer ', '');
+      const { data: { user }, error } = await createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      ).auth.getUser(jwt);
+      
+      if (user && !error) {
+        console.log('Request authenticated via JWT for user:', user.id);
+        isAuthenticated = true;
+      }
     }
     
-    if (!triggerSecret || triggerSecret !== expectedSecret) {
-      console.error('Invalid or missing trigger secret');
+    // Check trigger secret authentication
+    if (!isAuthenticated && triggerSecret && expectedSecret) {
+      if (triggerSecret === expectedSecret) {
+        console.log('Request authenticated via trigger secret');
+        isAuthenticated = true;
+      }
+    }
+    
+    if (!isAuthenticated) {
+      console.error('Unauthorized - No valid authentication provided');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid trigger secret' }), 
+        JSON.stringify({ error: 'Unauthorized' }), 
         { status: 401, headers: corsHeaders }
       );
     }
