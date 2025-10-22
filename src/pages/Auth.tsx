@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 
 import { passwordSchema } from '@/lib/validation';
+import { validateAndNormalizePhone } from '@/lib/phoneValidation';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -75,25 +76,15 @@ const Auth = () => {
     const cartNumber = formData.get('signup-cart-number') as string;
     const phone = formData.get('signup-phone') as string;
 
-    // Normalize phone to E.164 format
-    const normalizePhone = (phone: string): string => {
-      const digits = phone.replace(/\D/g, '');
-      // Assume US numbers if not starting with country code
-      return digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
-    };
-
     // Validate and normalize phone format
-    const phoneSchema = z.string()
-      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format');
-    
-    const phoneValidation = phoneSchema.safeParse(phone);
-    if (!phoneValidation.success) {
-      toast.error(phoneValidation.error.errors[0].message);
+    const phoneResult = validateAndNormalizePhone(phone);
+    if (!phoneResult.success) {
+      toast.error(phoneResult.error);
       setLoading(false);
       return;
     }
-
-    const normalizedPhone = normalizePhone(phone);
+    
+    const normalizedPhone = phoneResult.phone!;
 
     // Validate cart information
     const cartNameSchema = z.string()

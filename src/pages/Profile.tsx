@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { z } from 'zod';
 import { passwordSchema } from '@/lib/validation';
-import { phoneSchema } from '@/lib/phoneValidation';
+import { validateAndNormalizePhone } from '@/lib/phoneValidation';
 import { useTranslation } from 'react-i18next';
 
 interface OrderItem {
@@ -205,13 +205,13 @@ const Profile = () => {
     }
 
     // Validate and normalize phone to E.164 format
-    const validation = phoneSchema.safeParse(newPhone);
-    if (!validation.success) {
-      toast.error(validation.error.errors[0].message);
+    const result = validateAndNormalizePhone(newPhone);
+    if (!result.success) {
+      toast.error(result.error);
       return;
     }
 
-    const normalizedPhone = validation.data;
+    const normalizedPhone = result.phone!;
 
     const { error } = await supabase
       .from('customer_phones')
