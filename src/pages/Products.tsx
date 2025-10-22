@@ -238,6 +238,12 @@ const Products = () => {
       return;
     }
 
+    // Check authentication
+    if (!user?.id) {
+      toast.error('Please log in to place an order');
+      return;
+    }
+
     // Validation schema for order items
     const orderItemSchema = z.object({
       product_id: z.string().uuid(),
@@ -285,7 +291,7 @@ const Products = () => {
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-          customer_id: user?.id,
+          customer_id: user.id,
           total: 0, // Trigger will recalculate
           status: 'pending',
         })
@@ -293,7 +299,8 @@ const Products = () => {
         .single();
 
       if (orderError || !order) {
-        toast.error('Failed to create order');
+        console.error('Order creation error:', orderError);
+        toast.error(orderError?.message || 'Failed to create order. Please try again.');
         return;
       }
       orderId = order.id;
@@ -313,7 +320,8 @@ const Products = () => {
       .insert(orderItems);
 
     if (itemsError) {
-      toast.error('Failed to add items to order');
+      console.error('Order items error:', itemsError);
+      toast.error(itemsError?.message || 'Failed to add items to order');
     } else {
       const message = keepOrderId ? 'Order updated successfully!' : 'Order placed successfully!';
       toast.success(message);
