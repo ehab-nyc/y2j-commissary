@@ -234,7 +234,7 @@ const Auth = () => {
               </div>
             )}
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-2">
               {settings.logo_url ? (
                 <img src={settings.logo_url} alt="Logo" className="h-16 w-16 rounded-full object-cover" />
               ) : (
