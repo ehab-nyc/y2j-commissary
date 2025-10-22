@@ -82,9 +82,9 @@ const Profile = () => {
     if (!user) return;
     
     const { data } = await supabase
-      .from('customer_phones')
+      .from('user_phone_numbers')
       .select('*')
-      .eq('customer_id', user.id)
+      .eq('user_id', user.id)
       .order('is_primary', { ascending: false });
     
     if (data) {
@@ -214,10 +214,10 @@ const Profile = () => {
     const normalizedPhone = result.phone!;
 
     const { error } = await supabase
-      .from('customer_phones')
+      .from('user_phone_numbers')
       .insert({
-        customer_id: user?.id,
-        phone: normalizedPhone,
+        user_id: user?.id,
+        phone_number: normalizedPhone,
         is_primary: phoneNumbers.length === 0
       });
 
@@ -236,7 +236,7 @@ const Profile = () => {
 
   const handleDeletePhone = async (phoneId: string) => {
     const { error } = await supabase
-      .from('customer_phones')
+      .from('user_phone_numbers')
       .delete()
       .eq('id', phoneId);
 
@@ -422,7 +422,7 @@ const Profile = () => {
                     >
                       <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-medium">{phoneNum.phone}</span>
+                        <span className="font-medium">{phoneNum.phone_number}</span>
                         {phoneNum.is_primary && (
                           <Badge variant="secondary" className="text-xs">Primary</Badge>
                         )}
