@@ -1161,6 +1161,18 @@ export type Database = {
           id: string
         }[]
       }
+      get_manageable_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cart_name: string
+          cart_number: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          user_roles: Json
+        }[]
+      }
       get_user_cart_number: {
         Args: { _user_id: string }
         Returns: string

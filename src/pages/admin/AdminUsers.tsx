@@ -21,19 +21,22 @@ const AdminUsers = () => {
   }, []);
 
   const fetchUsers = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_roles(role)
-      `)
-      .order('email');
+    // Use server-side function that filters out super_admins
+    const { data, error } = await supabase.rpc('get_manageable_profiles');
     
-    const filteredUsers = (data || []).filter(user => {
-      return !user.user_roles?.some((ur: any) => ur.role === 'super_admin');
-    });
+    if (error) {
+      toast.error('Failed to fetch users');
+      console.error('Error fetching users:', error);
+      return;
+    }
     
-    setUsers(filteredUsers);
+    // Transform the data to match the expected format
+    const transformedUsers = (data || []).map((user: any) => ({
+      ...user,
+      user_roles: user.user_roles || []
+    }));
+    
+    setUsers(transformedUsers);
   };
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {

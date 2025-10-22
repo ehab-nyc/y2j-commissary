@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { z } from 'zod';
 import { passwordSchema } from '@/lib/validation';
+import { phoneSchema } from '@/lib/phoneValidation';
 import { useTranslation } from 'react-i18next';
 
 interface OrderItem {
@@ -203,20 +204,20 @@ const Profile = () => {
       return;
     }
 
-    const phoneSchema = z.string()
-      .regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number format');
-    
-    const phoneValidation = phoneSchema.safeParse(newPhone);
-    if (!phoneValidation.success) {
-      toast.error(phoneValidation.error.errors[0].message);
+    // Validate and normalize phone to E.164 format
+    const validation = phoneSchema.safeParse(newPhone);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
       return;
     }
+
+    const normalizedPhone = validation.data;
 
     const { error } = await supabase
       .from('customer_phones')
       .insert({
         customer_id: user?.id,
-        phone: newPhone,
+        phone: normalizedPhone,
         is_primary: phoneNumbers.length === 0
       });
 
