@@ -52,26 +52,33 @@ serve(async (req) => {
     // Extract JWT token from Bearer header
     const token = authHeader.replace('Bearer ', '');
     
+    // Decode JWT to get user ID (without making API call)
+    let userId: string;
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => 
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join(''));
+      const payload = JSON.parse(jsonPayload);
+      userId = payload.sub;
+      
+      if (!userId) {
+        throw new Error('Invalid token payload');
+      }
+    } catch (e) {
+      console.error('JWT decode error:', e);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     // Create Supabase client with user's JWT for proper RLS context
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { authorization: authHeader } }
     });
     
-    // Validate JWT using Supabase auth with explicit token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.error('Auth error:', userError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Unauthorized",
-          details: userError?.message 
-        }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    const userId = user.id;
     console.log('User authenticated:', userId);
 
     // Create conversation if needed
