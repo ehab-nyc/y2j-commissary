@@ -954,6 +954,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_phone_numbers: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          phone_number: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          phone_number: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          phone_number?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
