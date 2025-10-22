@@ -104,9 +104,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending SMS to:", to, "- Message length:", message.length);
 
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+    // Get Twilio credentials - first try database, then environment
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: settings } = await supabaseAdmin
+      .from('app_settings')
+      .select('key, value')
+      .in('key', ['twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number']);
+
+    const dbSettings = settings?.reduce((acc, s) => {
+      acc[s.key] = s.value;
+      return acc;
+    }, {} as Record<string, string>) || {};
+
+    const accountSid = dbSettings.twilio_account_sid || Deno.env.get("TWILIO_ACCOUNT_SID");
+    const authToken = dbSettings.twilio_auth_token || Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioPhone = dbSettings.twilio_phone_number || Deno.env.get("TWILIO_PHONE_NUMBER");
 
     if (!accountSid || !authToken || !twilioPhone) {
       throw new Error("Twilio credentials not configured");
