@@ -22,6 +22,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [companyName, setCompanyName] = useState('Commissary');
+  const [activeLogo, setActiveLogo] = useState<string | null>(null);
   const { t, i18n } = useTranslation();
 
   const changeLanguage = (lng: string) => {
@@ -31,18 +32,30 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   useEffect(() => {
-    fetchCompanyName();
+    fetchCompanyInfo();
   }, []);
 
-  const fetchCompanyName = async () => {
-    const { data } = await supabase
+  const fetchCompanyInfo = async () => {
+    // Fetch company name
+    const { data: nameData } = await supabase
       .from('app_settings')
       .select('value')
       .eq('key', 'company_name')
       .single();
     
-    if (data?.value) {
-      setCompanyName(data.value);
+    if (nameData?.value) {
+      setCompanyName(nameData.value);
+    }
+
+    // Fetch active logo
+    const { data: logoData } = await supabase
+      .from('company_logos')
+      .select('logo_url')
+      .eq('is_active', true)
+      .single();
+    
+    if (logoData?.logo_url) {
+      setActiveLogo(logoData.logo_url);
     }
   };
 
@@ -69,8 +82,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="w-6 h-6 text-primary" />
-              <span className="font-bold text-xl">{companyName}</span>
+              {activeLogo ? (
+                <img src={activeLogo} alt={companyName} className="h-10 w-auto object-contain" />
+              ) : (
+                <>
+                  <ShoppingBag className="w-6 h-6 text-primary" />
+                  <span className="font-bold text-xl">{companyName}</span>
+                </>
+              )}
             </div>
             
             <div className="hidden md:flex items-center gap-4">

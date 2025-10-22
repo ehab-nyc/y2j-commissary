@@ -115,6 +115,33 @@ export type Database = {
           },
         ]
       }
+      company_logos: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string
+          name?: string
+        }
+        Relationships: []
+      }
       customer_phones: {
         Row: {
           created_at: string | null

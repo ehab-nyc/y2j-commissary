@@ -33,8 +33,10 @@ const AdminSettings = () => {
   const [newThemeName, setNewThemeName] = useState("");
   const [newBackgroundName, setNewBackgroundName] = useState("");
   const [newBackgroundQuality, setNewBackgroundQuality] = useState(80);
+  const [newLogoName, setNewLogoName] = useState("");
   const [themeToDelete, setThemeToDelete] = useState<string | null>(null);
   const [backgroundToDelete, setBackgroundToDelete] = useState<string | null>(null);
+  const [logoToDelete, setLogoToDelete] = useState<string | null>(null);
 
   const { data: appSettings } = useQuery({
     queryKey: ["app-settings"],
@@ -96,6 +98,38 @@ const AdminSettings = () => {
           // Refetch after migration
           const { data: newData } = await supabase
             .from("login_backgrounds")
+            .select("*")
+            .order("created_at", { ascending: false });
+          return newData || [];
+        }
+      }
+
+      return data;
+    },
+    enabled: !!appSettings,
+  });
+
+  const { data: logos } = useQuery({
+    queryKey: ["company-logos", appSettings?.logo_url],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("company_logos")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      // Migrate old logo from app_settings if needed
+      if (data && data.length === 0 && appSettings?.logo_url) {
+        const { error: insertError } = await supabase.from("company_logos").insert({
+          name: "Existing Logo",
+          logo_url: appSettings.logo_url,
+          is_active: true,
+        });
+        
+        if (!insertError) {
+          // Refetch after migration
+          const { data: newData } = await supabase
+            .from("company_logos")
             .select("*")
             .order("created_at", { ascending: false });
           return newData || [];
@@ -273,27 +307,85 @@ const AdminSettings = () => {
     },
   });
 
-  const handleLogoUpload = async (file: File) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `logo.${fileExt}`;
-    const filePath = `${fileName}`;
+  const addLogoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('branding')
-      .upload(filePath, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage
+        .from('branding')
+        .upload(filePath, file, { upsert: true });
 
-    if (uploadError) {
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('branding')
+        .getPublicUrl(filePath);
+
+      const { error } = await supabase
+        .from("company_logos")
+        .insert({
+          name: newLogoName || file.name,
+          logo_url: publicUrl,
+          is_active: false,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-logos"] });
+      toast.success("Logo uploaded successfully");
+      setNewLogoName("");
+    },
+    onError: (error) => {
       toast.error("Failed to upload logo");
-      return;
-    }
+      console.error(error);
+    },
+  });
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('branding')
-      .getPublicUrl(filePath);
+  const setActiveLogoMutation = useMutation({
+    mutationFn: async (logoId: string) => {
+      await supabase
+        .from("company_logos")
+        .update({ is_active: false })
+        .neq("id", logoId);
 
-    setSettings({ ...settings, logo_url: publicUrl });
-    toast.success("Logo uploaded successfully");
-  };
+      const { error } = await supabase
+        .from("company_logos")
+        .update({ is_active: true })
+        .eq("id", logoId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-logos"] });
+      toast.success("Active logo updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update active logo");
+      console.error(error);
+    },
+  });
+
+  const deleteLogoMutation = useMutation({
+    mutationFn: async (logoId: string) => {
+      const { error } = await supabase
+        .from("company_logos")
+        .delete()
+        .eq("id", logoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-logos"] });
+      toast.success("Logo deleted successfully");
+      setLogoToDelete(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete logo");
+      console.error(error);
+    },
+  });
 
   return (
     <DashboardLayout>
@@ -368,9 +460,14 @@ const AdminSettings = () => {
               <div className="space-y-2">
                 <Label>Manage Themes</Label>
                 <div className="space-y-2">
-                  {themes?.filter(t => !t.is_system).map((theme) => (
+                  {themes?.map((theme) => (
                     <div key={theme.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                      <span>{theme.name}</span>
+                      <span className="flex items-center gap-2">
+                        {theme.name}
+                        {theme.is_system && (
+                          <span className="text-xs text-muted-foreground">(System)</span>
+                        )}
+                      </span>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -385,32 +482,70 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
-                Logo
+                Company Logos
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {settings.logo_url && (
-                <div className="border rounded-lg p-4 bg-muted">
-                  <img
-                    src={settings.logo_url}
-                    alt="Company Logo"
-                    className="max-h-32 mx-auto object-contain"
-                  />
-                </div>
-              )}
-              <div>
-                <Label htmlFor="logo-upload">Upload New Logo</Label>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {logos?.map((logo) => (
+                  <div key={logo.id} className="border rounded-lg p-3 space-y-2">
+                    <div className="relative">
+                      <div className="w-full h-32 flex items-center justify-center bg-muted rounded">
+                        <img
+                          src={logo.logo_url}
+                          alt={logo.name}
+                          className="max-h-28 max-w-full object-contain"
+                        />
+                      </div>
+                      {logo.is_active && (
+                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="font-medium truncate text-sm">{logo.name}</p>
+                      <div className="flex gap-2">
+                        {!logo.is_active && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setActiveLogoMutation.mutate(logo.id)}
+                          >
+                            Set Active
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setLogoToDelete(logo.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-4 space-y-3">
+                <Label>Add New Logo</Label>
                 <Input
-                  id="logo-upload"
+                  placeholder="Logo name"
+                  value={newLogoName}
+                  onChange={(e) => setNewLogoName(e.target.value)}
+                />
+                <Input
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) handleLogoUpload(file);
+                    if (file) addLogoMutation.mutate(file);
                   }}
                 />
               </div>
@@ -554,6 +689,25 @@ const AdminSettings = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => backgroundToDelete && deleteBackgroundMutation.mutate(backgroundToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!logoToDelete} onOpenChange={() => setLogoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Logo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this logo? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => logoToDelete && deleteLogoMutation.mutate(logoToDelete)}
             >
               Delete
             </AlertDialogAction>
