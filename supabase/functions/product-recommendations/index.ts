@@ -16,12 +16,20 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const authHeader = req.headers.get("authorization");
     
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader || "" } }
-    });
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Properly validate JWT using Supabase auth
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Extract JWT token from Bearer header
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Properly validate JWT using Supabase auth with explicit token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
       return new Response(

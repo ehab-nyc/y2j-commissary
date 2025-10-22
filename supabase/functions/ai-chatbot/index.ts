@@ -49,16 +49,13 @@ serve(async (req) => {
       );
     }
     
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { authorization: authHeader } },
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false
-      }
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Properly validate JWT using Supabase auth
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Extract JWT token from Bearer header
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Properly validate JWT using Supabase auth with explicit token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
       console.error('Auth error:', userError);
