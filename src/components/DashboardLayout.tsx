@@ -85,12 +85,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               {activeLogo ? (
                 <>
                   <img src={activeLogo} alt="Logo" className="h-10 w-10 rounded-full object-cover" />
-                  <span className="font-bold text-lg">Y2J Commissary</span>
+                  <span className="font-bold text-sm">Y2J Commissary</span>
                 </>
               ) : (
                 <>
                   <ShoppingBag className="w-6 h-6 text-primary" />
-                  <span className="font-bold text-lg">Y2J Commissary</span>
+                  <span className="font-bold text-sm">Y2J Commissary</span>
                 </>
               )}
             </div>
