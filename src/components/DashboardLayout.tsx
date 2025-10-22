@@ -5,6 +5,7 @@ import { LogOut, ShoppingBag, Package, Users, BarChart3, ShoppingCart, UserCircl
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationBell } from '@/components/NotificationBell';
+import { AIChatbot } from '@/components/AIChatbot';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -177,6 +178,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:pt-8 pt-32">
         {children}
       </main>
+      <AIChatbot />
     </div>
   );
 };

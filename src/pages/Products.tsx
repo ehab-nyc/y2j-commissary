@@ -13,7 +13,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { ProductRecommendations } from '@/components/ProductRecommendations';
-import { AIChatbot } from '@/components/AIChatbot';
 import { TranslateButton } from '@/components/TranslateButton';
 
 interface Product {
@@ -553,7 +552,6 @@ const Products = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <AIChatbot />
     </DashboardLayout>
   );
 };
