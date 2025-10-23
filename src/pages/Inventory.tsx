@@ -103,7 +103,7 @@ export default function Inventory() {
                       <p className="text-sm text-muted-foreground">
                         Reorder: {product.reorder_point}
                       </p>
-                      <p className="text-sm">Cost: ${product.cost_price}</p>
+                      <p className="text-sm">Price: ${Number(product.price).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
