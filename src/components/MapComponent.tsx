@@ -32,12 +32,27 @@ const MapComponent: React.FC<MapComponentProps> = ({
   useEffect(() => {
     const loadToken = async () => {
       try {
+        // Check if user is authenticated first
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          console.error('No active session - user must be logged in to view maps');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Fetching Mapbox token with authenticated session...');
+        
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         
         if (error) {
           console.error('Error fetching mapbox token:', error);
+          console.error('Error details:', JSON.stringify(error, null, 2));
         } else if (data?.configured && data?.token) {
+          console.log('Mapbox token received successfully');
           setMapboxToken(data.token);
+        } else {
+          console.log('Mapbox token not configured:', data);
         }
       } catch (error) {
         console.error('Failed to load mapbox token:', error);
