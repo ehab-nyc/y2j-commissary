@@ -783,7 +783,7 @@ export type Database = {
       role_change_audit: {
         Row: {
           changed_at: string
-          changed_by: string
+          changed_by: string | null
           id: string
           new_role: Database["public"]["Enums"]["app_role"]
           old_role: Database["public"]["Enums"]["app_role"] | null
@@ -791,7 +791,7 @@ export type Database = {
         }
         Insert: {
           changed_at?: string
-          changed_by: string
+          changed_by?: string | null
           id?: string
           new_role: Database["public"]["Enums"]["app_role"]
           old_role?: Database["public"]["Enums"]["app_role"] | null
@@ -799,7 +799,7 @@ export type Database = {
         }
         Update: {
           changed_at?: string
-          changed_by?: string
+          changed_by?: string | null
           id?: string
           new_role?: Database["public"]["Enums"]["app_role"]
           old_role?: Database["public"]["Enums"]["app_role"] | null
@@ -1158,14 +1158,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_low_stock: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_sms_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_low_stock: { Args: never; Returns: undefined }
+      cleanup_old_sms_logs: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
           p_message: string
@@ -1176,7 +1170,7 @@ export type Database = {
         Returns: string
       }
       get_customer_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cart_name: string
           cart_number: string
@@ -1186,7 +1180,7 @@ export type Database = {
         }[]
       }
       get_manageable_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cart_name: string
           cart_number: string
@@ -1197,10 +1191,7 @@ export type Database = {
           user_roles: Json
         }[]
       }
-      get_user_cart_number: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_cart_number: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
