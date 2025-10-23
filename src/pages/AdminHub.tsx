@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Folder, ClipboardList, CheckCircle2, AlertCircle, Users, MessageSquare, Settings } from 'lucide-react';
+import { Package, Folder, ClipboardList, CheckCircle2, AlertCircle, Users, MessageSquare, Settings, MapPin } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const AdminHub = () => {
@@ -57,6 +57,13 @@ const AdminHub = () => {
       icon: MessageSquare,
       path: '/admin/sms',
       roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'GPS Fleet Management',
+      description: 'Track vehicles and manage fleet',
+      icon: MapPin,
+      path: '/gps',
+      roles: ['worker', 'manager', 'admin', 'super_admin']
     },
     {
       title: 'Branding & Settings',
