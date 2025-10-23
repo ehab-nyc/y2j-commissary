@@ -41,12 +41,13 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     // Two authentication methods:
     // 1. JWT token (from authenticated frontend users)
-    // 2. Trigger secret (from database triggers)
+    // 2. Trigger secret (from database triggers with rate limiting)
     const authHeader = req.headers.get('Authorization');
     const triggerSecret = req.headers.get('x-trigger-secret');
     const expectedSecret = Deno.env.get('SMS_TRIGGER_SECRET');
     
     let isAuthenticated = false;
+    let userId: string | null = null;
     
     // Check JWT authentication
     if (authHeader) {
@@ -59,14 +60,16 @@ const handler = async (req: Request): Promise<Response> => {
       if (user && !error) {
         console.log('Request authenticated via JWT for user:', user.id);
         isAuthenticated = true;
+        userId = user.id;
       }
     }
     
-    // Check trigger secret authentication
+    // Check trigger secret authentication with rate limiting
     if (!isAuthenticated && triggerSecret && expectedSecret) {
       if (triggerSecret === expectedSecret) {
         console.log('Request authenticated via trigger secret');
         isAuthenticated = true;
+        // Note: Trigger secret requests have no user ID
       }
     }
     
@@ -104,12 +107,41 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending SMS to:", to, "- Message length:", message.length);
 
-    // Get Twilio credentials - first try database, then environment
+    // Initialize Supabase admin client for rate limiting check
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Rate limiting: Check recent SMS to this number (last 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: recentSMS, error: rateLimitError } = await supabaseAdmin
+      .from('sms_rate_limit')
+      .select('id')
+      .eq('phone_number', to)
+      .gte('sent_at', fiveMinutesAgo);
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+      // Continue despite error to avoid blocking legitimate SMS
+    } else if (recentSMS && recentSMS.length >= 3) {
+      console.warn('Rate limit exceeded for phone:', to);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please wait a few minutes.',
+          success: false 
+        }),
+        {
+          status: 429,
+          headers: { 
+            "Content-Type": "application/json", 
+            ...corsHeaders 
+          },
+        }
+      );
+    }
+
+    // Get Twilio credentials - first try database, then environment
     const { data: settings } = await supabaseAdmin
       .from('app_settings')
       .select('key, value')
@@ -157,6 +189,18 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("SMS sent successfully:", twilioData.sid);
+
+    // Log SMS send for rate limiting and audit trail
+    const { error: logError } = await supabaseAdmin
+      .from('sms_rate_limit')
+      .insert({
+        phone_number: to,
+        message_type: 'system',
+      });
+    
+    if (logError) {
+      console.error('Failed to log SMS send:', logError);
+    }
 
     return new Response(
       JSON.stringify({ 
