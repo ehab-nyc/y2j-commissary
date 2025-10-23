@@ -50,30 +50,34 @@ export function ReceiptPreview({
       style={{ width: `${paperWidth}mm`, maxWidth: "100%" }}
     >
       {/* Header */}
-      <div className="text-center space-y-2 border-b-2 border-dashed border-black pb-4 mb-4">
-        {template?.show_logo && logoUrl && (
-          <div className="flex justify-center mb-3">
-            <img 
-              src={logoUrl} 
-              alt="Company Logo" 
-              className="max-w-[60mm] h-auto max-h-[30mm] object-contain"
-            />
-          </div>
-        )}
-        {template?.show_company_info && companyInfo && (
-          <>
-            <h2 className="text-lg font-bold">{companyInfo.name}</h2>
-            {companyInfo.address && (
-              <p className="text-xs">{companyInfo.address}</p>
-            )}
-            {companyInfo.phone && <p className="text-xs">{companyInfo.phone}</p>}
-            {companyInfo.tax_id && (
-              <p className="text-xs">Tax ID: {companyInfo.tax_id}</p>
-            )}
-          </>
-        )}
+      <div className="border-b-2 border-dashed border-black pb-4 mb-4">
+        <div className="flex gap-3 items-start">
+          {template?.show_logo && logoUrl && (
+            <div className="flex-shrink-0">
+              <img 
+                src={logoUrl} 
+                alt="Company Logo" 
+                className="w-[25mm] h-auto max-h-[25mm] object-contain"
+              />
+            </div>
+          )}
+          {template?.show_company_info && companyInfo && (
+            <div className="flex-1 text-left">
+              <h2 className="text-base font-bold mb-1">{companyInfo.name}</h2>
+              {companyInfo.address && (
+                <p className="text-xs leading-tight">{companyInfo.address}</p>
+              )}
+              {companyInfo.phone && (
+                <p className="text-xs leading-tight">{companyInfo.phone}</p>
+              )}
+              {companyInfo.tax_id && (
+                <p className="text-xs leading-tight mt-1">Tax ID: {companyInfo.tax_id}</p>
+              )}
+            </div>
+          )}
+        </div>
         {template?.header_text && (
-          <p className="text-xs mt-2">{template.header_text}</p>
+          <p className="text-xs mt-3 text-center">{template.header_text}</p>
         )}
       </div>
 
