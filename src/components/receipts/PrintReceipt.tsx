@@ -87,6 +87,8 @@ export function PrintReceipt({
       ALLOWED_ATTR: ['class', 'style'],
     });
 
+    const paperWidth = template?.paper_width || 80;
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -94,10 +96,28 @@ export function PrintReceipt({
           <title>Receipt #${orderNumber}</title>
           <style>
             @media print {
-              @page { margin: 0; }
-              body { margin: 10mm; }
+              @page { 
+                margin: 0;
+                size: ${paperWidth}mm auto;
+              }
+              body { 
+                margin: 0;
+                padding: 0;
+              }
             }
-            body { font-family: monospace; }
+            body { 
+              font-family: 'Courier New', monospace;
+              width: ${paperWidth}mm;
+              margin: 0 auto;
+              padding: 2mm;
+              font-size: 12px;
+              line-height: 1.4;
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
           </style>
         </head>
         <body>
