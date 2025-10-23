@@ -6,31 +6,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Key, Map } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Settings, Key, Map, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const GPSSettings = () => {
-  const [mapboxToken, setMapboxToken] = useState('');
   const [gpsApiKey, setGpsApiKey] = useState('');
   const [gpsApiUrl, setGpsApiUrl] = useState('');
+  const [mapboxConfigured, setMapboxConfigured] = useState(false);
 
   useEffect(() => {
     loadSettings();
+    checkMapboxToken();
   }, []);
 
   const loadSettings = async () => {
     const { data } = await supabase
       .from('gps_settings')
       .select('*')
-      .in('key', ['mapbox_token', 'gps_api_key', 'gps_api_url']);
+      .in('key', ['gps_api_key', 'gps_api_url']);
 
     if (data) {
       data.forEach((setting) => {
-        if (setting.key === 'mapbox_token') setMapboxToken(setting.value);
         if (setting.key === 'gps_api_key') setGpsApiKey(setting.value);
         if (setting.key === 'gps_api_url') setGpsApiUrl(setting.value);
       });
+    }
+  };
+
+  const checkMapboxToken = async () => {
+    try {
+      const { data } = await supabase.functions.invoke('get-mapbox-token');
+      if (data?.configured) {
+        setMapboxConfigured(true);
+      }
+    } catch (error) {
+      console.error('Error checking mapbox token:', error);
     }
   };
 
@@ -71,38 +83,50 @@ const GPSSettings = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Map className="h-5 w-5" />
-                  Mapbox Configuration
+                  <Lock className="h-5 w-5" />
+                  Secure Mapbox Configuration
                 </CardTitle>
                 <CardDescription>
-                  Get your free Mapbox public token at{' '}
-                  <a 
-                    href="https://mapbox.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    mapbox.com
-                  </a>
+                  Mapbox token is now securely managed via system secrets for enhanced security
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="mapbox-token">Mapbox Public Token</Label>
-                  <Input
-                    id="mapbox-token"
-                    type="text"
-                    placeholder="pk.eyJ..."
-                    value={mapboxToken}
-                    onChange={(e) => setMapboxToken(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    This token is used to display maps throughout the GPS tracking system
-                  </p>
+                {mapboxConfigured ? (
+                  <Alert>
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Mapbox Token Configured</AlertTitle>
+                    <AlertDescription>
+                      The Mapbox service is properly configured and ready to use. The token is securely stored server-side.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert>
+                    <AlertTitle>Mapbox Token Not Configured</AlertTitle>
+                    <AlertDescription>
+                      To enable map features, an administrator must add the MAPBOX_TOKEN secret via the system settings.
+                      <br /><br />
+                      <strong>For administrators:</strong>
+                      <ol className="list-decimal list-inside space-y-1 mt-2">
+                        <li>Get your free Mapbox public token from <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a></li>
+                        <li>Contact your system administrator to add the token as a secret named "MAPBOX_TOKEN"</li>
+                        <li>The token will be securely stored and only accessible server-side</li>
+                      </ol>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Security Benefits
+                  </h4>
+                  <ul className="text-sm space-y-1 text-muted-foreground">
+                    <li>✓ Token stored server-side only</li>
+                    <li>✓ Not accessible via browser network traffic</li>
+                    <li>✓ Requires staff authentication to access</li>
+                    <li>✓ Reduced risk of token exposure</li>
+                  </ul>
                 </div>
-                <Button onClick={() => saveSetting('mapbox_token', mapboxToken)}>
-                  Save Mapbox Token
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>

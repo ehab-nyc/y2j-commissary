@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MapComponentProps {
@@ -29,22 +26,24 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [tokenInput, setTokenInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load Mapbox token from settings
+  // Load Mapbox token from secure edge function
   useEffect(() => {
     const loadToken = async () => {
-      const { data } = await supabase
-        .from('gps_settings')
-        .select('value')
-        .eq('key', 'mapbox_token')
-        .maybeSingle();
-      
-      if (data?.value) {
-        setMapboxToken(data.value);
+      try {
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+        
+        if (error) {
+          console.error('Error fetching mapbox token:', error);
+        } else if (data?.configured && data?.token) {
+          setMapboxToken(data.token);
+        }
+      } catch (error) {
+        console.error('Failed to load mapbox token:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     loadToken();
   }, []);
@@ -109,16 +108,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     });
   }, [markers]);
 
-  const handleSaveToken = async () => {
-    const { error } = await supabase
-      .from('gps_settings')
-      .upsert({ key: 'mapbox_token', value: tokenInput }, { onConflict: 'key' });
-    
-    if (!error) {
-      setMapboxToken(tokenInput);
-      setTokenInput('');
-    }
-  };
+  // Token is now managed via secrets by administrators
 
   if (isLoading) {
     return <div className="w-full h-full flex items-center justify-center">Loading map...</div>;
@@ -127,32 +117,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
   if (!mapboxToken) {
     return (
       <div className="w-full h-full flex items-center justify-center p-6">
-        <div className="max-w-md space-y-4">
-          <h3 className="text-lg font-semibold">Mapbox Token Required</h3>
+        <div className="max-w-md space-y-4 text-center">
+          <h3 className="text-lg font-semibold">Map Service Not Configured</h3>
           <p className="text-sm text-muted-foreground">
-            To display the map, you need a Mapbox public token. Get your free token at{' '}
-            <a 
-              href="https://mapbox.com/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              mapbox.com
-            </a>
+            The Mapbox service has not been configured. Please contact your administrator to set up the MAPBOX_TOKEN in system settings.
           </p>
-          <div className="space-y-2">
-            <Label htmlFor="mapbox-token">Mapbox Public Token</Label>
-            <Input
-              id="mapbox-token"
-              type="text"
-              placeholder="pk.eyJ..."
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-            />
-          </div>
-          <Button onClick={handleSaveToken} className="w-full">
-            Save Token
-          </Button>
         </div>
       </div>
     );
