@@ -58,19 +58,6 @@ export function PrintReceiptDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-4">
-          <Button
-            onClick={handlePOSPrint}
-            variant="outline"
-            className="h-auto flex flex-col gap-2 p-4"
-          >
-            <Receipt className="h-8 w-8" />
-            <div className="text-center">
-              <div className="font-semibold">POS Design</div>
-              <div className="text-xs text-muted-foreground">
-                Standard invoice format
-              </div>
-            </div>
-          </Button>
           <div className="flex flex-col gap-2">
             <PrintReceipt
               orderNumber={orderNumber}
@@ -81,12 +68,25 @@ export function PrintReceiptDialog({
               date={date}
             />
             <div className="text-center px-2">
-              <div className="font-semibold text-sm">Template Design</div>
+              <div className="font-semibold text-sm">Customizable Design</div>
               <div className="text-xs text-muted-foreground">
-                Customizable receipt
+                Template-based receipt
               </div>
             </div>
           </div>
+          <Button
+            onClick={handlePOSPrint}
+            variant="outline"
+            className="h-auto flex flex-col gap-2 p-4"
+          >
+            <FileText className="h-8 w-8" />
+            <div className="text-center">
+              <div className="font-semibold">Standard Invoice</div>
+              <div className="text-xs text-muted-foreground">
+                Full-page format
+              </div>
+            </div>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

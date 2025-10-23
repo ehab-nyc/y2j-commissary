@@ -151,17 +151,18 @@ const Worker = () => {
           <style>
             @media print {
               @page { 
-                margin: 0;
-                size: auto;
+                margin: 0.25in;
+                size: 8.5in 11in;
               }
             }
             body {
               font-family: system-ui, -apple-system, sans-serif;
-              max-width: 8.5in;
-              margin: 0.5in auto;
-              padding: 15px;
+              max-width: 8in;
+              margin: 0 auto;
+              padding: 20px;
               position: relative;
-              font-size: 9px;
+              font-size: 11px;
+              background: white;
             }
             body::before {
               content: '';
@@ -169,13 +170,13 @@ const Worker = () => {
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 50%;
-              height: 50%;
+              width: 40%;
+              height: 40%;
               background-image: url('${logoUrl}');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
-              opacity: 0.08;
+              opacity: 0.05;
               z-index: 0;
               pointer-events: none;
             }
@@ -183,68 +184,67 @@ const Worker = () => {
               display: flex;
               align-items: center;
               justify-content: space-between;
-              margin-bottom: 20px;
-              padding-bottom: 15px;
-              border-bottom: 1.5px solid #000;
+              margin-bottom: 25px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #000;
               position: relative;
               z-index: 1;
             }
             .logo-section {
               display: flex;
               align-items: center;
-              gap: 10px;
+              gap: 15px;
             }
             .logo {
-              max-height: 60px;
-              max-width: 120px;
+              max-height: 70px;
+              max-width: 140px;
             }
             .company-name {
-              font-size: 13px;
+              font-size: 16px;
               font-weight: bold;
             }
             .order-info {
               text-align: right;
-              font-size: 9px;
+              font-size: 11px;
             }
             .order-info h2 {
-              font-size: 12px;
-              margin: 0 0 5px 0;
+              font-size: 16px;
+              margin: 0 0 8px 0;
             }
             .customer-info {
-              margin-bottom: 15px;
-              padding: 8px;
-              background-color: #f3f4f6;
-              border: 1.5px solid #000;
-              border-radius: 4px;
-              font-size: 9px;
-              font-weight: 600;
+              margin: 15px 0;
+              padding: 12px;
+              background-color: #f9fafb;
+              border-left: 4px solid #000;
+              position: relative;
+              z-index: 1;
+            }
+            .customer-info > div {
+              margin: 4px 0;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin: 12px 0;
-              font-size: 8px;
+              margin: 20px 0;
+              font-size: 11px;
+              position: relative;
+              z-index: 1;
             }
             th {
               background-color: #f3f4f6;
-              padding: 5px;
+              padding: 10px;
               text-align: left;
-              border-bottom: 1.5px solid #000;
-              font-size: 8px;
+              border-bottom: 2px solid #000;
+              font-size: 11px;
+              font-weight: 600;
             }
             td {
-              padding: 4px 5px;
+              padding: 8px 10px;
             }
             .total-row {
               font-weight: bold;
-              font-size: 10px;
-            }
-            .notes {
-              margin-top: 15px;
-              padding: 8px;
+              font-size: 13px;
               background-color: #f9fafb;
-              border-left: 3px solid #000;
-              font-size: 8px;
             }
           </style>
         </head>
@@ -254,18 +254,18 @@ const Worker = () => {
               ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
               <div>
                 <div class="company-name">${companyName}</div>
-                ${companyAddress ? `<div style="font-size: 8px; margin-top: 3px;">${companyAddress}</div>` : ''}
-                ${companyEmail ? `<div style="font-size: 8px; margin-top: 2px;">${companyEmail}</div>` : ''}
+                ${companyAddress ? `<div style="font-size: 10px; margin-top: 4px;">${companyAddress}</div>` : ''}
+                ${companyEmail ? `<div style="font-size: 10px; margin-top: 3px;">${companyEmail}</div>` : ''}
               </div>
             </div>
             <div class="order-info">
-              <h2>Order #${order.id.slice(0, 8)}</h2>
+              <h2>Invoice #${order.id.slice(0, 8)}</h2>
               <p>${format(new Date(order.created_at), 'PPp')}</p>
               <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
             </div>
           </div>
           
-          <div class="customer-info" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="customer-info">
             <div><strong>Customer:</strong> ${order.profiles?.full_name || 'Unknown'}</div>
             ${order.profiles?.cart_name || order.profiles?.cart_number ? `<div><strong>Cart:</strong> ${order.profiles?.cart_name || ''} ${order.profiles?.cart_number || ''}</div>` : ''}
             ${order.assigned_worker ? `<div><strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}</div>` : ''}
@@ -283,9 +283,9 @@ const Worker = () => {
             </thead>
             <tbody>
               ${itemsHtml}
-               <tr class="total-row">
-                <td colspan="4" style="padding: 15px 8px; text-align: right;">TOTAL:</td>
-                <td style="padding: 15px 8px; text-align: right;">$${order.total.toFixed(2)}</td>
+              <tr class="total-row">
+                <td colspan="4" style="padding: 15px 10px; text-align: right; border-top: 2px solid #000;">TOTAL:</td>
+                <td style="padding: 15px 10px; text-align: right; border-top: 2px solid #000;">$${order.total.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
