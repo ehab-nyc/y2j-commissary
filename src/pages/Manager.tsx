@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { TrendingUp, Package, Users, DollarSign, Eye, Printer, BarChart3, ClipboardList, CheckCircle2, Play } from 'lucide-react';
+import { TrendingUp, Package, Users, DollarSign, Eye, BarChart3, ClipboardList, CheckCircle2, Play } from 'lucide-react';
+import { PrintReceiptDialog } from '@/components/receipts/PrintReceiptDialog';
 
 const Manager = () => {
   const navigate = useNavigate();
@@ -510,14 +511,21 @@ const Manager = () => {
                                     Complete
                                   </Button>
                                 )}
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => printOrder(order)}
-                                >
-                                  <Printer className="w-4 h-4" />
-                                </Button>
-                                <Button 
+                                <PrintReceiptDialog
+                                  orderNumber={order.id.slice(0, 8)}
+                                  customerName={order.profiles?.full_name || 'N/A'}
+                                  items={order.order_items?.map((item: any) => ({
+                                    name: item.products?.name || 'Unknown',
+                                    quantity: item.quantity,
+                                    price: Number(item.price),
+                                    box_size: item.box_size,
+                                  })) || []}
+                                  total={Number(order.total)}
+                                  serviceFee={0}
+                                  date={new Date(order.created_at)}
+                                  onPOSPrint={() => printOrder(order)}
+                                />
+                                <Button
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => {
@@ -547,15 +555,22 @@ const Manager = () => {
                           Complete order information and items
                         </DialogDescription>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => selectedOrder && printOrder(selectedOrder)}
-                        className="gap-2"
-                      >
-                        <Printer className="w-4 h-4" />
-                        Print Order
-                      </Button>
+                      {selectedOrder && (
+                        <PrintReceiptDialog
+                          orderNumber={selectedOrder.id.slice(0, 8)}
+                          customerName={selectedOrder.profiles?.full_name || 'N/A'}
+                          items={selectedOrder.order_items?.map((item: any) => ({
+                            name: item.products?.name || 'Unknown',
+                            quantity: item.quantity,
+                            price: Number(item.price),
+                            box_size: item.box_size,
+                          })) || []}
+                          total={Number(selectedOrder.total)}
+                          serviceFee={0}
+                          date={new Date(selectedOrder.created_at)}
+                          onPOSPrint={() => printOrder(selectedOrder)}
+                        />
+                      )}
                     </div>
                   </DialogHeader>
                   {selectedOrder && (

@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { CheckCircle2, Clock, Printer } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
+import { PrintReceiptDialog } from '@/components/receipts/PrintReceiptDialog';
 
 type OrderStatus = 'pending' | 'processing' | 'completed' | 'cancelled';
 
@@ -348,15 +349,20 @@ const Worker = () => {
                       <span className="text-lg font-bold text-primary">
                         ${order.total.toFixed(2)}
                       </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => printOrder(order)}
-                        className="gap-1"
-                      >
-                        <Printer className="w-4 h-4" />
-                        Print
-                      </Button>
+                      <PrintReceiptDialog
+                        orderNumber={order.id.slice(0, 8)}
+                        customerName={order.profiles?.full_name || 'N/A'}
+                        items={order.order_items.map(item => ({
+                          name: item.products?.name || 'Unknown',
+                          quantity: item.quantity,
+                          price: item.price,
+                          box_size: item.box_size,
+                        }))}
+                        total={order.total}
+                        serviceFee={0}
+                        date={new Date(order.created_at)}
+                        onPOSPrint={() => printOrder(order)}
+                      />
                     </div>
                   </div>
                 </CardHeader>

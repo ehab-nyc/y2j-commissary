@@ -11,11 +11,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
-import { Trash2, Edit, MessageSquare, Printer } from 'lucide-react';
+import { Trash2, Edit, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { TranslateButton } from '@/components/TranslateButton';
+import { PrintReceiptDialog } from '@/components/receipts/PrintReceiptDialog';
 
 interface OrderItem {
   id: string;
@@ -502,15 +503,20 @@ const Orders = () => {
                       <span className="text-lg font-bold text-primary">
                         ${order.total.toFixed(2)}
                       </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => printOrder(order)}
-                        className="gap-1"
-                      >
-                        <Printer className="w-4 h-4" />
-                        Print
-                      </Button>
+                      <PrintReceiptDialog
+                        orderNumber={order.id.slice(0, 8)}
+                        customerName={order.profiles?.full_name || 'N/A'}
+                        items={order.order_items.map(item => ({
+                          name: item.products.name,
+                          quantity: item.quantity,
+                          price: item.price,
+                          box_size: item.box_size,
+                        }))}
+                        total={order.total}
+                        serviceFee={serviceFee}
+                        date={new Date(order.created_at)}
+                        onPOSPrint={() => printOrder(order)}
+                      />
                       {order.status === 'pending' && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
