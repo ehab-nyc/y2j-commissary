@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { detectPromptInjection, sanitizeForAI } from "../_shared/promptInjection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,16 +26,25 @@ serve(async (req) => {
     const validationResult = chatSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.error('AI chatbot validation failed:', validationResult.error.errors);
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid input",
-          details: validationResult.error.errors 
-        }),
+        JSON.stringify({ error: 'Invalid request format' }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const { conversationId, message } = validationResult.data;
+    
+    // Check for prompt injection
+    if (detectPromptInjection(message)) {
+      console.warn('Potential prompt injection detected:', message.substring(0, 100));
+      return new Response(
+        JSON.stringify({ error: 'Invalid message content' }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const sanitizedMessage = sanitizeForAI(message);
     
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -98,7 +108,7 @@ serve(async (req) => {
     await supabase.from("chat_messages").insert({
       conversation_id: convId,
       role: "user",
-      content: message,
+      content: sanitizedMessage,
     });
 
     // Get conversation history
@@ -159,6 +169,7 @@ Be friendly, concise, and helpful. If you don't know something, admit it.`;
     });
 
     if (!response.ok) {
+      console.error('AI API error:', response.status);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -167,11 +178,14 @@ Be friendly, concise, and helpful. If you don't know something, admit it.`;
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please contact support." }),
+          JSON.stringify({ error: "Service temporarily unavailable" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`AI request failed: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: "Unable to process request" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await response.json();
@@ -191,7 +205,7 @@ Be friendly, concise, and helpful. If you don't know something, admit it.`;
   } catch (error) {
     console.error("Chatbot error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Service temporarily unavailable" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

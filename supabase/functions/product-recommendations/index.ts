@@ -97,6 +97,7 @@ Format: {"productIds": [id1, id2, id3, id4, id5], "reasons": ["reason1", "reason
     });
 
     if (!response.ok) {
+      console.error('AI API error:', response.status);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -105,11 +106,14 @@ Format: {"productIds": [id1, id2, id3, id4, id5], "reasons": ["reason1", "reason
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please contact support." }),
+          JSON.stringify({ error: "Recommendations unavailable" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`AI request failed: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate recommendations" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await response.json();
@@ -134,7 +138,7 @@ Format: {"productIds": [id1, id2, id3, id4, id5], "reasons": ["reason1", "reason
   } catch (error) {
     console.error("Recommendations error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Recommendations service error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

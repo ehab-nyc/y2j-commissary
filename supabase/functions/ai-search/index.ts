@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { detectPromptInjection, sanitizeForAI } from "../_shared/promptInjection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,16 +26,25 @@ serve(async (req) => {
     const validationResult = searchSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.error('AI search validation failed:', validationResult.error.errors);
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid input",
-          details: validationResult.error.errors 
-        }),
+        JSON.stringify({ error: 'Invalid search parameters' }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const { query, type = "products" } = validationResult.data;
+    
+    // Check for prompt injection
+    if (detectPromptInjection(query)) {
+      console.warn('Potential prompt injection in search:', query.substring(0, 100));
+      return new Response(
+        JSON.stringify({ error: 'Invalid search query' }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const sanitizedQuery = sanitizeForAI(query);
     
     if (!query) {
       return new Response(
@@ -113,7 +123,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const searchPrompt = `Given this search query: "${query}"
+    const searchPrompt = `Given this search query: "${sanitizedQuery}"
     
 And this data:
 ${JSON.stringify(data, null, 2)}
@@ -149,7 +159,23 @@ Format: {"ids": [1, 5, 3, ...]}`;
     });
 
     if (!aiResponse.ok) {
-      throw new Error(`AI request failed: ${aiResponse.status}`);
+      console.error('AI API error:', aiResponse.status);
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Search service unavailable' }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: 'Search request failed' }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await aiResponse.json();
@@ -171,7 +197,7 @@ Format: {"ids": [1, 5, 3, ...]}`;
   } catch (error) {
     console.error("AI search error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: 'Search service error' }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

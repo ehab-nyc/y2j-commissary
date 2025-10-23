@@ -109,7 +109,11 @@ const handler = async (req: Request): Promise<Response> => {
     const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
 
     if (!accountSid || !authToken || !twilioPhone) {
-      throw new Error("Twilio credentials not configured");
+      console.error('Missing Twilio credentials - service not configured');
+      return new Response(
+        JSON.stringify({ error: 'SMS service unavailable', success: false }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Initialize Supabase client with service role for data access
@@ -230,7 +234,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-bulk-sms function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: 'Failed to send bulk SMS',
         success: false 
       }),
       {

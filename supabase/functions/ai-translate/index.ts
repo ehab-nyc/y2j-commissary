@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { detectPromptInjection, sanitizeForAI } from "../_shared/promptInjection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,15 +43,24 @@ serve(async (req) => {
     if (!validationResult.success) {
       console.error('Validation failed:', validationResult.error.errors);
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid input",
-          details: validationResult.error.errors 
-        }),
+        JSON.stringify({ error: 'Invalid translation request' }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const { text, targetLanguage, context } = validationResult.data;
+    
+    // Check for prompt injection
+    if (detectPromptInjection(text) || (context && detectPromptInjection(context))) {
+      console.warn('Potential prompt injection in translation');
+      return new Response(
+        JSON.stringify({ error: 'Invalid text content' }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const sanitizedText = sanitizeForAI(text);
+    const sanitizedContext = context ? sanitizeForAI(context) : undefined;
     
     console.log('Validated - Target Language:', targetLanguage);
     console.log('Validated - Text length:', text.length);
@@ -71,7 +81,7 @@ serve(async (req) => {
     };
 
     const targetLangName = languageMap[targetLanguage] || targetLanguage;
-    const contextNote = context ? `\n\nContext: ${context}` : "";
+    const contextNote = sanitizedContext ? `\n\nContext: ${sanitizedContext}` : "";
 
     console.log('Calling Lovable AI gateway...');
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -89,7 +99,7 @@ serve(async (req) => {
           },
           {
             role: "user",
-            content: text
+            content: sanitizedText
           }
         ],
       }),
@@ -98,6 +108,7 @@ serve(async (req) => {
     console.log('AI Gateway response status:', response.status);
 
     if (!response.ok) {
+      console.error('AI API error:', response.status);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -106,11 +117,14 @@ serve(async (req) => {
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add funds to your Lovable workspace." }),
+          JSON.stringify({ error: "Translation service unavailable" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`Translation request failed: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: "Translation failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const data = await response.json();
@@ -126,7 +140,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Translation error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Translation service error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

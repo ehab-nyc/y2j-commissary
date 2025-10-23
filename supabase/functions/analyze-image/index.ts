@@ -139,6 +139,7 @@ Format as JSON: {"primaryCategory": "", "subCategory": "", "productType": "", "p
     });
 
     if (!response.ok) {
+      console.error('AI API error:', response.status);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -147,11 +148,14 @@ Format as JSON: {"primaryCategory": "", "subCategory": "", "productType": "", "p
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please contact support." }),
+          JSON.stringify({ error: "Image analysis unavailable" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`AI request failed: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to analyze image" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await response.json();
@@ -168,7 +172,7 @@ Format as JSON: {"primaryCategory": "", "subCategory": "", "productType": "", "p
   } catch (error) {
     console.error("Image analysis error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Failed to analyze image" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -125,7 +125,11 @@ const handler = async (req: Request): Promise<Response> => {
     const twilioPhone = dbSettings.twilio_phone_number || Deno.env.get("TWILIO_PHONE_NUMBER");
 
     if (!accountSid || !authToken || !twilioPhone) {
-      throw new Error("Twilio credentials not configured");
+      console.error('Missing Twilio credentials - service not configured');
+      return new Response(
+        JSON.stringify({ error: 'SMS service unavailable', success: false }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Send SMS using Twilio API
@@ -171,7 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-sms function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: 'Failed to send SMS',
         success: false 
       }),
       {

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { detectPromptInjection, sanitizeForAI } from "../_shared/promptInjection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,18 +30,28 @@ serve(async (req) => {
     if (!validationResult.success) {
       console.error('Input validation failed:', validationResult.error.errors);
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid input", 
-          details: validationResult.error.errors.map(e => ({
-            field: e.path.join('.'),
-            message: e.message
-          }))
-        }),
+        JSON.stringify({ error: 'Invalid content generation request' }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    const { productId, productName, categoryName, existingDescription, tone } = validationResult.data;
+    const validated = validationResult.data;
+    
+    // Check for prompt injection in text fields
+    if (detectPromptInjection(validated.productName) || 
+        (validated.existingDescription && detectPromptInjection(validated.existingDescription))) {
+      console.warn('Potential prompt injection in content generation');
+      return new Response(
+        JSON.stringify({ error: 'Invalid input content' }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const productId = validated.productId;
+    const sanitizedProductName = sanitizeForAI(validated.productName);
+    const categoryName = validated.categoryName;
+    const sanitizedDescription = validated.existingDescription ? sanitizeForAI(validated.existingDescription) : undefined;
+    const tone = validated.tone;
 
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
@@ -92,13 +103,13 @@ serve(async (req) => {
     // tone is now guaranteed to be one of the enum values from validation
     const selectedTone = toneMap[tone];
 
-    const prompt = existingDescription
-      ? `Improve this product description for "${productName}" (Category: ${categoryName || "General"})
+    const prompt = sanitizedDescription
+      ? `Improve this product description for "${sanitizedProductName}" (Category: ${categoryName ? sanitizeForAI(categoryName) : "General"})
 
-Current description: ${existingDescription}
+Current description: ${sanitizedDescription}
 
 Make it more engaging, ${selectedTone}, and highlight key features and benefits. Keep it between 50-150 words. Return only the improved description, no additional text.`
-      : `Write a compelling product description for "${productName}" (Category: ${categoryName || "General"})
+      : `Write a compelling product description for "${sanitizedProductName}" (Category: ${categoryName ? sanitizeForAI(categoryName) : "General"})
 
 Make it ${selectedTone}, highlight key features and benefits, and make customers want to buy it. Keep it between 50-150 words. Return only the description, no additional text.`;
 
@@ -124,6 +135,7 @@ Make it ${selectedTone}, highlight key features and benefits, and make customers
     });
 
     if (!response.ok) {
+      console.error('AI API error:', response.status);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -132,11 +144,14 @@ Make it ${selectedTone}, highlight key features and benefits, and make customers
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please contact support." }),
+          JSON.stringify({ error: "Content generation service unavailable" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`AI request failed: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate content" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await response.json();
@@ -157,7 +172,7 @@ Make it ${selectedTone}, highlight key features and benefits, and make customers
   } catch (error) {
     console.error("Content generation error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Content generation failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
