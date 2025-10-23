@@ -121,6 +121,7 @@ export default function ReceiptSettings() {
 
       // Update company info settings
       const settingsToUpdate = [
+        { key: "company_name", value: companyInfo.name },
         { key: "receipt_company_address", value: companyInfo.address },
         { key: "receipt_company_phone", value: companyInfo.phone },
         { key: "receipt_tax_id", value: companyInfo.tax_id },
