@@ -19,6 +19,7 @@ export default function ReceiptSettings() {
     header_text: "Thank you for your order!",
     footer_text: "Please come again!",
     show_company_info: true,
+    show_logo: true,
     paper_width: 80,
   });
 
@@ -44,10 +45,25 @@ export default function ReceiptSettings() {
           header_text: data.header_text || "",
           footer_text: data.footer_text || "",
           show_company_info: data.show_company_info,
+          show_logo: data.show_logo ?? true,
           paper_width: data.paper_width,
         });
       }
       return data;
+    },
+  });
+
+  const { data: companyLogo } = useQuery({
+    queryKey: ["company-logo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("company_logos")
+        .select("logo_url")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data?.logo_url || null;
     },
   });
 
@@ -244,6 +260,19 @@ export default function ReceiptSettings() {
                     }
                   />
                 </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-logo">Show Company Logo</Label>
+                  <Switch
+                    id="show-logo"
+                    checked={templateData.show_logo}
+                    onCheckedChange={(checked) =>
+                      setTemplateData({
+                        ...templateData,
+                        show_logo: checked,
+                      })
+                    }
+                  />
+                </div>
                 <div>
                   <Label htmlFor="paper-width">Paper Width (mm)</Label>
                   <Input
@@ -277,6 +306,7 @@ export default function ReceiptSettings() {
                   date={new Date()}
                   template={templateData}
                   companyInfo={companyInfo}
+                  logoUrl={companyLogo}
                 />
               </CardContent>
             </Card>

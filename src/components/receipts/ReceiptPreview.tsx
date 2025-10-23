@@ -18,6 +18,7 @@ interface ReceiptPreviewProps {
     header_text: string;
     footer_text: string;
     show_company_info: boolean;
+    show_logo?: boolean;
     paper_width: number;
   };
   companyInfo?: {
@@ -26,6 +27,7 @@ interface ReceiptPreviewProps {
     phone: string;
     tax_id: string;
   };
+  logoUrl?: string | null;
 }
 
 export function ReceiptPreview({
@@ -37,6 +39,7 @@ export function ReceiptPreview({
   date,
   template,
   companyInfo,
+  logoUrl,
 }: ReceiptPreviewProps) {
   const subtotal = total - serviceFee;
   const paperWidth = template?.paper_width || 80;
@@ -48,6 +51,15 @@ export function ReceiptPreview({
     >
       {/* Header */}
       <div className="text-center space-y-2 border-b-2 border-dashed border-black pb-4 mb-4">
+        {template?.show_logo && logoUrl && (
+          <div className="flex justify-center mb-3">
+            <img 
+              src={logoUrl} 
+              alt="Company Logo" 
+              className="max-w-[60mm] h-auto max-h-[30mm] object-contain"
+            />
+          </div>
+        )}
         {template?.show_company_info && companyInfo && (
           <>
             <h2 className="text-lg font-bold">{companyInfo.name}</h2>

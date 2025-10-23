@@ -71,6 +71,20 @@ export function PrintReceipt({
     },
   });
 
+  const { data: companyLogo } = useQuery({
+    queryKey: ["company-logo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("company_logos")
+        .select("logo_url")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data?.logo_url || null;
+    },
+  });
+
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -164,9 +178,11 @@ export function PrintReceipt({
               header_text: template.header_text || "",
               footer_text: template.footer_text || "",
               show_company_info: template.show_company_info,
+              show_logo: template.show_logo,
               paper_width: template.paper_width,
             }}
             companyInfo={companySettings}
+            logoUrl={companyLogo}
           />
         )}
       </div>
