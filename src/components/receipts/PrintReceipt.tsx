@@ -81,11 +81,18 @@ export function PrintReceipt({
     const receiptContent = document.getElementById("receipt-content");
     if (!receiptContent) return;
 
-    // Sanitize HTML to prevent XSS attacks
-    const sanitizedHTML = DOMPurify.sanitize(receiptContent.innerHTML, {
-      ALLOWED_TAGS: ['div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'br', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-      ALLOWED_ATTR: ['class', 'style'],
-    });
+    // Get computed styles from the original element
+    const allStyles = Array.from(document.styleSheets)
+      .map((styleSheet) => {
+        try {
+          return Array.from(styleSheet.cssRules)
+            .map((rule) => rule.cssText)
+            .join('\n');
+        } catch (e) {
+          return '';
+        }
+      })
+      .join('\n');
 
     const paperWidth = template?.paper_width || 80;
 
@@ -95,6 +102,8 @@ export function PrintReceipt({
         <head>
           <title>Receipt #${orderNumber}</title>
           <style>
+            ${allStyles}
+            
             @media print {
               @page { 
                 margin: 0;
@@ -109,19 +118,18 @@ export function PrintReceipt({
               font-family: 'Courier New', monospace;
               width: ${paperWidth}mm;
               margin: 0 auto;
-              padding: 2mm;
+              padding: 0;
               font-size: 12px;
               line-height: 1.4;
+              background: white;
             }
             * {
-              margin: 0;
-              padding: 0;
               box-sizing: border-box;
             }
           </style>
         </head>
         <body>
-          ${sanitizedHTML}
+          ${receiptContent.innerHTML}
         </body>
       </html>
     `);
