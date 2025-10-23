@@ -338,6 +338,11 @@ const Worker = () => {
                       <CardDescription>
                         Customer: {order.profiles?.full_name || 'Unknown'} ({order.profiles?.email || 'N/A'})
                       </CardDescription>
+                      {(order.profiles?.cart_name || order.profiles?.cart_number) && (
+                        <CardDescription>
+                          Cart: {order.profiles?.cart_name || ''} {order.profiles?.cart_number || ''}
+                        </CardDescription>
+                      )}
                       <CardDescription>
                         {format(new Date(order.created_at), 'PPp')}
                       </CardDescription>
@@ -361,6 +366,9 @@ const Worker = () => {
                         total={order.total}
                         serviceFee={0}
                         date={new Date(order.created_at)}
+                        cartName={order.profiles?.cart_name}
+                        cartNumber={order.profiles?.cart_number}
+                        processedBy={order.assigned_worker?.full_name || order.assigned_worker?.email}
                         onPOSPrint={() => printOrder(order)}
                       />
                     </div>

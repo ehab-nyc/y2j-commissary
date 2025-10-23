@@ -502,8 +502,21 @@ const Orders = () => {
                     <div>
                       <CardTitle className="text-lg">Order #{order.id.slice(0, 8)}</CardTitle>
                       <CardDescription>
+                        Customer: {order.profiles?.full_name || 'N/A'}
+                      </CardDescription>
+                      {(order.profiles?.cart_name || order.profiles?.cart_number) && (
+                        <CardDescription>
+                          Cart: {order.profiles?.cart_name || ''} {order.profiles?.cart_number || ''}
+                        </CardDescription>
+                      )}
+                      <CardDescription>
                         {format(new Date(order.created_at), 'PPp')}
                       </CardDescription>
+                      {order.assigned_worker && (
+                        <CardDescription>
+                          Processed by: {order.assigned_worker.full_name || order.assigned_worker.email}
+                        </CardDescription>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                       <Badge className={getStatusColor(order.status)}>
@@ -524,6 +537,9 @@ const Orders = () => {
                         total={order.total}
                         serviceFee={serviceFee}
                         date={new Date(order.created_at)}
+                        cartName={order.profiles?.cart_name}
+                        cartNumber={order.profiles?.cart_number}
+                        processedBy={order.assigned_worker?.full_name || order.assigned_worker?.email}
                         onPOSPrint={() => printOrder(order)}
                       />
                       {order.status === 'pending' && (

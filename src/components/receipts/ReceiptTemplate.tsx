@@ -44,13 +44,16 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           </div>
         )}
 
-        {/* Order Info */}
-        <div className="mb-4 text-xs">
-          <p>Order #: {order?.id?.slice(0, 8)}</p>
-          <p>Date: {new Date(order?.created_at).toLocaleString()}</p>
-          <p>Customer: {order?.customer_name || "Walk-in"}</p>
-          {order?.cart_number && <p>Cart: {order.cart_number}</p>}
-        </div>
+      {/* Order Info */}
+      <div className="mb-4 text-xs">
+        <p>Order #: {order?.id?.slice(0, 8)}</p>
+        <p>Date: {new Date(order?.created_at).toLocaleString()}</p>
+        <p>Customer: {order?.customer_name || "Walk-in"}</p>
+        {(order?.cart_name || order?.cart_number) && (
+          <p>Cart: {order?.cart_name || ''} {order?.cart_number || ''}</p>
+        )}
+        {order?.processed_by && <p>Processed by: {order.processed_by}</p>}
+      </div>
 
         {/* Items */}
         <div className="border-t-2 border-b-2 border-black py-2 mb-4">

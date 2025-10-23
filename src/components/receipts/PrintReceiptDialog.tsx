@@ -23,6 +23,9 @@ interface PrintReceiptDialogProps {
   total: number;
   serviceFee: number;
   date: Date;
+  cartName?: string | null;
+  cartNumber?: string | null;
+  processedBy?: string | null;
   onPOSPrint: () => void;
 }
 
@@ -33,6 +36,9 @@ export function PrintReceiptDialog({
   total,
   serviceFee,
   date,
+  cartName,
+  cartNumber,
+  processedBy,
   onPOSPrint,
 }: PrintReceiptDialogProps) {
   const [open, setOpen] = useState(false);
@@ -59,14 +65,17 @@ export function PrintReceiptDialog({
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-4">
           <div className="flex flex-col gap-2">
-            <PrintReceipt
-              orderNumber={orderNumber}
-              customerName={customerName}
-              items={items}
-              total={total}
-              serviceFee={serviceFee}
-              date={date}
-            />
+              <PrintReceipt
+                orderNumber={orderNumber}
+                customerName={customerName}
+                items={items}
+                total={total}
+                serviceFee={serviceFee}
+                date={date}
+                cartName={cartName}
+                cartNumber={cartNumber}
+                processedBy={processedBy}
+              />
             <div className="text-center px-2">
               <div className="font-semibold text-sm">Customizable Design</div>
               <div className="text-xs text-muted-foreground">

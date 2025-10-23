@@ -14,6 +14,9 @@ interface ReceiptPreviewProps {
   total: number;
   serviceFee: number;
   date: Date;
+  cartName?: string | null;
+  cartNumber?: string | null;
+  processedBy?: string | null;
   template?: {
     header_text: string;
     footer_text: string;
@@ -37,6 +40,9 @@ export function ReceiptPreview({
   total,
   serviceFee,
   date,
+  cartName,
+  cartNumber,
+  processedBy,
   template,
   companyInfo,
   logoUrl,
@@ -91,10 +97,22 @@ export function ReceiptPreview({
           <span>Customer:</span>
           <span>{customerName}</span>
         </div>
+        {(cartName || cartNumber) && (
+          <div className="flex justify-between">
+            <span>Cart:</span>
+            <span>{cartName || ''} {cartNumber || ''}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span>Date:</span>
           <span>{date.toLocaleString()}</span>
         </div>
+        {processedBy && (
+          <div className="flex justify-between">
+            <span>Processed by:</span>
+            <span>{processedBy}</span>
+          </div>
+        )}
       </div>
 
       {/* Items */}

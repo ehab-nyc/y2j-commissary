@@ -18,6 +18,9 @@ interface PrintReceiptProps {
   total: number;
   serviceFee: number;
   date: Date;
+  cartName?: string | null;
+  cartNumber?: string | null;
+  processedBy?: string | null;
 }
 
 export function PrintReceipt({
@@ -27,6 +30,9 @@ export function PrintReceipt({
   total,
   serviceFee,
   date,
+  cartName,
+  cartNumber,
+  processedBy,
 }: PrintReceiptProps) {
   const { data: template } = useQuery({
     queryKey: ["receipt-template"],
@@ -174,6 +180,9 @@ export function PrintReceipt({
             total={total}
             serviceFee={serviceFee}
             date={date}
+            cartName={cartName}
+            cartNumber={cartNumber}
+            processedBy={processedBy}
             template={{
               header_text: template.header_text || "",
               footer_text: template.footer_text || "",
