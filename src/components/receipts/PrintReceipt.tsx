@@ -133,6 +133,11 @@ export function PrintReceipt({
                 margin: 0;
                 padding: 0;
               }
+              /* Hide browser print headers/footers */
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
             }
             body { 
               font-family: 'Courier New', monospace;

@@ -151,8 +151,17 @@ const Worker = () => {
           <style>
             @media print {
               @page { 
-                margin: 0.25in;
+                margin: 0;
                 size: 8.5in 11in;
+              }
+              body {
+                margin: 0.25in;
+                padding: 0;
+              }
+              /* Hide browser print headers/footers */
+              html {
+                margin: 0 !important;
+                padding: 0 !important;
               }
             }
             body {
