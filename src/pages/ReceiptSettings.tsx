@@ -128,9 +128,27 @@ export default function ReceiptSettings() {
       ];
 
       for (const setting of settingsToUpdate) {
-        await supabase
+        // Check if setting exists
+        const { data: existing } = await supabase
           .from("app_settings")
-          .upsert({ key: setting.key, value: setting.value });
+          .select("id")
+          .eq("key", setting.key)
+          .maybeSingle();
+
+        if (existing) {
+          // Update existing setting
+          const { error } = await supabase
+            .from("app_settings")
+            .update({ value: setting.value })
+            .eq("key", setting.key);
+          if (error) throw error;
+        } else {
+          // Insert new setting
+          const { error } = await supabase
+            .from("app_settings")
+            .insert({ key: setting.key, value: setting.value });
+          if (error) throw error;
+        }
       }
     },
     onSuccess: () => {
