@@ -45,14 +45,16 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         )}
 
       {/* Order Info */}
-      <div className="mb-4 text-xs">
-        <p>Order #: {order?.id?.slice(0, 8)}</p>
+      <div className="mb-4 text-xs space-y-1">
+        <div className="flex justify-between">
+          <span>Order #: {order?.id?.slice(0, 8)}</span>
+          <span>Customer: {order?.customer_name || "Walk-in"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Cart: {order?.cart_name || ''} {order?.cart_number || ''}</span>
+          <span>Processed by: {order?.processed_by || 'N/A'}</span>
+        </div>
         <p>Date: {new Date(order?.created_at).toLocaleString()}</p>
-        <p>Customer: {order?.customer_name || "Walk-in"}</p>
-        {(order?.cart_name || order?.cart_number) && (
-          <p>Cart: {order?.cart_name || ''} {order?.cart_number || ''}</p>
-        )}
-        {order?.processed_by && <p>Processed by: {order.processed_by}</p>}
       </div>
 
         {/* Items */}
