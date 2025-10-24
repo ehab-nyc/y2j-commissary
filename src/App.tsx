@@ -23,6 +23,7 @@ import AdminViolations from "./pages/admin/AdminViolations";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSMS from "./pages/admin/AdminSMS";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import Profile from "./pages/Profile";
 import Violations from "./pages/Violations";
 import CustomerViolations from "./pages/CustomerViolations";
@@ -79,6 +80,7 @@ const AppContent = () => {
           <Route path="/admin/users" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/sms" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSMS /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSettings /></ProtectedRoute>} />
+          <Route path="/admin/announcements" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminAnnouncements /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Analytics /></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Inventory /></ProtectedRoute>} />

@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          active: boolean
+          category: Database["public"]["Enums"]["announcement_category"]
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          id: string
+          message: string
+          priority: Database["public"]["Enums"]["announcement_priority"]
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["announcement_category"]
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          message: string
+          priority?: Database["public"]["Enums"]["announcement_priority"]
+          start_date?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["announcement_category"]
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          message?: string
+          priority?: Database["public"]["Enums"]["announcement_priority"]
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string | null
@@ -954,6 +996,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dismissed_announcements: {
+        Row: {
+          announcement_id: string
+          dismissed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          dismissed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          dismissed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dismissed_announcements_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_phone_numbers: {
         Row: {
           created_at: string
@@ -1201,6 +1272,8 @@ export type Database = {
       }
     }
     Enums: {
+      announcement_category: "price" | "fleet" | "general"
+      announcement_priority: "urgent" | "important" | "info"
       app_role: "customer" | "worker" | "manager" | "super_admin" | "admin"
       order_status: "pending" | "processing" | "completed" | "cancelled"
     }
@@ -1330,6 +1403,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      announcement_category: ["price", "fleet", "general"],
+      announcement_priority: ["urgent", "important", "info"],
       app_role: ["customer", "worker", "manager", "super_admin", "admin"],
       order_status: ["pending", "processing", "completed", "cancelled"],
     },
