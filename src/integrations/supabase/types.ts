@@ -1274,7 +1274,13 @@ export type Database = {
     Enums: {
       announcement_category: "price" | "fleet" | "general"
       announcement_priority: "urgent" | "important" | "info"
-      app_role: "customer" | "worker" | "manager" | "super_admin" | "admin"
+      app_role:
+        | "customer"
+        | "worker"
+        | "manager"
+        | "super_admin"
+        | "admin"
+        | "owner"
       order_status: "pending" | "processing" | "completed" | "cancelled"
     }
     CompositeTypes: {
@@ -1405,7 +1411,14 @@ export const Constants = {
     Enums: {
       announcement_category: ["price", "fleet", "general"],
       announcement_priority: ["urgent", "important", "info"],
-      app_role: ["customer", "worker", "manager", "super_admin", "admin"],
+      app_role: [
+        "customer",
+        "worker",
+        "manager",
+        "super_admin",
+        "admin",
+        "owner",
+      ],
       order_status: ["pending", "processing", "completed", "cancelled"],
     },
   },
