@@ -29,6 +29,8 @@ const AdminSettings = () => {
     logo_url: "",
     login_blur_amount: "0",
     active_theme: "default",
+    franchise_fee: "0.00",
+    commissary_rent: "0.00",
   });
   const [newThemeName, setNewThemeName] = useState("");
   const [newBackgroundName, setNewBackgroundName] = useState("");
@@ -44,7 +46,7 @@ const AdminSettings = () => {
       const { data, error } = await supabase
         .from("app_settings")
         .select("*")
-        .in("key", ["company_name", "logo_url", "login_blur_amount", "active_theme"]);
+        .in("key", ["company_name", "logo_url", "login_blur_amount", "active_theme", "franchise_fee", "commissary_rent"]);
 
       if (error) throw error;
       
@@ -58,6 +60,8 @@ const AdminSettings = () => {
         logo_url: settingsMap.logo_url || "",
         login_blur_amount: settingsMap.login_blur_amount || "0",
         active_theme: settingsMap.active_theme || "default",
+        franchise_fee: settingsMap.franchise_fee || "0.00",
+        commissary_rent: settingsMap.commissary_rent || "0.00",
       });
 
       return settingsMap;
@@ -148,6 +152,8 @@ const AdminSettings = () => {
         { key: "logo_url", value: settings.logo_url },
         { key: "login_blur_amount", value: settings.login_blur_amount },
         { key: "active_theme", value: settings.active_theme },
+        { key: "franchise_fee", value: settings.franchise_fee },
+        { key: "commissary_rent", value: settings.commissary_rent },
       ];
 
       for (const setting of settingsToUpdate) {
@@ -422,6 +428,30 @@ const AdminSettings = () => {
                   value={settings.company_name}
                   onChange={(e) =>
                     setSettings({ ...settings, company_name: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="franchise-fee">Default Franchise Fee ($)</Label>
+                <Input
+                  id="franchise-fee"
+                  type="number"
+                  step="0.01"
+                  value={settings.franchise_fee}
+                  onChange={(e) =>
+                    setSettings({ ...settings, franchise_fee: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="commissary-rent">Default Commissary Rent ($)</Label>
+                <Input
+                  id="commissary-rent"
+                  type="number"
+                  step="0.01"
+                  value={settings.commissary_rent}
+                  onChange={(e) =>
+                    setSettings({ ...settings, commissary_rent: e.target.value })
                   }
                 />
               </div>
