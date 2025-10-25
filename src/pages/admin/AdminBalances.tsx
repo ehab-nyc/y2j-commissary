@@ -67,6 +67,9 @@ export default function AdminBalances() {
       setBalances(data?.map(b => ({
         ...b,
         payment_status: b.payment_status as 'unpaid' | 'partial' | 'paid_full',
+        remaining_balance: b.remaining_balance ?? 0,
+        amount_paid: b.amount_paid ?? 0,
+        old_balance: b.old_balance ?? 0,
         customer: b.profiles as { full_name: string; cart_name: string; cart_number: string }
       })) || []);
     } catch (error: any) {
