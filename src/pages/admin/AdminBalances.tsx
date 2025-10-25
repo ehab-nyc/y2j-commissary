@@ -268,7 +268,7 @@ export default function AdminBalances() {
                         <TableCell>
                           {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
                         </TableCell>
-                        <TableCell className="text-right">${balance.old_balance.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${(balance.old_balance ?? 0).toFixed(2)}</TableCell>
                         <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
                           {isEditing ? (
@@ -297,7 +297,7 @@ export default function AdminBalances() {
                           )}
                         </TableCell>
                         <TableCell className="text-right font-bold">
-                          ${(balance.total_balance + balance.old_balance).toFixed(2)}
+                          ${((balance.total_balance ?? 0) + (balance.old_balance ?? 0)).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right">
                           {isPaymentEditing ? (
@@ -310,11 +310,11 @@ export default function AdminBalances() {
                               placeholder="0.00"
                             />
                           ) : (
-                            `$${balance.amount_paid.toFixed(2)}`
+                            `$${(balance.amount_paid ?? 0).toFixed(2)}`
                           )}
                         </TableCell>
                         <TableCell className="text-right font-bold">
-                          ${balance.remaining_balance.toFixed(2)}
+                          ${(balance.remaining_balance ?? 0).toFixed(2)}
                         </TableCell>
                         <TableCell className={`text-right font-semibold ${statusColor}`}>
                           {balance.payment_status === 'paid_full' ? 'Paid Full' : 
