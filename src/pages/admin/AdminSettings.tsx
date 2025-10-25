@@ -154,9 +154,11 @@ const AdminSettings = () => {
       ];
 
       for (const setting of settingsToUpdate) {
-        await supabase
+        const { error } = await supabase
           .from("app_settings")
-          .upsert({ key: setting.key, value: setting.value });
+          .upsert({ key: setting.key, value: setting.value }, { onConflict: 'key' });
+        
+        if (error) throw error;
       }
     },
     onSuccess: () => {
@@ -171,9 +173,11 @@ const AdminSettings = () => {
 
   const saveThemeMutation = useMutation({
     mutationFn: async () => {
-      await supabase
+      const { error } = await supabase
         .from("app_settings")
-        .upsert({ key: "active_theme", value: settings.active_theme });
+        .upsert({ key: "active_theme", value: settings.active_theme }, { onConflict: 'key' });
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["app-settings"] });
@@ -191,9 +195,11 @@ const AdminSettings = () => {
 
   const saveBackgroundBlurMutation = useMutation({
     mutationFn: async () => {
-      await supabase
+      const { error } = await supabase
         .from("app_settings")
-        .upsert({ key: "login_blur_amount", value: settings.login_blur_amount });
+        .upsert({ key: "login_blur_amount", value: settings.login_blur_amount }, { onConflict: 'key' });
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["app-settings"] });
