@@ -349,7 +349,7 @@ export default function AdminBalances() {
                                 <Button size="sm" variant="default" onClick={() => handlePaymentEdit(balance)}>
                                   Add Payment
                                 </Button>
-                                {balance.remaining_balance > 0 && (
+                                {(balance.remaining_balance ?? 0) > 0 && (
                                   <Button size="sm" variant="secondary" onClick={() => handleRollover(balance)}>
                                     Rollover
                                   </Button>
@@ -389,11 +389,11 @@ export default function AdminBalances() {
                 {Object.entries(groupedByOwner).map(([customer, customerBalances]) => {
                   const totals = customerBalances.reduce(
                     (acc, b) => ({
-                      orders: acc.orders + b.orders_total,
-                      fees: acc.fees + b.franchise_fee,
-                      rent: acc.rent + b.commissary_rent,
-                      paid: acc.paid + b.amount_paid,
-                      remaining: acc.remaining + b.remaining_balance,
+                      orders: acc.orders + (b.orders_total ?? 0),
+                      fees: acc.fees + (b.franchise_fee ?? 0),
+                      rent: acc.rent + (b.commissary_rent ?? 0),
+                      paid: acc.paid + (b.amount_paid ?? 0),
+                      remaining: acc.remaining + (b.remaining_balance ?? 0),
                     }),
                     { orders: 0, fees: 0, rent: 0, paid: 0, remaining: 0 }
                   );
