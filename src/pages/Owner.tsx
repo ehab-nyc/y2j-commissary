@@ -39,6 +39,10 @@ interface WeeklyBalance {
   franchise_fee: number;
   commissary_rent: number;
   total_balance: number;
+  old_balance: number;
+  amount_paid: number;
+  remaining_balance: number;
+  payment_status: 'unpaid' | 'partial' | 'paid_full';
   customer: {
     full_name: string;
     cart_name: string;
@@ -107,6 +111,7 @@ export default function Owner() {
 
       setBalances(balancesData?.map(b => ({
         ...b,
+        payment_status: b.payment_status as 'unpaid' | 'partial' | 'paid_full',
         customer: b.profiles as { full_name: string; cart_name: string }
       })) || []);
 
@@ -280,25 +285,50 @@ export default function Owner() {
                     <TableRow>
                       <TableHead>Customer</TableHead>
                       <TableHead>Week</TableHead>
+                      <TableHead className="text-right">Old Balance</TableHead>
                       <TableHead className="text-right">Orders</TableHead>
-                      <TableHead className="text-right">Franchise Fee</TableHead>
-                      <TableHead className="text-right">Rent</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Fees & Rent</TableHead>
+                      <TableHead className="text-right">Total Due</TableHead>
+                      <TableHead className="text-right">Paid</TableHead>
+                      <TableHead className="text-right">Remaining</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {balances.map((balance) => (
-                      <TableRow key={balance.id}>
-                        <TableCell>{balance.customer.cart_name || balance.customer.full_name}</TableCell>
-                        <TableCell>
-                          {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${balance.franchise_fee.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">${balance.commissary_rent.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-bold">${balance.total_balance.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
+                    {balances.map((balance) => {
+                      const statusColor = 
+                        balance.payment_status === 'paid_full' ? 'text-green-600' :
+                        balance.payment_status === 'partial' ? 'text-yellow-600' :
+                        'text-red-600';
+                      
+                      return (
+                        <TableRow key={balance.id}>
+                          <TableCell>{balance.customer.cart_name || balance.customer.full_name}</TableCell>
+                          <TableCell>
+                            {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
+                          </TableCell>
+                          <TableCell className="text-right">${balance.old_balance.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">
+                            ${(balance.franchise_fee + balance.commissary_rent).toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            ${(balance.total_balance + balance.old_balance).toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right text-green-600">
+                            ${balance.amount_paid.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            ${balance.remaining_balance.toFixed(2)}
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${statusColor}`}>
+                            {balance.payment_status === 'paid_full' ? 'Paid Full' : 
+                             balance.payment_status === 'partial' ? 'Partial' : 
+                             'Unpaid'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>

@@ -66,6 +66,7 @@ export default function AdminBalances() {
 
       setBalances(data?.map(b => ({
         ...b,
+        payment_status: b.payment_status as 'unpaid' | 'partial' | 'paid_full',
         customer: b.profiles as { full_name: string; cart_name: string; cart_number: string }
       })) || []);
     } catch (error: any) {
@@ -104,7 +105,7 @@ export default function AdminBalances() {
 
       toast({
         title: 'Success',
-        description: 'Balance updated successfully',
+        description: 'Fees updated successfully',
       });
 
       setEditing(null);
@@ -218,143 +219,148 @@ export default function AdminBalances() {
           <BackButton />
           <div>
             <h1 className="text-3xl font-bold">Weekly Balances</h1>
-            <p className="text-muted-foreground">Manage customer weekly balances and fees</p>
+            <p className="text-muted-foreground">Manage customer weekly balances, payments and rollovers</p>
           </div>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>All Weekly Balances</CardTitle>
-            <CardDescription>View and edit franchise fees and commissary rent</CardDescription>
+            <CardDescription>Track customer payments and manage unpaid balances</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Cart #</TableHead>
-                  <TableHead>Week</TableHead>
-                  <TableHead className="text-right">Old Balance</TableHead>
-                  <TableHead className="text-right">Orders Total</TableHead>
-                  <TableHead className="text-right">Franchise Fee</TableHead>
-                  <TableHead className="text-right">Commissary Rent</TableHead>
-                  <TableHead className="text-right">Total Balance</TableHead>
-                  <TableHead className="text-right">Amount Paid</TableHead>
-                  <TableHead className="text-right">Remaining</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {balances.map((balance) => {
-                  const isEditing = editing?.id === balance.id;
-                  const isPaymentEditing = paymentEditing?.id === balance.id;
-                  const statusColor = 
-                    balance.payment_status === 'paid_full' ? 'text-green-600' :
-                    balance.payment_status === 'partial' ? 'text-yellow-600' :
-                    'text-red-600';
-                  
-                  return (
-                    <TableRow key={balance.id}>
-                      <TableCell className="font-medium">
-                        {balance.customer.cart_name || balance.customer.full_name}
-                      </TableCell>
-                      <TableCell>{balance.customer.cart_number || '-'}</TableCell>
-                      <TableCell>
-                        {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell className="text-right">${balance.old_balance.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={editing.franchise_fee}
-                            onChange={(e) => setEditing({ ...editing, franchise_fee: parseFloat(e.target.value) || 0 })}
-                            className="w-24"
-                          />
-                        ) : (
-                          `$${balance.franchise_fee.toFixed(2)}`
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={editing.commissary_rent}
-                            onChange={(e) => setEditing({ ...editing, commissary_rent: parseFloat(e.target.value) || 0 })}
-                            className="w-24"
-                          />
-                        ) : (
-                          `$${balance.commissary_rent.toFixed(2)}`
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-bold">${balance.total_balance.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        {isPaymentEditing ? (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={paymentEditing.amount_paid}
-                            onChange={(e) => setPaymentEditing({ ...paymentEditing, amount_paid: parseFloat(e.target.value) || 0 })}
-                            className="w-24"
-                          />
-                        ) : (
-                          `$${balance.amount_paid.toFixed(2)}`
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        ${balance.remaining_balance.toFixed(2)}
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold ${statusColor}`}>
-                        {balance.payment_status === 'paid_full' ? 'Paid Full' : 
-                         balance.payment_status === 'partial' ? 'Partial' : 
-                         'Unpaid'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Cart #</TableHead>
+                    <TableHead>Week</TableHead>
+                    <TableHead className="text-right">Old Balance</TableHead>
+                    <TableHead className="text-right">Orders Total</TableHead>
+                    <TableHead className="text-right">Franchise Fee</TableHead>
+                    <TableHead className="text-right">Commissary Rent</TableHead>
+                    <TableHead className="text-right">Total Balance</TableHead>
+                    <TableHead className="text-right">Amount Paid</TableHead>
+                    <TableHead className="text-right">Remaining</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {balances.map((balance) => {
+                    const isEditing = editing?.id === balance.id;
+                    const isPaymentEditing = paymentEditing?.id === balance.id;
+                    const statusColor = 
+                      balance.payment_status === 'paid_full' ? 'text-green-600' :
+                      balance.payment_status === 'partial' ? 'text-yellow-600' :
+                      'text-red-600';
+                    
+                    return (
+                      <TableRow key={balance.id}>
+                        <TableCell className="font-medium">
+                          {balance.customer.cart_name || balance.customer.full_name}
+                        </TableCell>
+                        <TableCell>{balance.customer.cart_number || '-'}</TableCell>
+                        <TableCell>
+                          {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell className="text-right">${balance.old_balance.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
                           {isEditing ? (
-                            <>
-                              <Button size="sm" onClick={handleSave} disabled={saving}>
-                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={handleCancel}>
-                                Cancel
-                              </Button>
-                            </>
-                          ) : isPaymentEditing ? (
-                            <>
-                              <Button size="sm" onClick={handlePaymentSave} disabled={processingPayment}>
-                                {processingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Payment'}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={handlePaymentCancel}>
-                                Cancel
-                              </Button>
-                            </>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={editing.franchise_fee}
+                              onChange={(e) => setEditing({ ...editing, franchise_fee: parseFloat(e.target.value) || 0 })}
+                              className="w-24"
+                            />
                           ) : (
-                            <>
-                              <Button size="sm" variant="outline" onClick={() => handleEdit(balance)}>
-                                Edit Fees
-                              </Button>
-                              <Button size="sm" variant="default" onClick={() => handlePaymentEdit(balance)}>
-                                Add Payment
-                              </Button>
-                              {balance.remaining_balance > 0 && (
-                                <Button size="sm" variant="secondary" onClick={() => handleRollover(balance)}>
-                                  Rollover
-                                </Button>
-                              )}
-                            </>
+                            `$${balance.franchise_fee.toFixed(2)}`
                           )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isEditing ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={editing.commissary_rent}
+                              onChange={(e) => setEditing({ ...editing, commissary_rent: parseFloat(e.target.value) || 0 })}
+                              className="w-24"
+                            />
+                          ) : (
+                            `$${balance.commissary_rent.toFixed(2)}`
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          ${(balance.total_balance + balance.old_balance).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isPaymentEditing ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={paymentEditing.amount_paid}
+                              onChange={(e) => setPaymentEditing({ ...paymentEditing, amount_paid: parseFloat(e.target.value) || 0 })}
+                              className="w-24"
+                              placeholder="0.00"
+                            />
+                          ) : (
+                            `$${balance.amount_paid.toFixed(2)}`
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          ${balance.remaining_balance.toFixed(2)}
+                        </TableCell>
+                        <TableCell className={`text-right font-semibold ${statusColor}`}>
+                          {balance.payment_status === 'paid_full' ? 'Paid Full' : 
+                           balance.payment_status === 'partial' ? 'Partial' : 
+                           'Unpaid'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {isEditing ? (
+                              <>
+                                <Button size="sm" onClick={handleSave} disabled={saving}>
+                                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={handleCancel}>
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : isPaymentEditing ? (
+                              <>
+                                <Button size="sm" onClick={handlePaymentSave} disabled={processingPayment}>
+                                  {processingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Payment'}
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={handlePaymentCancel}>
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => handleEdit(balance)}>
+                                  Edit Fees
+                                </Button>
+                                <Button size="sm" variant="default" onClick={() => handlePaymentEdit(balance)}>
+                                  Add Payment
+                                </Button>
+                                {balance.remaining_balance > 0 && (
+                                  <Button size="sm" variant="secondary" onClick={() => handleRollover(balance)}>
+                                    Rollover
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
@@ -372,19 +378,21 @@ export default function AdminBalances() {
                   <TableHead className="text-right">Total Orders</TableHead>
                   <TableHead className="text-right">Total Fees</TableHead>
                   <TableHead className="text-right">Total Rent</TableHead>
-                  <TableHead className="text-right">Grand Total</TableHead>
+                  <TableHead className="text-right">Total Paid</TableHead>
+                  <TableHead className="text-right">Remaining Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(groupedByOwner).map(([customer, balances]) => {
-                  const totals = balances.reduce(
+                {Object.entries(groupedByOwner).map(([customer, customerBalances]) => {
+                  const totals = customerBalances.reduce(
                     (acc, b) => ({
                       orders: acc.orders + b.orders_total,
                       fees: acc.fees + b.franchise_fee,
                       rent: acc.rent + b.commissary_rent,
-                      total: acc.total + b.total_balance,
+                      paid: acc.paid + b.amount_paid,
+                      remaining: acc.remaining + b.remaining_balance,
                     }),
-                    { orders: 0, fees: 0, rent: 0, total: 0 }
+                    { orders: 0, fees: 0, rent: 0, paid: 0, remaining: 0 }
                   );
 
                   return (
@@ -393,7 +401,8 @@ export default function AdminBalances() {
                       <TableCell className="text-right">${totals.orders.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${totals.fees.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${totals.rent.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-bold">${totals.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-green-600">${totals.paid.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-bold">${totals.remaining.toFixed(2)}</TableCell>
                     </TableRow>
                   );
                 })}
