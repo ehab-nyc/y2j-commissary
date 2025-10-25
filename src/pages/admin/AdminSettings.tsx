@@ -145,13 +145,10 @@ const AdminSettings = () => {
     enabled: !!appSettings,
   });
 
-  const saveSettingsMutation = useMutation({
+  const saveCompanyInfoMutation = useMutation({
     mutationFn: async () => {
       const settingsToUpdate = [
         { key: "company_name", value: settings.company_name },
-        { key: "logo_url", value: settings.logo_url },
-        { key: "login_blur_amount", value: settings.login_blur_amount },
-        { key: "active_theme", value: settings.active_theme },
         { key: "franchise_fee", value: settings.franchise_fee },
         { key: "commissary_rent", value: settings.commissary_rent },
       ];
@@ -164,14 +161,46 @@ const AdminSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["app-settings"] });
-      toast.success("Settings saved successfully");
+      toast.success("Company information saved successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to save company information");
+      console.error(error);
+    },
+  });
+
+  const saveThemeMutation = useMutation({
+    mutationFn: async () => {
+      await supabase
+        .from("app_settings")
+        .upsert({ key: "active_theme", value: settings.active_theme });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["app-settings"] });
+      toast.success("Theme saved successfully");
       
       if (settings.active_theme !== appSettings?.active_theme) {
         setTimeout(() => window.location.reload(), 500);
       }
     },
     onError: (error) => {
-      toast.error("Failed to save settings");
+      toast.error("Failed to save theme");
+      console.error(error);
+    },
+  });
+
+  const saveBackgroundBlurMutation = useMutation({
+    mutationFn: async () => {
+      await supabase
+        .from("app_settings")
+        .upsert({ key: "login_blur_amount", value: settings.login_blur_amount });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["app-settings"] });
+      toast.success("Background blur saved successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to save background blur");
       console.error(error);
     },
   });
@@ -398,18 +427,9 @@ const AdminSettings = () => {
       <div className="space-y-6">
         <BackButton to="/admin" label="Back to Admin Panel" />
         
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Branding & Settings</h1>
-            <p className="text-muted-foreground">Configure app branding and appearance</p>
-          </div>
-          <Button
-            onClick={() => saveSettingsMutation.mutate()}
-            disabled={saveSettingsMutation.isPending}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Settings
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Branding & Settings</h1>
+          <p className="text-muted-foreground">Configure app branding and appearance</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -455,6 +475,14 @@ const AdminSettings = () => {
                   }
                 />
               </div>
+              <Button
+                onClick={() => saveCompanyInfoMutation.mutate()}
+                disabled={saveCompanyInfoMutation.isPending}
+                className="w-full"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Company Information
+              </Button>
             </CardContent>
           </Card>
 
@@ -486,6 +514,14 @@ const AdminSettings = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                onClick={() => saveThemeMutation.mutate()}
+                disabled={saveThemeMutation.isPending}
+                className="w-full"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Theme
+              </Button>
 
               <div className="space-y-2">
                 <Label>Manage Themes</Label>
@@ -670,7 +706,7 @@ const AdminSettings = () => {
                 />
               </div>
 
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-3">
                 <Label htmlFor="blur-amount">Background Blur: {settings.login_blur_amount}px</Label>
                 <Slider
                   id="blur-amount"
@@ -682,6 +718,14 @@ const AdminSettings = () => {
                     setSettings({ ...settings, login_blur_amount: value[0].toString() })
                   }
                 />
+                <Button
+                  onClick={() => saveBackgroundBlurMutation.mutate()}
+                  disabled={saveBackgroundBlurMutation.isPending}
+                  className="w-full"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Background Blur
+                </Button>
               </div>
             </CardContent>
           </Card>

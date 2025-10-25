@@ -11,7 +11,7 @@ import { KeyRound, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { z } from 'zod';
 
-const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin', 'super_admin']);
+const roleSchema = z.enum(['customer', 'worker', 'manager', 'admin', 'super_admin', 'owner']);
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -147,6 +147,7 @@ const AdminUsers = () => {
                         <SelectItem value="worker">Worker</SelectItem>
                         <SelectItem value="manager">Manager</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="owner">Owner</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
