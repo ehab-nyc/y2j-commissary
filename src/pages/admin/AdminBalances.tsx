@@ -19,6 +19,10 @@ interface WeeklyBalance {
   franchise_fee: number;
   commissary_rent: number;
   total_balance: number;
+  old_balance: number;
+  amount_paid: number;
+  remaining_balance: number;
+  payment_status: 'unpaid' | 'partial' | 'paid_full';
   customer: {
     full_name: string;
     cart_name: string;
@@ -32,12 +36,19 @@ interface EditingBalance {
   commissary_rent: number;
 }
 
+interface PaymentEditing {
+  id: string;
+  amount_paid: number;
+}
+
 export default function AdminBalances() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [balances, setBalances] = useState<WeeklyBalance[]>([]);
   const [editing, setEditing] = useState<EditingBalance | null>(null);
+  const [paymentEditing, setPaymentEditing] = useState<PaymentEditing | null>(null);
   const [saving, setSaving] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     fetchBalances();
@@ -113,6 +124,73 @@ export default function AdminBalances() {
     setEditing(null);
   };
 
+  const handlePaymentEdit = (balance: WeeklyBalance) => {
+    setPaymentEditing({
+      id: balance.id,
+      amount_paid: balance.amount_paid,
+    });
+  };
+
+  const handlePaymentSave = async () => {
+    if (!paymentEditing) return;
+
+    try {
+      setProcessingPayment(true);
+      const { error } = await supabase
+        .from('weekly_balances')
+        .update({
+          amount_paid: paymentEditing.amount_paid,
+        })
+        .eq('id', paymentEditing.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Payment recorded successfully',
+      });
+
+      setPaymentEditing(null);
+      fetchBalances();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handlePaymentCancel = () => {
+    setPaymentEditing(null);
+  };
+
+  const handleRollover = async (balance: WeeklyBalance) => {
+    try {
+      const { error } = await supabase.rpc('rollover_unpaid_balance', {
+        p_customer_id: balance.customer_id,
+        p_current_week_start: balance.week_start_date,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Balance rolled over to next week',
+      });
+
+      fetchBalances();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Group by owner
   const groupedByOwner = balances.reduce((acc, balance) => {
     const key = balance.customer.cart_name || balance.customer.full_name;
@@ -156,16 +234,26 @@ export default function AdminBalances() {
                   <TableHead>Customer</TableHead>
                   <TableHead>Cart #</TableHead>
                   <TableHead>Week</TableHead>
+                  <TableHead className="text-right">Old Balance</TableHead>
                   <TableHead className="text-right">Orders Total</TableHead>
                   <TableHead className="text-right">Franchise Fee</TableHead>
                   <TableHead className="text-right">Commissary Rent</TableHead>
                   <TableHead className="text-right">Total Balance</TableHead>
+                  <TableHead className="text-right">Amount Paid</TableHead>
+                  <TableHead className="text-right">Remaining</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {balances.map((balance) => {
                   const isEditing = editing?.id === balance.id;
+                  const isPaymentEditing = paymentEditing?.id === balance.id;
+                  const statusColor = 
+                    balance.payment_status === 'paid_full' ? 'text-green-600' :
+                    balance.payment_status === 'partial' ? 'text-yellow-600' :
+                    'text-red-600';
+                  
                   return (
                     <TableRow key={balance.id}>
                       <TableCell className="font-medium">
@@ -175,6 +263,7 @@ export default function AdminBalances() {
                       <TableCell>
                         {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
                       </TableCell>
+                      <TableCell className="text-right">${balance.old_balance.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
@@ -204,20 +293,62 @@ export default function AdminBalances() {
                       </TableCell>
                       <TableCell className="text-right font-bold">${balance.total_balance.toFixed(2)}</TableCell>
                       <TableCell className="text-right">
-                        {isEditing ? (
-                          <div className="flex justify-end gap-2">
-                            <Button size="sm" onClick={handleSave} disabled={saving}>
-                              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={handleCancel}>
-                              Cancel
-                            </Button>
-                          </div>
+                        {isPaymentEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={paymentEditing.amount_paid}
+                            onChange={(e) => setPaymentEditing({ ...paymentEditing, amount_paid: parseFloat(e.target.value) || 0 })}
+                            className="w-24"
+                          />
                         ) : (
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(balance)}>
-                            Edit
-                          </Button>
+                          `$${balance.amount_paid.toFixed(2)}`
                         )}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        ${balance.remaining_balance.toFixed(2)}
+                      </TableCell>
+                      <TableCell className={`text-right font-semibold ${statusColor}`}>
+                        {balance.payment_status === 'paid_full' ? 'Paid Full' : 
+                         balance.payment_status === 'partial' ? 'Partial' : 
+                         'Unpaid'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {isEditing ? (
+                            <>
+                              <Button size="sm" onClick={handleSave} disabled={saving}>
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={handleCancel}>
+                                Cancel
+                              </Button>
+                            </>
+                          ) : isPaymentEditing ? (
+                            <>
+                              <Button size="sm" onClick={handlePaymentSave} disabled={processingPayment}>
+                                {processingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Payment'}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={handlePaymentCancel}>
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => handleEdit(balance)}>
+                                Edit Fees
+                              </Button>
+                              <Button size="sm" variant="default" onClick={() => handlePaymentEdit(balance)}>
+                                Add Payment
+                              </Button>
+                              {balance.remaining_balance > 0 && (
+                                <Button size="sm" variant="secondary" onClick={() => handleRollover(balance)}>
+                                  Rollover
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

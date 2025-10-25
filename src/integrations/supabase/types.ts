@@ -1265,36 +1265,48 @@ export type Database = {
       }
       weekly_balances: {
         Row: {
+          amount_paid: number | null
           commissary_rent: number | null
           created_at: string | null
           customer_id: string
           franchise_fee: number | null
           id: string
+          old_balance: number | null
           orders_total: number | null
+          payment_status: string | null
+          remaining_balance: number | null
           total_balance: number | null
           updated_at: string | null
           week_end_date: string
           week_start_date: string
         }
         Insert: {
+          amount_paid?: number | null
           commissary_rent?: number | null
           created_at?: string | null
           customer_id: string
           franchise_fee?: number | null
           id?: string
+          old_balance?: number | null
           orders_total?: number | null
+          payment_status?: string | null
+          remaining_balance?: number | null
           total_balance?: number | null
           updated_at?: string | null
           week_end_date: string
           week_start_date: string
         }
         Update: {
+          amount_paid?: number | null
           commissary_rent?: number | null
           created_at?: string | null
           customer_id?: string
           franchise_fee?: number | null
           id?: string
+          old_balance?: number | null
           orders_total?: number | null
+          payment_status?: string | null
+          remaining_balance?: number | null
           total_balance?: number | null
           updated_at?: string | null
           week_end_date?: string
@@ -1359,6 +1371,10 @@ export type Database = {
       is_owner_of_customer: {
         Args: { _customer_id: string; _owner_id: string }
         Returns: boolean
+      }
+      rollover_unpaid_balance: {
+        Args: { p_current_week_start: string; p_customer_id: string }
+        Returns: undefined
       }
     }
     Enums: {
