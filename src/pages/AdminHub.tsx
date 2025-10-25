@@ -52,6 +52,20 @@ const AdminHub = () => {
       roles: ['admin', 'super_admin']
     },
     {
+      title: 'Weekly Balances',
+      description: 'Manage customer weekly balances and fees',
+      icon: Users,
+      path: '/admin/balances',
+      roles: ['admin', 'super_admin']
+    },
+    {
+      title: 'Cart Assignments',
+      description: 'Assign customers to owners',
+      icon: Users,
+      path: '/admin/cart-assignments',
+      roles: ['admin', 'super_admin']
+    },
+    {
       title: 'SMS',
       description: 'Send bulk SMS notifications',
       icon: MessageSquare,

@@ -24,6 +24,9 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSMS from "./pages/admin/AdminSMS";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminBalances from "./pages/admin/AdminBalances";
+import AdminCartAssignments from "./pages/admin/AdminCartAssignments";
+import Owner from "./pages/Owner";
 import Profile from "./pages/Profile";
 import Violations from "./pages/Violations";
 import CustomerViolations from "./pages/CustomerViolations";
@@ -81,6 +84,9 @@ const AppContent = () => {
           <Route path="/admin/sms" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSMS /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/admin/announcements" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminAnnouncements /></ProtectedRoute>} />
+          <Route path="/admin/balances" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminBalances /></ProtectedRoute>} />
+          <Route path="/admin/cart-assignments" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminCartAssignments /></ProtectedRoute>} />
+          <Route path="/owner" element={<ProtectedRoute requireRole="owner"><Owner /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Analytics /></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Inventory /></ProtectedRoute>} />

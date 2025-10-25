@@ -80,6 +80,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_ownership: {
+        Row: {
+          assigned_at: string | null
+          created_at: string | null
+          customer_id: string
+          id: string
+          owner_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          owner_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_ownership_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_ownership_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -1224,6 +1263,53 @@ export type Database = {
           },
         ]
       }
+      weekly_balances: {
+        Row: {
+          commissary_rent: number | null
+          created_at: string | null
+          customer_id: string
+          franchise_fee: number | null
+          id: string
+          orders_total: number | null
+          total_balance: number | null
+          updated_at: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          commissary_rent?: number | null
+          created_at?: string | null
+          customer_id: string
+          franchise_fee?: number | null
+          id?: string
+          orders_total?: number | null
+          total_balance?: number | null
+          updated_at?: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          commissary_rent?: number | null
+          created_at?: string | null
+          customer_id?: string
+          franchise_fee?: number | null
+          id?: string
+          orders_total?: number | null
+          total_balance?: number | null
+          updated_at?: string | null
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_balances_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1268,6 +1354,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_owner_of_customer: {
+        Args: { _customer_id: string; _owner_id: string }
         Returns: boolean
       }
     }

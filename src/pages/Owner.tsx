@@ -1,0 +1,311 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, ShoppingCart, TrendingUp, Users } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+
+interface Customer {
+  id: string;
+  full_name: string;
+  email: string;
+  cart_name: string;
+  cart_number: string;
+  total_spent: number;
+}
+
+interface Order {
+  id: string;
+  created_at: string;
+  status: string;
+  total: number;
+  customer: {
+    full_name: string;
+    cart_name: string;
+  };
+}
+
+interface WeeklyBalance {
+  id: string;
+  customer_id: string;
+  week_start_date: string;
+  week_end_date: string;
+  orders_total: number;
+  franchise_fee: number;
+  commissary_rent: number;
+  total_balance: number;
+  customer: {
+    full_name: string;
+    cart_name: string;
+  };
+}
+
+export default function Owner() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [balances, setBalances] = useState<WeeklyBalance[]>([]);
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    totalRevenue: 0,
+    activeOrders: 0,
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
+
+  const fetchData = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+
+      // Fetch assigned customers
+      const { data: ownerships, error: ownershipError } = await supabase
+        .from('cart_ownership')
+        .select('customer_id, profiles!cart_ownership_customer_id_fkey(id, full_name, email, cart_name, cart_number, total_spent)')
+        .eq('owner_id', user.id);
+
+      if (ownershipError) throw ownershipError;
+
+      const customersList = ownerships?.map(o => o.profiles).filter(Boolean) as Customer[];
+      setCustomers(customersList);
+
+      const customerIds = customersList.map(c => c.id);
+
+      // Fetch orders for these customers
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, created_at, status, total, profiles!orders_customer_id_fkey(full_name, cart_name)')
+        .in('customer_id', customerIds)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (ordersError) throw ordersError;
+
+      setOrders(ordersData?.map(o => ({
+        ...o,
+        customer: o.profiles as { full_name: string; cart_name: string }
+      })) || []);
+
+      // Fetch weekly balances
+      const { data: balancesData, error: balancesError } = await supabase
+        .from('weekly_balances')
+        .select('*, profiles!weekly_balances_customer_id_fkey(full_name, cart_name)')
+        .in('customer_id', customerIds)
+        .order('week_start_date', { ascending: false });
+
+      if (balancesError) throw balancesError;
+
+      setBalances(balancesData?.map(b => ({
+        ...b,
+        customer: b.profiles as { full_name: string; cart_name: string }
+      })) || []);
+
+      // Calculate stats
+      const totalRevenue = customersList.reduce((sum, c) => sum + (c.total_spent || 0), 0);
+      const activeOrders = ordersData?.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length || 0;
+
+      setStats({
+        totalCustomers: customersList.length,
+        totalRevenue,
+        activeOrders,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'default';
+      case 'processing': return 'secondary';
+      case 'pending': return 'outline';
+      case 'cancelled': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Owner Dashboard</h1>
+          <p className="text-muted-foreground">Manage and monitor your carts</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Carts</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeOrders}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="customers" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="customers">My Carts</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsTrigger value="balances">Weekly Balances</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="customers" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Assigned Carts</CardTitle>
+                <CardDescription>Customers under your management</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Cart Name</TableHead>
+                      <TableHead>Cart Number</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-right">Total Spent</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell className="font-medium">{customer.full_name}</TableCell>
+                        <TableCell>{customer.cart_name || '-'}</TableCell>
+                        <TableCell>{customer.cart_number || '-'}</TableCell>
+                        <TableCell>{customer.email}</TableCell>
+                        <TableCell className="text-right">${customer.total_spent?.toFixed(2) || '0.00'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Orders</CardTitle>
+                <CardDescription>Orders from your carts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-mono text-xs">{order.id.substring(0, 8)}</TableCell>
+                        <TableCell>
+                          {order.customer.cart_name || order.customer.full_name}
+                        </TableCell>
+                        <TableCell>{format(new Date(order.created_at), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="balances" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Weekly Balances</CardTitle>
+                <CardDescription>Financial overview by week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Week</TableHead>
+                      <TableHead className="text-right">Orders</TableHead>
+                      <TableHead className="text-right">Franchise Fee</TableHead>
+                      <TableHead className="text-right">Rent</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {balances.map((balance) => (
+                      <TableRow key={balance.id}>
+                        <TableCell>{balance.customer.cart_name || balance.customer.full_name}</TableCell>
+                        <TableCell>
+                          {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${balance.franchise_fee.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${balance.commissary_rent.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold">${balance.total_balance.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardLayout>
+  );
+}
