@@ -83,6 +83,8 @@ export default function AdminBalances() {
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [deleteSnapshotDialogOpen, setDeleteSnapshotDialogOpen] = useState(false);
+  const [snapshotToDelete, setSnapshotToDelete] = useState<SummarySnapshot | null>(null);
 
   useEffect(() => {
     fetchBalances();
@@ -480,6 +482,40 @@ export default function AdminBalances() {
     printWindow.close();
   };
 
+  const handleDeleteSnapshotClick = (snapshot: SummarySnapshot) => {
+    setSnapshotToDelete(snapshot);
+    setDeleteSnapshotDialogOpen(true);
+  };
+
+  const handleDeleteSnapshotConfirm = async () => {
+    if (!snapshotToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('weekly_summary_snapshots')
+        .delete()
+        .eq('id', snapshotToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Snapshot deleted successfully',
+      });
+
+      fetchSnapshots();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteSnapshotDialogOpen(false);
+      setSnapshotToDelete(null);
+    }
+  };
+
   const handlePrintSnapshot = (snapshot: SummarySnapshot) => {
     const printWindow = window.open('', '', 'height=600,width=800');
     if (!printWindow) return;
@@ -861,10 +897,15 @@ export default function AdminBalances() {
                             Saved on {format(new Date(snapshot.created_at), 'MMM d, yyyy h:mm a')}
                           </CardDescription>
                         </div>
-                        <Button onClick={() => handlePrintSnapshot(snapshot)} variant="outline" size="sm">
-                          <Printer className="h-4 w-4 mr-2" />
-                          Print
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handlePrintSnapshot(snapshot)} variant="outline" size="sm">
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print
+                          </Button>
+                          <Button onClick={() => handleDeleteSnapshotClick(snapshot)} variant="destructive" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -934,6 +975,30 @@ export default function AdminBalances() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteSnapshotDialogOpen} onOpenChange={setDeleteSnapshotDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Snapshot</AlertDialogTitle>
+            <AlertDialogDescription>
+              {snapshotToDelete && (
+                <>
+                  Are you sure you want to delete this snapshot for week{' '}
+                  {format(new Date(snapshotToDelete.week_start_date), 'MMM d')} -{' '}
+                  {format(new Date(snapshotToDelete.week_end_date), 'MMM d, yyyy')}?
+                  This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSnapshotConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
