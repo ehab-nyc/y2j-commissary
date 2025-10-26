@@ -997,9 +997,25 @@ export default function AdminBalances() {
             
             {/* Week Summary Totals */}
             <div className="mt-6 pt-4 border-t">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">Total Paid (All Carts)</div>
+                  <div className="text-sm text-muted-foreground mb-1">Total Fees</div>
+                  <div className="text-2xl font-bold">
+                    ${Object.values(groupedByOwner).reduce((sum, customerData) => {
+                      return sum + customerData.balances.reduce((acc, b) => acc + (b.franchise_fee ?? 0), 0);
+                    }, 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total Rent</div>
+                  <div className="text-2xl font-bold">
+                    ${Object.values(groupedByOwner).reduce((sum, customerData) => {
+                      return sum + customerData.balances.reduce((acc, b) => acc + (b.commissary_rent ?? 0), 0);
+                    }, 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total Paid</div>
                   <div className="text-2xl font-bold text-green-600">
                     ${Object.values(groupedByOwner).reduce((sum, customerData) => {
                       return sum + customerData.balances.reduce((acc, b) => acc + (b.amount_paid ?? 0), 0);
@@ -1007,7 +1023,7 @@ export default function AdminBalances() {
                   </div>
                 </div>
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">Total Remaining (All Carts)</div>
+                  <div className="text-sm text-muted-foreground mb-1">Total Remaining</div>
                   <div className="text-2xl font-bold text-red-600">
                     ${Object.values(groupedByOwner).reduce((sum, customerData) => {
                       const sortedBalances = [...customerData.balances].sort((a, b) => 
@@ -1018,7 +1034,7 @@ export default function AdminBalances() {
                   </div>
                 </div>
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">Total Combined</div>
+                  <div className="text-sm text-muted-foreground mb-1">Grand Total</div>
                   <div className="text-2xl font-bold text-primary">
                     ${(
                       Object.values(groupedByOwner).reduce((sum, customerData) => {
