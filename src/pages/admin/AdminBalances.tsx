@@ -994,6 +994,47 @@ export default function AdminBalances() {
                 })}
               </TableBody>
             </Table>
+            
+            {/* Week Summary Totals */}
+            <div className="mt-6 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total Paid (All Carts)</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    ${Object.values(groupedByOwner).reduce((sum, customerData) => {
+                      return sum + customerData.balances.reduce((acc, b) => acc + (b.amount_paid ?? 0), 0);
+                    }, 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total Remaining (All Carts)</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    ${Object.values(groupedByOwner).reduce((sum, customerData) => {
+                      const sortedBalances = [...customerData.balances].sort((a, b) => 
+                        new Date(b.week_start_date).getTime() - new Date(a.week_start_date).getTime()
+                      );
+                      return sum + (sortedBalances[0]?.remaining_balance ?? 0);
+                    }, 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Total Combined</div>
+                  <div className="text-2xl font-bold text-primary">
+                    ${(
+                      Object.values(groupedByOwner).reduce((sum, customerData) => {
+                        return sum + customerData.balances.reduce((acc, b) => acc + (b.amount_paid ?? 0), 0);
+                      }, 0) + 
+                      Object.values(groupedByOwner).reduce((sum, customerData) => {
+                        const sortedBalances = [...customerData.balances].sort((a, b) => 
+                          new Date(b.week_start_date).getTime() - new Date(a.week_start_date).getTime()
+                        );
+                        return sum + (sortedBalances[0]?.remaining_balance ?? 0);
+                      }, 0)
+                    ).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
