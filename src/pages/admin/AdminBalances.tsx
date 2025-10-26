@@ -607,8 +607,28 @@ export default function AdminBalances() {
       .font-medium { font-weight: 500; }
       .font-bold { font-weight: bold; }
       .text-green-600 { color: #16a34a; }
+      .text-red-600 { color: #dc2626; }
       h2 { margin-top: 0; }
       .report-header { margin-bottom: 20px; }
+      
+      /* Print-specific grid layout for totals */
+      .grid { 
+        display: grid !important; 
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 1rem !important;
+      }
+      .bg-muted\\/50 { 
+        background-color: #f9fafb; 
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+      }
+      .text-sm { font-size: 0.875rem; }
+      .text-muted-foreground { color: #6b7280; margin-bottom: 0.25rem; }
+      .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+      .mt-6 { margin-top: 1.5rem; }
+      .pt-4 { padding-top: 1rem; }
+      .border-t { border-top: 1px solid #e5e7eb; }
     `);
     printWindow.document.write('</style></head><body>');
     printWindow.document.write('<div class="report-header"><h2>Weekly Summary Report</h2><p>Current week remaining balance and aggregated totals per customer</p></div>');
