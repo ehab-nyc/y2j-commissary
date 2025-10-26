@@ -136,6 +136,8 @@ const Orders = () => {
       query = query.eq('customer_id', user?.id);
     }
     
+    query = query.is('deleted_at', null);
+    
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {

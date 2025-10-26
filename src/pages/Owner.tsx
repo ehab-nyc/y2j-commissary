@@ -96,6 +96,7 @@ export default function Owner() {
         .from('orders')
         .select('id, created_at, status, total, profiles!orders_customer_id_fkey(full_name, cart_name)')
         .in('customer_id', customerIds)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(50);
 

@@ -36,6 +36,7 @@ const AdminOrders = () => {
           products(name, price)
         )
       `)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
     setOrders(data || []);
   };
@@ -72,20 +73,20 @@ const AdminOrders = () => {
   });
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to archive this order? You can permanently delete it later from Deleted Orders.')) {
       return;
     }
 
     const { error } = await supabase
       .from('orders')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', orderId);
 
     if (error) {
-      toast.error('Failed to delete order');
+      toast.error('Failed to archive order');
       console.error(error);
     } else {
-      toast.success('Order deleted successfully');
+      toast.success('Order archived successfully');
       fetchOrders();
     }
   };

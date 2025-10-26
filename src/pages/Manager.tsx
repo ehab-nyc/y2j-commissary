@@ -96,6 +96,7 @@ const Manager = () => {
           products(name)
         )
       `)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
     
     setOrders(data || []);
@@ -106,7 +107,8 @@ const Manager = () => {
     try {
       const { data: orders } = await supabase
         .from('orders')
-        .select('status, total');
+        .select('status, total')
+        .is('deleted_at', null);
 
       const { data: products } = await supabase
         .from('products')

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Folder, ClipboardList, CheckCircle2, AlertCircle, Users, MessageSquare, Settings, MapPin, Megaphone } from 'lucide-react';
+import { Package, Folder, ClipboardList, CheckCircle2, AlertCircle, Users, MessageSquare, Settings, MapPin, Megaphone, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const AdminHub = () => {
@@ -36,6 +36,13 @@ const AdminHub = () => {
       icon: CheckCircle2,
       path: '/admin/processed-orders',
       roles: ['worker', 'manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Deleted Orders',
+      description: 'Restore or permanently delete orders',
+      icon: Trash2,
+      path: '/admin/deleted-orders',
+      roles: ['super_admin']
     },
     {
       title: 'Violations',

@@ -86,6 +86,7 @@ const Worker = () => {
         )
       `)
       .in('status', ['pending', 'processing'])
+      .is('deleted_at', null)
       .order('created_at', { ascending: true });
 
     if (error) {

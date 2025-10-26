@@ -582,6 +582,7 @@ export type Database = {
           assigned_worker_id: string | null
           created_at: string | null
           customer_id: string
+          deleted_at: string | null
           id: string
           notes: string | null
           status: Database["public"]["Enums"]["order_status"] | null
@@ -592,6 +593,7 @@ export type Database = {
           assigned_worker_id?: string | null
           created_at?: string | null
           customer_id: string
+          deleted_at?: string | null
           id?: string
           notes?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
@@ -602,6 +604,7 @@ export type Database = {
           assigned_worker_id?: string | null
           created_at?: string | null
           customer_id?: string
+          deleted_at?: string | null
           id?: string
           notes?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null

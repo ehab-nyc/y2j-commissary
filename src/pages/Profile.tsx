@@ -113,6 +113,7 @@ const Profile = () => {
         )
       `)
       .eq('customer_id', user.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (!error && data) {

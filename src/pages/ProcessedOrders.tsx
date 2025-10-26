@@ -63,6 +63,7 @@ const ProcessedOrders = () => {
       `)
       .eq('assigned_worker_id', user.id)
       .eq('status', 'completed')
+      .is('deleted_at', null)
       .order('updated_at', { ascending: false });
 
     if (error) {
