@@ -318,6 +318,91 @@ export default function AdminBalances() {
     }
   };
 
+  const handleRolloverAll = async () => {
+    const balancesWithRemaining = balances.filter(b => (b.remaining_balance ?? 0) > 0);
+    
+    if (balancesWithRemaining.length === 0) {
+      toast({
+        title: 'No Balances',
+        description: 'No balances with remaining amounts to rollover',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setSaving(true);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const balance of balancesWithRemaining) {
+        try {
+          // Create snapshot before rollover
+          const ownerInfo = owners[balance.customer_id];
+          const snapshotData = {
+            customer_id: balance.customer_id,
+            owner_name: ownerInfo?.owner_name || '-',
+            customer_name: balance.customer.full_name,
+            cart_number: balance.customer.cart_number,
+            week_start: balance.week_start_date,
+            week_end: balance.week_end_date,
+            total_orders: balance.orders_total,
+            total_fees: balance.franchise_fee,
+            total_rent: balance.commissary_rent,
+            total_paid: balance.amount_paid,
+            remaining_balance: balance.remaining_balance
+          };
+
+          // Save snapshot
+          await supabase
+            .from('weekly_summary_snapshots')
+            .insert({
+              week_start_date: balance.week_start_date,
+              week_end_date: balance.week_end_date,
+              summary_data: [snapshotData],
+            });
+
+          // Rollover balance
+          await supabase.rpc('rollover_unpaid_balance', {
+            p_customer_id: balance.customer_id,
+            p_current_week_start: balance.week_start_date,
+          });
+
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error('Error rolling over balance:', error);
+        }
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: 'Success',
+          description: `${successCount} balance(s) rolled over successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+        });
+      }
+
+      if (errorCount > 0 && successCount === 0) {
+        toast({
+          title: 'Error',
+          description: 'Failed to rollover balances',
+          variant: 'destructive',
+        });
+      }
+
+      fetchBalances();
+      fetchSnapshots();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDeleteClick = (balance: WeeklyBalance) => {
     setBalanceToDelete(balance);
     setDeleteDialogOpen(true);
@@ -605,8 +690,24 @@ export default function AdminBalances() {
 
         <Card>
           <CardHeader>
-            <CardTitle>All Weekly Balances</CardTitle>
-            <CardDescription>Track customer payments and manage unpaid balances</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>All Weekly Balances</CardTitle>
+                <CardDescription>Track customer payments and manage unpaid balances</CardDescription>
+              </div>
+              <Button 
+                onClick={handleRolloverAll} 
+                variant="secondary" 
+                disabled={saving || balances.filter(b => (b.remaining_balance ?? 0) > 0).length === 0}
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Archive className="h-4 w-4 mr-2" />
+                )}
+                Rollover All
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
