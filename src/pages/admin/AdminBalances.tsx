@@ -563,11 +563,15 @@ export default function AdminBalances() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Weekly Balance</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this weekly balance for{' '}
-              <strong>{balanceToDelete?.customer.cart_name || balanceToDelete?.customer.full_name}</strong>
-              {' '}({format(new Date(balanceToDelete?.week_start_date || ''), 'MMM d')} -{' '}
-              {format(new Date(balanceToDelete?.week_end_date || ''), 'MMM d, yyyy')})?
-              This action cannot be undone.
+              {balanceToDelete && (
+                <>
+                  Are you sure you want to delete this weekly balance for{' '}
+                  <strong>{balanceToDelete.customer.cart_name || balanceToDelete.customer.full_name}</strong>
+                  {' '}({format(new Date(balanceToDelete.week_start_date), 'MMM d')} -{' '}
+                  {format(new Date(balanceToDelete.week_end_date), 'MMM d, yyyy')})?
+                  This action cannot be undone.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
