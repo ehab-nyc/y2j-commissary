@@ -1003,7 +1003,7 @@ export default function AdminBalances() {
         <Card>
           <CardHeader>
             <CardTitle>Weekly Balance History</CardTitle>
-            <CardDescription>All rolled-over balances that were moved to history</CardDescription>
+            <CardDescription>All rolled-over balances grouped by week with totals</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingHistory ? (
@@ -1015,63 +1015,131 @@ export default function AdminBalances() {
                 No balance history found. Balances will appear here after rollover.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Cart #</TableHead>
-                      <TableHead>Week Period</TableHead>
-                      <TableHead className="text-right">Old Balance</TableHead>
-                      <TableHead className="text-right">Orders Total</TableHead>
-                      <TableHead className="text-right">Franchise Fee</TableHead>
-                      <TableHead className="text-right">Commissary Rent</TableHead>
-                      <TableHead className="text-right">Total Due</TableHead>
-                      <TableHead className="text-right">Amount Paid</TableHead>
-                      <TableHead className="text-right">Remaining</TableHead>
-                      <TableHead className="text-right">Status</TableHead>
-                      <TableHead>Moved to History</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {balanceHistory.map((record) => {
-                      const statusColor = 
-                        record.payment_status === 'paid_full' ? 'text-green-600' :
-                        record.payment_status === 'partial' ? 'text-yellow-600' :
-                        'text-red-600';
-                      
-                      const totalBalance = record.orders_total + record.franchise_fee + record.commissary_rent;
-                      const totalDue = totalBalance + record.old_balance;
-                      
-                      return (
-                        <TableRow key={record.id}>
-                          <TableCell className="font-medium">
-                            {record.customer.cart_name || record.customer.full_name}
-                          </TableCell>
-                          <TableCell>{record.customer.cart_number || '-'}</TableCell>
-                          <TableCell>
-                            {format(new Date(record.week_start_date), 'MMM d')} - {format(new Date(record.week_end_date), 'MMM d, yyyy')}
-                          </TableCell>
-                          <TableCell className="text-right">${record.old_balance.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">${record.orders_total.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">${record.franchise_fee.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">${record.commissary_rent.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-bold">${totalDue.toFixed(2)}</TableCell>
-                          <TableCell className="text-right text-green-600">${record.amount_paid.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-bold">${record.remaining_balance.toFixed(2)}</TableCell>
-                          <TableCell className={`text-right font-semibold ${statusColor}`}>
-                            {record.payment_status === 'paid_full' ? 'Paid Full' : 
-                             record.payment_status === 'partial' ? 'Partial' : 
-                             'Unpaid'}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(record.created_at), 'MMM d, yyyy h:mm a')}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <div className="space-y-6">
+                {Object.entries(
+                  balanceHistory.reduce((acc, record) => {
+                    const weekKey = `${record.week_start_date}_${record.week_end_date}`;
+                    if (!acc[weekKey]) {
+                      acc[weekKey] = {
+                        week_start: record.week_start_date,
+                        week_end: record.week_end_date,
+                        records: []
+                      };
+                    }
+                    acc[weekKey].records.push(record);
+                    return acc;
+                  }, {} as Record<string, { week_start: string; week_end: string; records: BalanceHistory[] }>)
+                ).map(([weekKey, weekData]) => {
+                  // Calculate totals for this week
+                  const weekTotals = weekData.records.reduce(
+                    (acc, record) => ({
+                      orders: acc.orders + record.orders_total,
+                      fees: acc.fees + record.franchise_fee,
+                      rent: acc.rent + record.commissary_rent,
+                      paid: acc.paid + record.amount_paid,
+                      remaining: acc.remaining + record.remaining_balance,
+                    }),
+                    { orders: 0, fees: 0, rent: 0, paid: 0, remaining: 0 }
+                  );
+
+                  return (
+                    <Card key={weekKey} className="border-2">
+                      <CardHeader className="bg-muted/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-xl">
+                              Week of {format(new Date(weekData.week_start), 'MMM d')} - {format(new Date(weekData.week_end), 'MMM d, yyyy')}
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              {weekData.records.length} cart{weekData.records.length !== 1 ? 's' : ''} rolled over
+                            </CardDescription>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-muted-foreground">Week Total</div>
+                            <div className="text-2xl font-bold text-primary">
+                              ${weekTotals.remaining.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Owner</TableHead>
+                                <TableHead>Cart Name</TableHead>
+                                <TableHead>Cart #</TableHead>
+                                <TableHead className="text-right">Orders Total</TableHead>
+                                <TableHead className="text-right">Fees</TableHead>
+                                <TableHead className="text-right">Rent</TableHead>
+                                <TableHead className="text-right">Paid</TableHead>
+                                <TableHead className="text-right">Remaining</TableHead>
+                                <TableHead className="text-right">Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {weekData.records.map((record) => {
+                                const statusColor = 
+                                  record.payment_status === 'paid_full' ? 'text-green-600' :
+                                  record.payment_status === 'partial' ? 'text-yellow-600' :
+                                  'text-red-600';
+                                
+                                const ownerInfo = owners[record.customer_id];
+                                
+                                return (
+                                  <TableRow key={record.id}>
+                                    <TableCell className="font-medium">
+                                      {ownerInfo?.owner_name || '-'}
+                                    </TableCell>
+                                    <TableCell className="font-medium">
+                                      {record.customer.cart_name || record.customer.full_name}
+                                    </TableCell>
+                                    <TableCell>{record.customer.cart_number || '-'}</TableCell>
+                                    <TableCell className="text-right">${record.orders_total.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">${record.franchise_fee.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right">${record.commissary_rent.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right text-green-600 font-medium">
+                                      ${record.amount_paid.toFixed(2)}
+                                    </TableCell>
+                                    <TableCell className="text-right font-bold">
+                                      ${record.remaining_balance.toFixed(2)}
+                                    </TableCell>
+                                    <TableCell className={`text-right font-semibold ${statusColor}`}>
+                                      {record.payment_status === 'paid_full' ? 'Paid Full' : 
+                                       record.payment_status === 'partial' ? 'Partial' : 
+                                       'Unpaid'}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                        
+                        {/* Week Summary Footer */}
+                        <div className="mt-6 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center">
+                            <div className="text-sm text-muted-foreground">Total Orders</div>
+                            <div className="text-lg font-bold">${weekTotals.orders.toFixed(2)}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-sm text-muted-foreground">Total Collected</div>
+                            <div className="text-lg font-bold text-green-600">${weekTotals.paid.toFixed(2)}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-sm text-muted-foreground">Total Remaining</div>
+                            <div className="text-lg font-bold text-red-600">${weekTotals.remaining.toFixed(2)}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-sm text-muted-foreground">Number of Carts</div>
+                            <div className="text-lg font-bold">{weekData.records.length}</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </CardContent>
