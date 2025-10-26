@@ -265,6 +265,34 @@ export default function AdminBalances() {
 
   const handleRollover = async (balance: WeeklyBalance) => {
     try {
+      // Create snapshot before rollover
+      const ownerInfo = owners[balance.customer_id];
+      const snapshotData = {
+        customer_id: balance.customer_id,
+        owner_name: ownerInfo?.owner_name || '-',
+        customer_name: balance.customer.full_name,
+        cart_number: balance.customer.cart_number,
+        week_start: balance.week_start_date,
+        week_end: balance.week_end_date,
+        total_orders: balance.orders_total,
+        total_fees: balance.franchise_fee,
+        total_rent: balance.commissary_rent,
+        total_paid: balance.amount_paid,
+        remaining_balance: balance.remaining_balance
+      };
+
+      // Save snapshot
+      const { error: snapshotError } = await supabase
+        .from('weekly_summary_snapshots')
+        .insert({
+          week_start_date: balance.week_start_date,
+          week_end_date: balance.week_end_date,
+          summary_data: [snapshotData],
+        });
+
+      if (snapshotError) throw snapshotError;
+
+      // Rollover balance
       const { error } = await supabase.rpc('rollover_unpaid_balance', {
         p_customer_id: balance.customer_id,
         p_current_week_start: balance.week_start_date,
@@ -274,10 +302,11 @@ export default function AdminBalances() {
 
       toast({
         title: 'Success',
-        description: 'Balance rolled over to next week and moved to history',
+        description: 'Balance rolled over to next week, moved to history, and snapshot saved',
       });
 
       fetchBalances();
+      fetchSnapshots();
     } catch (error: any) {
       toast({
         title: 'Error',
