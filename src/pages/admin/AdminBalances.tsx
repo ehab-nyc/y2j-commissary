@@ -483,7 +483,7 @@ export default function AdminBalances() {
       setLoadingHistory(true);
       const { data, error } = await supabase
         .from('weekly_balance_history')
-        .select('*, profiles!inner(full_name, cart_name, cart_number)')
+        .select('*, profiles(full_name, cart_name, cart_number)')
         .order('rolled_over_at', { ascending: false });
 
       if (error) throw error;
@@ -495,7 +495,7 @@ export default function AdminBalances() {
         amount_paid: b.amount_paid ?? 0,
         old_balance: b.old_balance ?? 0,
         created_at: b.rolled_over_at || b.created_at,
-        customer: Array.isArray(b.profiles) ? b.profiles[0] : b.profiles
+        customer: b.profiles as { full_name: string; cart_name: string; cart_number: string }
       })) || []);
     } catch (error: any) {
       toast({
