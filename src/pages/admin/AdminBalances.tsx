@@ -140,10 +140,27 @@ export default function AdminBalances() {
 
     try {
       setProcessingPayment(true);
+      
+      // Find the balance record to calculate remaining
+      const balance = balances.find(b => b.id === paymentEditing.id);
+      if (!balance) throw new Error('Balance not found');
+      
+      const totalDue = (balance.total_balance ?? 0) + (balance.old_balance ?? 0);
+      const remainingBalance = totalDue - paymentEditing.amount_paid;
+      
+      let paymentStatus: 'unpaid' | 'partial' | 'paid_full' = 'unpaid';
+      if (remainingBalance <= 0 && totalDue > 0) {
+        paymentStatus = 'paid_full';
+      } else if (paymentEditing.amount_paid > 0) {
+        paymentStatus = 'partial';
+      }
+      
       const { error } = await supabase
         .from('weekly_balances')
         .update({
           amount_paid: paymentEditing.amount_paid,
+          remaining_balance: Math.max(0, remainingBalance),
+          payment_status: paymentStatus,
         })
         .eq('id', paymentEditing.id);
 
