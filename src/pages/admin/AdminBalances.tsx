@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Trash2, Printer } from 'lucide-react';
+import { Loader2, Save, Trash2, Printer, Archive, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import {
@@ -19,6 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 
 interface WeeklyBalance {
   id: string;
@@ -56,6 +58,16 @@ interface PaymentEditing {
   amount_paid: number;
 }
 
+interface SummarySnapshot {
+  id: string;
+  snapshot_date: string;
+  week_start_date: string;
+  week_end_date: string;
+  summary_data: any;
+  notes: string | null;
+  created_at: string;
+}
+
 export default function AdminBalances() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -67,10 +79,15 @@ export default function AdminBalances() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [balanceToDelete, setBalanceToDelete] = useState<WeeklyBalance | null>(null);
   const [owners, setOwners] = useState<Record<string, OwnerInfo>>({});
+  const [snapshots, setSnapshots] = useState<SummarySnapshot[]>([]);
+  const [savingSnapshot, setSavingSnapshot] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchBalances();
     fetchOwners();
+    fetchSnapshots();
   }, []);
 
   const fetchBalances = async () => {
@@ -304,6 +321,105 @@ export default function AdminBalances() {
     }
   };
 
+  const fetchSnapshots = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('weekly_summary_snapshots')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSnapshots(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSaveSnapshot = async () => {
+    try {
+      setSavingSnapshot(true);
+
+      // Get current week's data
+      const sortedBalances = [...balances].sort((a, b) => 
+        new Date(b.week_start_date).getTime() - new Date(a.week_start_date).getTime()
+      );
+      
+      if (sortedBalances.length === 0) {
+        toast({
+          title: 'No Data',
+          description: 'No balance data to save',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const currentWeek = sortedBalances[0];
+      
+      // Prepare summary data
+      const summaryData = Object.entries(groupedByOwner).map(([customerId, customerData]) => {
+        const sortedCustomerBalances = [...customerData.balances].sort((a, b) => 
+          new Date(b.week_start_date).getTime() - new Date(a.week_start_date).getTime()
+        );
+        
+        const currentWeekBalance = sortedCustomerBalances[0];
+        const totals = customerData.balances.reduce(
+          (acc, b) => ({
+            orders: acc.orders + (b.orders_total ?? 0),
+            fees: acc.fees + (b.franchise_fee ?? 0),
+            rent: acc.rent + (b.commissary_rent ?? 0),
+            paid: acc.paid + (b.amount_paid ?? 0),
+          }),
+          { orders: 0, fees: 0, rent: 0, paid: 0 }
+        );
+
+        const ownerInfo = owners[customerId];
+
+        return {
+          customer_id: customerId,
+          owner_name: ownerInfo?.owner_name || '-',
+          customer_name: customerData.name,
+          cart_number: customerData.cartNumber,
+          week_start: currentWeekBalance.week_start_date,
+          week_end: currentWeekBalance.week_end_date,
+          total_orders: totals.orders,
+          total_fees: totals.fees,
+          total_rent: totals.rent,
+          total_paid: totals.paid,
+          remaining_balance: currentWeekBalance?.remaining_balance ?? 0
+        };
+      });
+
+      const { error } = await supabase
+        .from('weekly_summary_snapshots')
+        .insert({
+          week_start_date: currentWeek.week_start_date,
+          week_end_date: currentWeek.week_end_date,
+          summary_data: summaryData,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Weekly summary snapshot saved successfully',
+      });
+
+      fetchSnapshots();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingSnapshot(false);
+    }
+  };
+
   const handlePrint = () => {
     const printContent = document.getElementById('summary-card-print');
     if (!printContent) return;
@@ -329,6 +445,58 @@ export default function AdminBalances() {
     printWindow.document.write('<div class="report-header"><h2>Weekly Summary Report</h2><p>Current week remaining balance and aggregated totals per customer</p></div>');
     printWindow.document.write(printContent.innerHTML);
     printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handlePrintSnapshot = (snapshot: SummarySnapshot) => {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    if (!printWindow) return;
+    
+    printWindow.document.write('<html><head><title>Weekly Summary Snapshot</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; font-weight: bold; }
+      .text-right { text-align: right; }
+      .font-medium { font-weight: 500; }
+      .font-bold { font-weight: bold; }
+      .text-green-600 { color: #16a34a; }
+      h2 { margin-top: 0; }
+      .report-header { margin-bottom: 20px; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(`<div class="report-header">
+      <h2>Weekly Summary Snapshot</h2>
+      <p>Week: ${format(new Date(snapshot.week_start_date), 'MMM d')} - ${format(new Date(snapshot.week_end_date), 'MMM d, yyyy')}</p>
+      <p>Saved: ${format(new Date(snapshot.created_at), 'MMM d, yyyy h:mm a')}</p>
+    </div>`);
+    
+    printWindow.document.write('<table><thead><tr>');
+    printWindow.document.write('<th>Owner</th><th>Customer</th><th>Cart #</th><th>Current Week</th>');
+    printWindow.document.write('<th class="text-right">Total Orders</th><th class="text-right">Total Fees</th>');
+    printWindow.document.write('<th class="text-right">Total Rent</th><th class="text-right">Total Paid</th>');
+    printWindow.document.write('<th class="text-right">Remaining Balance</th></tr></thead><tbody>');
+    
+    snapshot.summary_data.forEach((row: any) => {
+      printWindow.document.write(`<tr>
+        <td class="font-medium">${row.owner_name}</td>
+        <td class="font-medium">${row.customer_name}</td>
+        <td>${row.cart_number || '-'}</td>
+        <td>${format(new Date(row.week_start), 'MMM d')} - ${format(new Date(row.week_end), 'MMM d, yyyy')}</td>
+        <td class="text-right">$${row.total_orders.toFixed(2)}</td>
+        <td class="text-right">$${row.total_fees.toFixed(2)}</td>
+        <td class="text-right">$${row.total_rent.toFixed(2)}</td>
+        <td class="text-right text-green-600">$${row.total_paid.toFixed(2)}</td>
+        <td class="text-right font-bold">$${row.remaining_balance.toFixed(2)}</td>
+      </tr>`);
+    });
+    
+    printWindow.document.write('</tbody></table></body></html>');
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
@@ -514,21 +682,39 @@ export default function AdminBalances() {
           </CardContent>
         </Card>
 
-        {/* Summary by Customer */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Summary by Customer</CardTitle>
-                <CardDescription>Current week remaining balance and aggregated totals per customer</CardDescription>
-              </div>
-              <Button onClick={handlePrint} variant="outline" size="sm">
-                <Printer className="h-4 w-4 mr-2" />
-                Print Summary
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent id="summary-card-print">
+        {/* Summary Section with Tabs */}
+        <Tabs defaultValue="current" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="current">Current Summary</TabsTrigger>
+            <TabsTrigger value="history">Historical Snapshots</TabsTrigger>
+          </TabsList>
+
+          {/* Current Summary Tab */}
+          <TabsContent value="current">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Summary by Customer</CardTitle>
+                    <CardDescription>Current week remaining balance and aggregated totals per customer</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveSnapshot} variant="default" size="sm" disabled={savingSnapshot}>
+                      {savingSnapshot ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Archive className="h-4 w-4 mr-2" />
+                      )}
+                      Save Snapshot
+                    </Button>
+                    <Button onClick={handlePrint} variant="outline" size="sm">
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print Summary
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent id="summary-card-print">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -590,7 +776,115 @@ export default function AdminBalances() {
             </Table>
           </CardContent>
         </Card>
-      </div>
+      </TabsContent>
+
+      {/* Historical Snapshots Tab */}
+      <TabsContent value="history">
+        <Card>
+          <CardHeader>
+            <CardTitle>Historical Snapshots</CardTitle>
+            <CardDescription>View and print past weekly summary snapshots</CardDescription>
+            <div className="flex gap-4 mt-4">
+              <div className="flex-1">
+                <Label htmlFor="start-date">From Date</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="end-date">To Date</Label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {snapshots
+                .filter((snapshot) => {
+                  if (!startDate && !endDate) return true;
+                  const snapshotDate = new Date(snapshot.week_start_date);
+                  const start = startDate ? new Date(startDate) : null;
+                  const end = endDate ? new Date(endDate) : null;
+                  
+                  if (start && snapshotDate < start) return false;
+                  if (end && snapshotDate > end) return false;
+                  return true;
+                })
+                .map((snapshot) => (
+                  <Card key={snapshot.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">
+                            Week: {format(new Date(snapshot.week_start_date), 'MMM d')} - {format(new Date(snapshot.week_end_date), 'MMM d, yyyy')}
+                          </CardTitle>
+                          <CardDescription>
+                            Saved on {format(new Date(snapshot.created_at), 'MMM d, yyyy h:mm a')}
+                          </CardDescription>
+                        </div>
+                        <Button onClick={() => handlePrintSnapshot(snapshot)} variant="outline" size="sm">
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Owner</TableHead>
+                            <TableHead>Customer</TableHead>
+                            <TableHead>Cart #</TableHead>
+                            <TableHead>Week</TableHead>
+                            <TableHead className="text-right">Total Orders</TableHead>
+                            <TableHead className="text-right">Total Fees</TableHead>
+                            <TableHead className="text-right">Total Rent</TableHead>
+                            <TableHead className="text-right">Total Paid</TableHead>
+                            <TableHead className="text-right">Remaining Balance</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {snapshot.summary_data.map((row: any, index: number) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{row.owner_name}</TableCell>
+                              <TableCell className="font-medium">{row.customer_name}</TableCell>
+                              <TableCell>{row.cart_number || '-'}</TableCell>
+                              <TableCell>
+                                {format(new Date(row.week_start), 'MMM d')} - {format(new Date(row.week_end), 'MMM d, yyyy')}
+                              </TableCell>
+                              <TableCell className="text-right">${row.total_orders.toFixed(2)}</TableCell>
+                              <TableCell className="text-right">${row.total_fees.toFixed(2)}</TableCell>
+                              <TableCell className="text-right">${row.total_rent.toFixed(2)}</TableCell>
+                              <TableCell className="text-right text-green-600">${row.total_paid.toFixed(2)}</TableCell>
+                              <TableCell className="text-right font-bold">${row.remaining_balance.toFixed(2)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                ))}
+              {snapshots.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No snapshots saved yet. Save a snapshot from the Current Summary tab.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

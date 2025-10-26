@@ -1373,6 +1373,39 @@ export type Database = {
           },
         ]
       }
+      weekly_summary_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          snapshot_date: string
+          summary_data: Json
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          snapshot_date?: string
+          summary_data: Json
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          snapshot_date?: string
+          summary_data?: Json
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
