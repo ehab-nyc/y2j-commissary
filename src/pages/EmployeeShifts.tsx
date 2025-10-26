@@ -6,13 +6,25 @@ import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, LogIn, LogOut } from "lucide-react";
+import { Clock, LogIn, LogOut, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function EmployeeShifts() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const isSuperAdmin = hasRole('super_admin');
 
   const { data: shifts, isLoading } = useQuery({
     queryKey: ["employee-shifts"],
@@ -103,6 +115,25 @@ export default function EmployeeShifts() {
     },
   });
 
+  const deleteShiftMutation = useMutation({
+    mutationFn: async (shiftId: string) => {
+      const { error } = await supabase
+        .from("employee_shifts")
+        .delete()
+        .eq("id", shiftId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employee-shifts"] });
+      toast.success("Shift deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete shift");
+      console.error(error);
+    },
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -177,13 +208,38 @@ export default function EmployeeShifts() {
                         </p>
                       )}
                     </div>
-                    <div className="text-right">
-                      {shift.clock_out ? (
-                        <Badge variant="outline">
-                          {shift.hours_worked?.toFixed(2)} hours
-                        </Badge>
-                      ) : (
-                        <Badge>Active</Badge>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        {shift.clock_out ? (
+                          <Badge variant="outline">
+                            {shift.hours_worked?.toFixed(2)} hours
+                          </Badge>
+                        ) : (
+                          <Badge>Active</Badge>
+                        )}
+                      </div>
+                      {isSuperAdmin && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="icon" title="Delete Shift">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Shift</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this shift for {shift.employee_name}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteShiftMutation.mutate(shift.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                   </div>
