@@ -1263,6 +1263,57 @@ export type Database = {
           },
         ]
       }
+      weekly_balance_history: {
+        Row: {
+          amount_paid: number
+          commissary_rent: number
+          created_at: string
+          customer_id: string
+          franchise_fee: number
+          id: string
+          old_balance: number
+          orders_total: number
+          payment_status: string
+          remaining_balance: number
+          rolled_over_at: string
+          total_balance: number | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          amount_paid?: number
+          commissary_rent?: number
+          created_at?: string
+          customer_id: string
+          franchise_fee?: number
+          id?: string
+          old_balance?: number
+          orders_total?: number
+          payment_status?: string
+          remaining_balance?: number
+          rolled_over_at?: string
+          total_balance?: number | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          amount_paid?: number
+          commissary_rent?: number
+          created_at?: string
+          customer_id?: string
+          franchise_fee?: number
+          id?: string
+          old_balance?: number
+          orders_total?: number
+          payment_status?: string
+          remaining_balance?: number
+          rolled_over_at?: string
+          total_balance?: number | null
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       weekly_balances: {
         Row: {
           amount_paid: number | null

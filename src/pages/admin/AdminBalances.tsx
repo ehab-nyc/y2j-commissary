@@ -6,9 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Trash2, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface WeeklyBalance {
   id: string;
@@ -30,6 +40,11 @@ interface WeeklyBalance {
   };
 }
 
+interface OwnerInfo {
+  owner_id: string;
+  owner_name: string;
+}
+
 interface EditingBalance {
   id: string;
   franchise_fee: number;
@@ -49,9 +64,13 @@ export default function AdminBalances() {
   const [paymentEditing, setPaymentEditing] = useState<PaymentEditing | null>(null);
   const [saving, setSaving] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [balanceToDelete, setBalanceToDelete] = useState<WeeklyBalance | null>(null);
+  const [owners, setOwners] = useState<Record<string, OwnerInfo>>({});
 
   useEffect(() => {
     fetchBalances();
+    fetchOwners();
   }, []);
 
   const fetchBalances = async () => {
@@ -80,6 +99,27 @@ export default function AdminBalances() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOwners = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cart_ownership')
+        .select('customer_id, owner_id, profiles!cart_ownership_owner_id_fkey(full_name)');
+
+      if (error) throw error;
+
+      const ownerMap: Record<string, OwnerInfo> = {};
+      data?.forEach(item => {
+        ownerMap[item.customer_id] = {
+          owner_id: item.owner_id,
+          owner_name: (item.profiles as any)?.full_name || 'Unknown'
+        };
+      });
+      setOwners(ownerMap);
+    } catch (error: any) {
+      console.error('Error fetching owners:', error);
     }
   };
 
@@ -217,7 +257,7 @@ export default function AdminBalances() {
 
       toast({
         title: 'Success',
-        description: 'Balance rolled over to next week',
+        description: 'Balance rolled over to next week and moved to history',
       });
 
       fetchBalances();
@@ -228,6 +268,44 @@ export default function AdminBalances() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleDeleteClick = (balance: WeeklyBalance) => {
+    setBalanceToDelete(balance);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!balanceToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('weekly_balances')
+        .delete()
+        .eq('id', balanceToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Weekly balance deleted successfully',
+      });
+
+      fetchBalances();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setBalanceToDelete(null);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   // Group by owner (using customer_id as unique key)
@@ -256,13 +334,30 @@ export default function AdminBalances() {
 
   return (
     <DashboardLayout>
+      <style>{`
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+        }
+      `}</style>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <BackButton />
-          <div>
-            <h1 className="text-3xl font-bold">Weekly Balances</h1>
-            <p className="text-muted-foreground">Manage customer weekly balances, payments and rollovers</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <BackButton />
+            <div>
+              <h1 className="text-3xl font-bold">Weekly Balances</h1>
+              <p className="text-muted-foreground">Manage customer weekly balances, payments and rollovers</p>
+            </div>
           </div>
+          <Button onClick={handlePrint} className="no-print">
+            <Printer className="h-4 w-4 mr-2" />
+            Print Report
+          </Button>
         </div>
 
         <Card>
@@ -361,7 +456,7 @@ export default function AdminBalances() {
                            'Unpaid'}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-2 no-print">
                             {isEditing ? (
                               <>
                                 <Button size="sm" onClick={handleSave} disabled={saving}>
@@ -393,6 +488,9 @@ export default function AdminBalances() {
                                     Rollover
                                   </Button>
                                 )}
+                                <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(balance)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </>
                             )}
                           </div>
@@ -410,12 +508,13 @@ export default function AdminBalances() {
         <Card>
           <CardHeader>
             <CardTitle>Summary by Customer</CardTitle>
-            <CardDescription>Aggregated totals per customer</CardDescription>
+            <CardDescription>Aggregated totals per customer with owner information</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Owner</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Cart #</TableHead>
                   <TableHead className="text-right">Total Orders</TableHead>
@@ -438,8 +537,11 @@ export default function AdminBalances() {
                     { orders: 0, fees: 0, rent: 0, paid: 0, remaining: 0 }
                   );
 
+                  const ownerInfo = owners[customerId];
+
                   return (
                     <TableRow key={customerId}>
+                      <TableCell className="font-medium">{ownerInfo?.owner_name || '-'}</TableCell>
                       <TableCell className="font-medium">{customerData.name}</TableCell>
                       <TableCell>{customerData.cartNumber || '-'}</TableCell>
                       <TableCell className="text-right">${totals.orders.toFixed(2)}</TableCell>
@@ -455,6 +557,27 @@ export default function AdminBalances() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Weekly Balance</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this weekly balance for{' '}
+              <strong>{balanceToDelete?.customer.cart_name || balanceToDelete?.customer.full_name}</strong>
+              {' '}({format(new Date(balanceToDelete?.week_start_date || ''), 'MMM d')} -{' '}
+              {format(new Date(balanceToDelete?.week_end_date || ''), 'MMM d, yyyy')})?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
