@@ -6,9 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ShoppingCart, TrendingUp, Users } from 'lucide-react';
+import { Loader2, ShoppingCart, TrendingUp, Users, ArrowUpDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+
+type OrderSortField = 'created_at' | 'status' | 'total' | 'customer';
+type SortDirection = 'asc' | 'desc';
 
 interface Customer {
   id: string;
@@ -61,6 +65,8 @@ export default function Owner() {
     totalRevenue: 0,
     activeOrders: 0,
   });
+  const [sortField, setSortField] = useState<OrderSortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchData();
@@ -144,6 +150,33 @@ export default function Owner() {
       default: return 'outline';
     }
   };
+
+  const handleSort = (field: OrderSortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedOrders = [...orders].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortField === 'created_at') {
+      comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    } else if (sortField === 'status') {
+      comparison = a.status.localeCompare(b.status);
+    } else if (sortField === 'total') {
+      comparison = a.total - b.total;
+    } else if (sortField === 'customer') {
+      const nameA = a.customer.cart_name || a.customer.full_name || '';
+      const nameB = b.customer.cart_name || b.customer.full_name || '';
+      comparison = nameA.localeCompare(nameB);
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
 
   if (loading) {
     return (
@@ -241,6 +274,40 @@ export default function Owner() {
                 <CardDescription>Orders from your carts</CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSort('customer')}
+                    className="gap-1"
+                  >
+                    Customer <ArrowUpDown className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSort('created_at')}
+                    className="gap-1"
+                  >
+                    Date <ArrowUpDown className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSort('status')}
+                    className="gap-1"
+                  >
+                    Status <ArrowUpDown className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSort('total')}
+                    className="gap-1"
+                  >
+                    Total <ArrowUpDown className="w-3 h-3" />
+                  </Button>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -252,7 +319,7 @@ export default function Owner() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orders.map((order) => (
+                    {sortedOrders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-mono text-xs">{order.id.substring(0, 8)}</TableCell>
                         <TableCell>

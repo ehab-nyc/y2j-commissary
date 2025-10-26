@@ -17,6 +17,10 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { TranslateButton } from '@/components/TranslateButton';
 import { PrintReceiptDialog } from '@/components/receipts/PrintReceiptDialog';
+import { ArrowUpDown } from 'lucide-react';
+
+type SortField = 'created_at' | 'status' | 'total' | 'customer' | 'cart';
+type SortDirection = 'asc' | 'desc';
 
 interface OrderItem {
   id: string;
@@ -63,6 +67,8 @@ const Orders = () => {
   const [companyEmail, setCompanyEmail] = useState('');
   const [serviceFee, setServiceFee] = useState<number>(10);
   const [translatedNotes, setTranslatedNotes] = useState<Record<string, string>>({});
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchOrders();
@@ -274,6 +280,37 @@ const Orders = () => {
     setEditingNotes(null);
     setNotesText('');
   };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedOrders = [...orders].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortField === 'created_at') {
+      comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    } else if (sortField === 'status') {
+      comparison = a.status.localeCompare(b.status);
+    } else if (sortField === 'total') {
+      comparison = a.total - b.total;
+    } else if (sortField === 'customer') {
+      const nameA = a.profiles?.full_name || '';
+      const nameB = b.profiles?.full_name || '';
+      comparison = nameA.localeCompare(nameB);
+    } else if (sortField === 'cart') {
+      const cartA = a.profiles?.cart_name || a.profiles?.cart_number || '';
+      const cartB = b.profiles?.cart_name || b.profiles?.cart_number || '';
+      comparison = cartA.localeCompare(cartB);
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -495,7 +532,49 @@ const Orders = () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {orders.map(order => (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('created_at')}
+                className="gap-1"
+              >
+                Date <ArrowUpDown className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('customer')}
+                className="gap-1"
+              >
+                Customer <ArrowUpDown className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('cart')}
+                className="gap-1"
+              >
+                Cart <ArrowUpDown className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('status')}
+                className="gap-1"
+              >
+                Status <ArrowUpDown className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('total')}
+                className="gap-1"
+              >
+                Total <ArrowUpDown className="w-3 h-3" />
+              </Button>
+            </div>
+            {sortedOrders.map(order => (
               <Card key={order.id} className="overflow-hidden">
                 <CardHeader className="bg-muted/50">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">

@@ -9,13 +9,16 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { User, Lock, Save, ShoppingBag, Eye, EyeOff, Phone, Plus, Trash2 } from 'lucide-react';
+import { User, Lock, Save, ShoppingBag, Eye, EyeOff, Phone, Plus, Trash2, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { z } from 'zod';
 import { passwordSchema } from '@/lib/validation';
 import { validateAndNormalizePhone } from '@/lib/phoneValidation';
 import { useTranslation } from 'react-i18next';
+
+type SortField = 'created_at' | 'status' | 'total';
+type SortDirection = 'asc' | 'desc';
 
 interface OrderItem {
   id: string;
@@ -55,6 +58,8 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchProfile();
@@ -116,6 +121,29 @@ const Profile = () => {
   };
 
 
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedOrders = [...orders].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortField === 'created_at') {
+      comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    } else if (sortField === 'status') {
+      comparison = a.status.localeCompare(b.status);
+    } else if (sortField === 'total') {
+      comparison = a.total - b.total;
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -484,7 +512,33 @@ const Profile = () => {
                 <p className="text-muted-foreground text-center py-8">{t('profile.noOrdersYet')}</p>
               ) : (
                 <div className="space-y-4">
-                  {orders.map(order => (
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSort('created_at')}
+                      className="gap-1"
+                    >
+                      Date <ArrowUpDown className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSort('status')}
+                      className="gap-1"
+                    >
+                      Status <ArrowUpDown className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSort('total')}
+                      className="gap-1"
+                    >
+                      Total <ArrowUpDown className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  {sortedOrders.map(order => (
                     <div key={order.id} className="border rounded-lg overflow-hidden">
                       <div className="bg-muted/50 px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <div>

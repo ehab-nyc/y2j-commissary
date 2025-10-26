@@ -7,7 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ArrowUpDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+type SortField = 'updated_at' | 'total' | 'customer';
+type SortDirection = 'asc' | 'desc';
 
 interface Order {
   id: string;
@@ -34,6 +38,8 @@ interface Order {
 const ProcessedOrders = () => {
   const [processedOrders, setProcessedOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortField, setSortField] = useState<SortField>('updated_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchProcessedOrders();
@@ -66,6 +72,31 @@ const ProcessedOrders = () => {
     }
     setLoading(false);
   };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedOrders = [...processedOrders].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortField === 'updated_at') {
+      comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+    } else if (sortField === 'total') {
+      comparison = a.total - b.total;
+    } else if (sortField === 'customer') {
+      const nameA = a.profiles?.full_name || '';
+      const nameB = b.profiles?.full_name || '';
+      comparison = nameA.localeCompare(nameB);
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,7 +132,33 @@ const ProcessedOrders = () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {processedOrders.map(order => (
+            <div className="flex gap-2 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('updated_at')}
+                className="gap-1"
+              >
+                Completed Date <ArrowUpDown className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('customer')}
+                className="gap-1"
+              >
+                Customer <ArrowUpDown className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('total')}
+                className="gap-1"
+              >
+                Total <ArrowUpDown className="w-3 h-3" />
+              </Button>
+            </div>
+            {sortedOrders.map(order => (
               <Card key={order.id}>
                 <CardHeader>
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">

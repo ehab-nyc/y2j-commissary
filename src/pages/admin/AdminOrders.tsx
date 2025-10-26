@@ -4,14 +4,19 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { BackButton } from '@/components/BackButton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye } from 'lucide-react';
+import { Eye, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+type SortField = 'created_at' | 'status' | 'total' | 'customer' | 'cart';
+type SortDirection = 'asc' | 'desc';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
     fetchOrders();
@@ -34,6 +39,37 @@ const AdminOrders = () => {
     setOrders(data || []);
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedOrders = [...orders].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortField === 'created_at') {
+      comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    } else if (sortField === 'status') {
+      comparison = a.status.localeCompare(b.status);
+    } else if (sortField === 'total') {
+      comparison = a.total - b.total;
+    } else if (sortField === 'customer') {
+      const nameA = a.profiles?.full_name || a.profiles?.email || '';
+      const nameB = b.profiles?.full_name || b.profiles?.email || '';
+      comparison = nameA.localeCompare(nameB);
+    } else if (sortField === 'cart') {
+      const cartA = a.profiles?.cart_name || a.profiles?.cart_number || '';
+      const cartB = b.profiles?.cart_name || b.profiles?.cart_number || '';
+      comparison = cartA.localeCompare(cartB);
+    }
+    
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500/10 text-yellow-600 border-yellow-200';
@@ -55,6 +91,49 @@ const AdminOrders = () => {
           <p className="text-muted-foreground">View and manage all orders</p>
         </div>
 
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSort('created_at')}
+            className="gap-1"
+          >
+            Date <ArrowUpDown className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSort('customer')}
+            className="gap-1"
+          >
+            Customer <ArrowUpDown className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSort('cart')}
+            className="gap-1"
+          >
+            Cart <ArrowUpDown className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSort('status')}
+            className="gap-1"
+          >
+            Status <ArrowUpDown className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSort('total')}
+            className="gap-1"
+          >
+            Total <ArrowUpDown className="w-3 h-3" />
+          </Button>
+        </div>
+
         <Table>
           <TableHeader>
             <TableRow>
@@ -68,7 +147,7 @@ const AdminOrders = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {sortedOrders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-mono text-sm">{order.id.slice(0, 8)}</TableCell>
                 <TableCell>
