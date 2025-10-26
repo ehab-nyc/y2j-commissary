@@ -305,7 +305,34 @@ export default function AdminBalances() {
   };
 
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById('summary-card-print');
+    if (!printContent) return;
+    
+    const printWindow = window.open('', '', 'height=600,width=800');
+    if (!printWindow) return;
+    
+    printWindow.document.write('<html><head><title>Weekly Summary Report</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; font-weight: bold; }
+      .text-right { text-align: right; }
+      .font-medium { font-weight: 500; }
+      .font-bold { font-weight: bold; }
+      .text-green-600 { color: #16a34a; }
+      h2 { margin-top: 0; }
+      .report-header { margin-bottom: 20px; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write('<div class="report-header"><h2>Weekly Summary Report</h2><p>Current week remaining balance and aggregated totals per customer</p></div>');
+    printWindow.document.write(printContent.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
 
   // Group by owner (using customer_id as unique key)
@@ -334,30 +361,13 @@ export default function AdminBalances() {
 
   return (
     <DashboardLayout>
-      <style>{`
-        @media print {
-          .no-print {
-            display: none !important;
-          }
-          body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-          }
-        }
-      `}</style>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <BackButton />
-            <div>
-              <h1 className="text-3xl font-bold">Weekly Balances</h1>
-              <p className="text-muted-foreground">Manage customer weekly balances, payments and rollovers</p>
-            </div>
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
+            <h1 className="text-3xl font-bold">Weekly Balances</h1>
+            <p className="text-muted-foreground">Manage customer weekly balances, payments and rollovers</p>
           </div>
-          <Button onClick={handlePrint} className="no-print">
-            <Printer className="h-4 w-4 mr-2" />
-            Print Report
-          </Button>
         </div>
 
         <Card>
@@ -507,10 +517,18 @@ export default function AdminBalances() {
         {/* Summary by Customer */}
         <Card>
           <CardHeader>
-            <CardTitle>Summary by Customer</CardTitle>
-            <CardDescription>Current week remaining balance and aggregated totals per customer</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Summary by Customer</CardTitle>
+                <CardDescription>Current week remaining balance and aggregated totals per customer</CardDescription>
+              </div>
+              <Button onClick={handlePrint} variant="outline" size="sm">
+                <Printer className="h-4 w-4 mr-2" />
+                Print Summary
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent id="summary-card-print">
             <Table>
               <TableHeader>
                 <TableRow>
