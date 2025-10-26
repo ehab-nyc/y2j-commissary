@@ -508,7 +508,7 @@ export default function AdminBalances() {
         <Card>
           <CardHeader>
             <CardTitle>Summary by Customer</CardTitle>
-            <CardDescription>Aggregated totals per customer with owner information</CardDescription>
+            <CardDescription>Current week remaining balance and aggregated totals per customer</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -517,6 +517,7 @@ export default function AdminBalances() {
                   <TableHead>Owner</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Cart #</TableHead>
+                  <TableHead>Current Week</TableHead>
                   <TableHead className="text-right">Total Orders</TableHead>
                   <TableHead className="text-right">Total Fees</TableHead>
                   <TableHead className="text-right">Total Rent</TableHead>
@@ -526,15 +527,23 @@ export default function AdminBalances() {
               </TableHeader>
               <TableBody>
                 {Object.entries(groupedByOwner).map(([customerId, customerData]) => {
+                  // Sort balances by week_start_date descending to get most recent first
+                  const sortedBalances = [...customerData.balances].sort((a, b) => 
+                    new Date(b.week_start_date).getTime() - new Date(a.week_start_date).getTime()
+                  );
+                  
+                  // Get the most recent week's remaining balance (to avoid double-counting old balances)
+                  const currentWeekBalance = sortedBalances[0];
+                  const mostRecentRemaining = currentWeekBalance?.remaining_balance ?? 0;
+                  
                   const totals = customerData.balances.reduce(
                     (acc, b) => ({
                       orders: acc.orders + (b.orders_total ?? 0),
                       fees: acc.fees + (b.franchise_fee ?? 0),
                       rent: acc.rent + (b.commissary_rent ?? 0),
                       paid: acc.paid + (b.amount_paid ?? 0),
-                      remaining: acc.remaining + (b.remaining_balance ?? 0),
                     }),
-                    { orders: 0, fees: 0, rent: 0, paid: 0, remaining: 0 }
+                    { orders: 0, fees: 0, rent: 0, paid: 0 }
                   );
 
                   const ownerInfo = owners[customerId];
@@ -544,11 +553,18 @@ export default function AdminBalances() {
                       <TableCell className="font-medium">{ownerInfo?.owner_name || '-'}</TableCell>
                       <TableCell className="font-medium">{customerData.name}</TableCell>
                       <TableCell>{customerData.cartNumber || '-'}</TableCell>
+                      <TableCell>
+                        {currentWeekBalance && (
+                          <>
+                            {format(new Date(currentWeekBalance.week_start_date), 'MMM d')} - {format(new Date(currentWeekBalance.week_end_date), 'MMM d, yyyy')}
+                          </>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">${totals.orders.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${totals.fees.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${totals.rent.toFixed(2)}</TableCell>
                       <TableCell className="text-right text-green-600">${totals.paid.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-bold">${totals.remaining.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-bold">${mostRecentRemaining.toFixed(2)}</TableCell>
                     </TableRow>
                   );
                 })}
