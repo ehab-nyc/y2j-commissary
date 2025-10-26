@@ -63,7 +63,7 @@ const AdminHub = () => {
       description: 'Manage customer weekly balances and fees',
       icon: Users,
       path: '/admin/balances',
-      roles: ['admin', 'super_admin']
+      roles: ['manager', 'admin', 'super_admin']
     },
     {
       title: 'Cart Assignments',

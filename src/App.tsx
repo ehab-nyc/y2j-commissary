@@ -86,7 +86,7 @@ const AppContent = () => {
           <Route path="/admin/sms" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSMS /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/admin/announcements" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminAnnouncements /></ProtectedRoute>} />
-          <Route path="/admin/balances" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminBalances /></ProtectedRoute>} />
+          <Route path="/admin/balances" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><AdminBalances /></ProtectedRoute>} />
           <Route path="/admin/cart-assignments" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminCartAssignments /></ProtectedRoute>} />
           <Route path="/owner" element={<ProtectedRoute requireRole="owner"><Owner /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
