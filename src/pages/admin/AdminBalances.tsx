@@ -68,6 +68,26 @@ interface SummarySnapshot {
   created_at: string;
 }
 
+interface BalanceHistory {
+  id: string;
+  customer_id: string;
+  week_start_date: string;
+  week_end_date: string;
+  orders_total: number;
+  franchise_fee: number;
+  commissary_rent: number;
+  old_balance: number;
+  amount_paid: number;
+  remaining_balance: number;
+  payment_status: 'unpaid' | 'partial' | 'paid_full';
+  created_at: string;
+  customer: {
+    full_name: string;
+    cart_name: string;
+    cart_number: string;
+  };
+}
+
 export default function AdminBalances() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -85,11 +105,14 @@ export default function AdminBalances() {
   const [endDate, setEndDate] = useState('');
   const [deleteSnapshotDialogOpen, setDeleteSnapshotDialogOpen] = useState(false);
   const [snapshotToDelete, setSnapshotToDelete] = useState<SummarySnapshot | null>(null);
+  const [balanceHistory, setBalanceHistory] = useState<BalanceHistory[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     fetchBalances();
     fetchOwners();
     fetchSnapshots();
+    fetchBalanceHistory();
   }, []);
 
   const fetchBalances = async () => {
@@ -452,6 +475,36 @@ export default function AdminBalances() {
         description: error.message,
         variant: 'destructive',
       });
+    }
+  };
+
+  const fetchBalanceHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const { data, error } = await supabase
+        .from('weekly_balance_history')
+        .select('*, profiles!inner(full_name, cart_name, cart_number)')
+        .order('rolled_over_at', { ascending: false });
+
+      if (error) throw error;
+
+      setBalanceHistory(data?.map(b => ({
+        ...b,
+        payment_status: b.payment_status as 'unpaid' | 'partial' | 'paid_full',
+        remaining_balance: b.remaining_balance ?? 0,
+        amount_paid: b.amount_paid ?? 0,
+        old_balance: b.old_balance ?? 0,
+        created_at: b.rolled_over_at || b.created_at,
+        customer: Array.isArray(b.profiles) ? b.profiles[0] : b.profiles
+      })) || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -850,9 +903,10 @@ export default function AdminBalances() {
 
         {/* Summary Section with Tabs */}
         <Tabs defaultValue="current" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="current">Current Summary</TabsTrigger>
-            <TabsTrigger value="history">Historical Snapshots</TabsTrigger>
+            <TabsTrigger value="history">Rollover History</TabsTrigger>
+            <TabsTrigger value="snapshots">Manual Snapshots</TabsTrigger>
           </TabsList>
 
           {/* Current Summary Tab */}
@@ -944,8 +998,88 @@ export default function AdminBalances() {
         </Card>
       </TabsContent>
 
-      {/* Historical Snapshots Tab */}
+      {/* Rollover History Tab */}
       <TabsContent value="history">
+        <Card>
+          <CardHeader>
+            <CardTitle>Weekly Balance History</CardTitle>
+            <CardDescription>All rolled-over balances that were moved to history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingHistory ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : balanceHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No balance history found. Balances will appear here after rollover.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Cart #</TableHead>
+                      <TableHead>Week Period</TableHead>
+                      <TableHead className="text-right">Old Balance</TableHead>
+                      <TableHead className="text-right">Orders Total</TableHead>
+                      <TableHead className="text-right">Franchise Fee</TableHead>
+                      <TableHead className="text-right">Commissary Rent</TableHead>
+                      <TableHead className="text-right">Total Due</TableHead>
+                      <TableHead className="text-right">Amount Paid</TableHead>
+                      <TableHead className="text-right">Remaining</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                      <TableHead>Moved to History</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {balanceHistory.map((record) => {
+                      const statusColor = 
+                        record.payment_status === 'paid_full' ? 'text-green-600' :
+                        record.payment_status === 'partial' ? 'text-yellow-600' :
+                        'text-red-600';
+                      
+                      const totalBalance = record.orders_total + record.franchise_fee + record.commissary_rent;
+                      const totalDue = totalBalance + record.old_balance;
+                      
+                      return (
+                        <TableRow key={record.id}>
+                          <TableCell className="font-medium">
+                            {record.customer.cart_name || record.customer.full_name}
+                          </TableCell>
+                          <TableCell>{record.customer.cart_number || '-'}</TableCell>
+                          <TableCell>
+                            {format(new Date(record.week_start_date), 'MMM d')} - {format(new Date(record.week_end_date), 'MMM d, yyyy')}
+                          </TableCell>
+                          <TableCell className="text-right">${record.old_balance.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${record.orders_total.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${record.franchise_fee.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${record.commissary_rent.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-bold">${totalDue.toFixed(2)}</TableCell>
+                          <TableCell className="text-right text-green-600">${record.amount_paid.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-bold">${record.remaining_balance.toFixed(2)}</TableCell>
+                          <TableCell className={`text-right font-semibold ${statusColor}`}>
+                            {record.payment_status === 'paid_full' ? 'Paid Full' : 
+                             record.payment_status === 'partial' ? 'Partial' : 
+                             'Unpaid'}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {format(new Date(record.created_at), 'MMM d, yyyy h:mm a')}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Manual Snapshots Tab */}
+      <TabsContent value="snapshots">
         <Card>
           <CardHeader>
             <CardTitle>Historical Snapshots</CardTitle>
