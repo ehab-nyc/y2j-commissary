@@ -117,7 +117,6 @@ export default function AdminBalances() {
         .update({
           franchise_fee: editing.franchise_fee,
           commissary_rent: editing.commissary_rent,
-          total_balance: newTotalBalance,
           remaining_balance: Math.max(0, remainingBalance),
           payment_status: paymentStatus,
         })
