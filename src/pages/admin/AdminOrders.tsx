@@ -4,8 +4,9 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { BackButton } from '@/components/BackButton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, ArrowUpDown } from 'lucide-react';
+import { Eye, ArrowUpDown, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type SortField = 'created_at' | 'status' | 'total' | 'customer' | 'cart';
@@ -69,6 +70,25 @@ const AdminOrders = () => {
     
     return sortDirection === 'asc' ? comparison : -comparison;
   });
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (error) {
+      toast.error('Failed to delete order');
+      console.error(error);
+    } else {
+      toast.success('Order deleted successfully');
+      fetchOrders();
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -164,16 +184,25 @@ const AdminOrders = () => {
                 <TableCell>${Number(order.total).toFixed(2)}</TableCell>
                 <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedOrder(order);
-                      setShowOrderDialog(true);
-                    }}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowOrderDialog(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDeleteOrder(order.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
