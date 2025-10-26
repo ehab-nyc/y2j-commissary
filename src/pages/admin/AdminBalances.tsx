@@ -195,15 +195,19 @@ export default function AdminBalances() {
     }
   };
 
-  // Group by owner
+  // Group by owner (using customer_id as unique key)
   const groupedByOwner = balances.reduce((acc, balance) => {
-    const key = balance.customer.cart_name || balance.customer.full_name;
+    const key = balance.customer_id;
     if (!acc[key]) {
-      acc[key] = [];
+      acc[key] = {
+        name: balance.customer.cart_name || balance.customer.full_name,
+        cartNumber: balance.customer.cart_number,
+        balances: []
+      };
     }
-    acc[key].push(balance);
+    acc[key].balances.push(balance);
     return acc;
-  }, {} as Record<string, WeeklyBalance[]>);
+  }, {} as Record<string, { name: string; cartNumber: string; balances: WeeklyBalance[] }>);
 
   if (loading) {
     return (
@@ -378,6 +382,7 @@ export default function AdminBalances() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
+                  <TableHead>Cart #</TableHead>
                   <TableHead className="text-right">Total Orders</TableHead>
                   <TableHead className="text-right">Total Fees</TableHead>
                   <TableHead className="text-right">Total Rent</TableHead>
@@ -386,8 +391,8 @@ export default function AdminBalances() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(groupedByOwner).map(([customer, customerBalances]) => {
-                  const totals = customerBalances.reduce(
+                {Object.entries(groupedByOwner).map(([customerId, customerData]) => {
+                  const totals = customerData.balances.reduce(
                     (acc, b) => ({
                       orders: acc.orders + (b.orders_total ?? 0),
                       fees: acc.fees + (b.franchise_fee ?? 0),
@@ -399,8 +404,9 @@ export default function AdminBalances() {
                   );
 
                   return (
-                    <TableRow key={customer}>
-                      <TableCell className="font-medium">{customer}</TableCell>
+                    <TableRow key={customerId}>
+                      <TableCell className="font-medium">{customerData.name}</TableCell>
+                      <TableCell>{customerData.cartNumber || '-'}</TableCell>
                       <TableCell className="text-right">${totals.orders.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${totals.fees.toFixed(2)}</TableCell>
                       <TableCell className="text-right">${totals.rent.toFixed(2)}</TableCell>
