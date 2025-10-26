@@ -96,11 +96,30 @@ export default function AdminBalances() {
 
     try {
       setSaving(true);
+      
+      // Find the balance record to calculate remaining after fee changes
+      const balance = balances.find(b => b.id === editing.id);
+      if (!balance) throw new Error('Balance not found');
+      
+      const newTotalBalance = (balance.orders_total ?? 0) + editing.franchise_fee + editing.commissary_rent;
+      const totalDue = newTotalBalance + (balance.old_balance ?? 0);
+      const remainingBalance = totalDue - (balance.amount_paid ?? 0);
+      
+      let paymentStatus: 'unpaid' | 'partial' | 'paid_full' = 'unpaid';
+      if (remainingBalance <= 0 && totalDue > 0) {
+        paymentStatus = 'paid_full';
+      } else if ((balance.amount_paid ?? 0) > 0) {
+        paymentStatus = 'partial';
+      }
+      
       const { error } = await supabase
         .from('weekly_balances')
         .update({
           franchise_fee: editing.franchise_fee,
           commissary_rent: editing.commissary_rent,
+          total_balance: newTotalBalance,
+          remaining_balance: Math.max(0, remainingBalance),
+          payment_status: paymentStatus,
         })
         .eq('id', editing.id);
 
