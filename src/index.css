@@ -245,6 +245,62 @@ All colors MUST be HSL.
     --sidebar-ring: 40 85% 85%;
   }
 
+  /* Liquid Glass Theme (Translucent Glassmorphism) */
+  :root.liquid-glass {
+    --background: 210 20% 98%;
+    --foreground: 220 15% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
+
+    --primary: 210 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 220 15% 20%;
+
+    --muted: 220 10% 95%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 280 60% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 92%;
+    --ring: 210 100% 55%;
+
+    --radius: 1rem;
+
+    /* Glass-specific variables */
+    --glass-bg: 0 0% 100%;
+    --glass-bg-opacity: 0.7;
+    --glass-border: 220 15% 90%;
+    --glass-border-opacity: 0.3;
+    --glass-blur: 16px;
+    --glass-shadow: 0 8px 32px hsl(220 15% 20% / 0.08);
+    --glass-shadow-hover: 0 12px 40px hsl(220 15% 20% / 0.12);
+    --glass-glow: 0 0 20px hsl(210 100% 55% / 0.15);
+
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(220 15% 95% / 0.8));
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(280 60% 65%));
+    --shadow-soft: 0 4px 24px hsl(220 15% 20% / 0.06), 0 2px 8px hsl(220 15% 20% / 0.04);
+
+    --sidebar-background: 220 15% 95%;
+    --sidebar-foreground: 220 15% 20%;
+    --sidebar-primary: 210 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 12% 90%;
+    --sidebar-accent-foreground: 220 15% 20%;
+    --sidebar-border: 220 15% 85%;
+    --sidebar-ring: 210 100% 55%;
+  }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -380,6 +436,62 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 200 20% 90%;
     --sidebar-border: 210 20% 28%;
     --sidebar-ring: 40 70% 75%;
+  }
+
+  /* Liquid Glass Theme - Dark Mode */
+  .dark.liquid-glass {
+    --background: 220 20% 8%;
+    --foreground: 210 15% 90%;
+
+    --card: 220 18% 12%;
+    --card-foreground: 210 15% 90%;
+
+    --popover: 220 18% 12%;
+    --popover-foreground: 210 15% 90%;
+
+    --primary: 210 95% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 210 15% 90%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 280 60% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 22%;
+    --input: 220 15% 18%;
+    --ring: 210 95% 60%;
+
+    --radius: 1rem;
+
+    /* Glass-specific variables for dark mode */
+    --glass-bg: 220 18% 12%;
+    --glass-bg-opacity: 0.6;
+    --glass-border: 220 15% 25%;
+    --glass-border-opacity: 0.25;
+    --glass-blur: 20px;
+    --glass-shadow: 0 8px 32px hsl(0 0% 0% / 0.4);
+    --glass-shadow-hover: 0 12px 40px hsl(0 0% 0% / 0.5);
+    --glass-glow: 0 0 24px hsl(210 95% 60% / 0.25);
+
+    --gradient-glass: linear-gradient(135deg, hsl(220 18% 12% / 0.85), hsl(220 15% 18% / 0.7));
+    --gradient-primary: linear-gradient(135deg, hsl(210 95% 60%), hsl(280 60% 60%));
+    --shadow-soft: 0 4px 24px hsl(0 0% 0% / 0.3), 0 2px 8px hsl(0 0% 0% / 0.2);
+
+    --sidebar-background: 220 20% 10%;
+    --sidebar-foreground: 210 15% 90%;
+    --sidebar-primary: 210 95% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 210 15% 90%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 210 95% 60%;
   }
 }
 
@@ -738,3 +850,251 @@ All colors MUST be HSL.
   filter: blur(1px);
   animation: christmas-lights 2s linear infinite;
 }
+
+/* ==================== Liquid Glass Theme Effects ==================== */
+
+/* Glass background effect on body */
+.liquid-glass body {
+  background-image: 
+    radial-gradient(ellipse at top left, hsl(210 100% 55% / 0.08), transparent 40%),
+    radial-gradient(ellipse at bottom right, hsl(280 60% 65% / 0.08), transparent 40%);
+}
+
+.dark.liquid-glass body {
+  background-image: 
+    radial-gradient(ellipse at top left, hsl(210 95% 60% / 0.12), transparent 40%),
+    radial-gradient(ellipse at bottom right, hsl(280 60% 60% / 0.12), transparent 40%);
+}
+
+/* Cards with glass effect */
+.liquid-glass .rounded-lg.border.bg-card,
+.liquid-glass [class*="card"] {
+  background: hsl(var(--glass-bg) / var(--glass-bg-opacity));
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.liquid-glass .rounded-lg.border.bg-card:hover,
+.liquid-glass [class*="card"]:hover {
+  box-shadow: var(--glass-shadow-hover), var(--glass-glow);
+  transform: translateY(-2px);
+}
+
+/* Buttons with glass effect */
+.liquid-glass button:not(.ghost):not([data-state="open"]) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass button:not(.ghost):hover {
+  box-shadow: var(--glass-glow);
+  transform: translateY(-1px);
+}
+
+/* Ripple effect on button click */
+.liquid-glass button:not(.ghost)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: hsl(var(--primary) / 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.liquid-glass button:not(.ghost):active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Input fields with frosted glass */
+.liquid-glass input,
+.liquid-glass textarea,
+.liquid-glass select {
+  background: hsl(var(--glass-bg) / 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+  transition: all 0.3s ease;
+}
+
+.liquid-glass input:focus,
+.liquid-glass textarea:focus,
+.liquid-glass select:focus {
+  background: hsl(var(--glass-bg) / 0.7);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1), var(--glass-glow);
+  border-color: hsl(var(--primary) / 0.5);
+}
+
+/* Dialogs and modals with heavy blur */
+.liquid-glass [role="dialog"],
+.liquid-glass [role="alertdialog"],
+.liquid-glass [data-radix-dialog-content] {
+  background: hsl(var(--glass-bg) / 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid hsl(var(--glass-border) / 0.4);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+/* Dialog overlay with blur */
+.liquid-glass [data-radix-dialog-overlay] {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background: hsl(var(--background) / 0.8);
+}
+
+/* Dropdowns and popovers - IMPORTANT: proper background for visibility */
+.liquid-glass [role="menu"],
+.liquid-glass [role="listbox"],
+.liquid-glass [data-radix-popover-content],
+.liquid-glass [data-radix-dropdown-menu-content],
+.liquid-glass [data-radix-select-content] {
+  background: hsl(var(--glass-bg) / 0.95) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--glass-border) / 0.4);
+  box-shadow: var(--glass-shadow);
+  z-index: 50;
+}
+
+/* Sidebar with glass effect */
+.liquid-glass aside,
+.liquid-glass nav {
+  background: hsl(var(--sidebar-background) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+}
+
+/* Tabs with subtle glass */
+.liquid-glass [role="tablist"] {
+  background: hsl(var(--glass-bg) / 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+.liquid-glass [role="tab"][data-state="active"] {
+  background: hsl(var(--primary) / 0.15);
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.1);
+}
+
+/* Floating action elements glow */
+.liquid-glass [data-floating] {
+  box-shadow: var(--glass-shadow), var(--glass-glow);
+}
+
+/* Toast notifications with glass */
+.liquid-glass [data-sonner-toast] {
+  background: hsl(var(--glass-bg) / 0.9) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--glass-border) / 0.3);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Tables with glass rows */
+.liquid-glass table tr {
+  transition: all 0.2s ease;
+}
+
+.liquid-glass table tr:hover {
+  background: hsl(var(--glass-bg) / 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Badge with glass effect */
+.liquid-glass [class*="badge"] {
+  background: hsl(var(--glass-bg) / 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--glass-border) / 0.3);
+}
+
+/* Scrollbar styling for glass theme */
+.liquid-glass ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.liquid-glass ::-webkit-scrollbar-track {
+  background: hsl(var(--glass-bg) / 0.3);
+  border-radius: 4px;
+}
+
+.liquid-glass ::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.liquid-glass ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* Focus ring with glow */
+.liquid-glass *:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2), var(--glass-glow);
+}
+
+/* Shimmer animation for loading states */
+@keyframes glass-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.liquid-glass [data-loading] {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--glass-bg) / 0.5) 25%,
+    hsl(var(--glass-bg) / 0.8) 50%,
+    hsl(var(--glass-bg) / 0.5) 75%
+  );
+  background-size: 200% 100%;
+  animation: glass-shimmer 2s ease-in-out infinite;
+}
+
+/* Icon brightness adjustment in glass containers */
+.liquid-glass .rounded-lg.border.bg-card svg,
+.liquid-glass [class*="card"] svg {
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+}
+
+.liquid-glass .rounded-lg.border.bg-card:hover svg,
+.liquid-glass [class*="card"]:hover svg {
+  opacity: 1;
+}
+
+/* Adaptive tone shift for different states */
+.liquid-glass [data-state="open"],
+.liquid-glass [data-state="active"],
+.liquid-glass [aria-selected="true"] {
+  filter: brightness(1.1);
+}
+
+.liquid-glass [disabled],
+.liquid-glass [data-disabled] {
+  opacity: 0.4;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+

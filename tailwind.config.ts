@@ -60,11 +60,24 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        glass: {
+          DEFAULT: "hsl(var(--glass-bg) / var(--glass-bg-opacity))",
+          border: "hsl(var(--glass-border) / var(--glass-border-opacity))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backdropBlur: {
+        glass: "var(--glass-blur, 16px)",
+      },
+      boxShadow: {
+        glass: "var(--glass-shadow)",
+        "glass-hover": "var(--glass-shadow-hover)",
+        "glass-glow": "var(--glass-glow)",
+        soft: "var(--shadow-soft)",
       },
       keyframes: {
         "accordion-down": {
