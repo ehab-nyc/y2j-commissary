@@ -30,6 +30,7 @@ const Manager = () => {
   const [logoUrl, setLogoUrl] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
+  const [serviceFee, setServiceFee] = useState<number>(10);
 
   // Server-side role verification for defense in depth
   useEffect(() => {
@@ -59,7 +60,20 @@ const Manager = () => {
     fetchStats();
     fetchOrders();
     fetchCompanySettings();
+    fetchServiceFee();
   }, []);
+
+  const fetchServiceFee = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'service_fee')
+      .single();
+    
+    if (data) {
+      setServiceFee(parseFloat(data.value) || 10);
+    }
+  };
 
   const fetchCompanySettings = async () => {
     const { data } = await supabase
@@ -568,7 +582,7 @@ const Manager = () => {
                             box_size: item.box_size,
                           })) || []}
                           total={Number(selectedOrder.total)}
-                          serviceFee={0}
+                          serviceFee={serviceFee}
                           date={new Date(selectedOrder.created_at)}
                           onPOSPrint={() => printOrder(selectedOrder)}
                         />
@@ -594,6 +608,16 @@ const Manager = () => {
                           </Badge>
                         </div>
                         <div>
+                          <p className="text-sm text-muted-foreground">Subtotal</p>
+                          <p className="font-medium">
+                            ${(Number(selectedOrder.total) - serviceFee).toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Service Fee</p>
+                          <p className="font-medium">${serviceFee.toFixed(2)}</p>
+                        </div>
+                        <div className="col-span-2">
                           <p className="text-sm text-muted-foreground">Total Amount</p>
                           <p className="text-lg font-bold text-primary">
                             ${Number(selectedOrder.total).toFixed(2)}

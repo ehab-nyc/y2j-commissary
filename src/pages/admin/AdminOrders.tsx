@@ -18,10 +18,24 @@ const AdminOrders = () => {
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [serviceFee, setServiceFee] = useState<number>(10);
 
   useEffect(() => {
     fetchOrders();
+    fetchServiceFee();
   }, []);
+
+  const fetchServiceFee = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'service_fee')
+      .single();
+    
+    if (data) {
+      setServiceFee(parseFloat(data.value) || 10);
+    }
+  };
 
   const fetchOrders = async () => {
     const { data } = await supabase
@@ -252,10 +266,19 @@ const AdminOrders = () => {
                     </TableBody>
                   </Table>
                 </div>
-                <div className="pt-4 border-t">
-                  <p className="text-lg font-bold text-right">
-                    Total: ${Number(selectedOrder.total).toFixed(2)}
-                  </p>
+                <div className="pt-4 border-t space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal:</span>
+                    <span>${(Number(selectedOrder.total) - serviceFee).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Service Fee:</span>
+                    <span>${serviceFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                    <span>Total:</span>
+                    <span>${Number(selectedOrder.total).toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             )}
