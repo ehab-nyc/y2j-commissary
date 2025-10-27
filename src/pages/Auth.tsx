@@ -28,9 +28,10 @@ const Auth = () => {
 
   useEffect(() => {
     fetchSettings();
-    // Check if Halloween theme is active
+    // Check if Halloween theme is active (not halloween-minimal)
     const checkHalloween = () => {
-      setIsHalloween(document.documentElement.classList.contains('halloween'));
+      const classList = document.documentElement.classList;
+      setIsHalloween(classList.contains('halloween') && !classList.contains('halloween-minimal'));
     };
     checkHalloween();
     

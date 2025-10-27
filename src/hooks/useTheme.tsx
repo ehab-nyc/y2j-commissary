@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppTheme = 'default' | 'halloween' | 'christmas' | 'christmas-wonderland';
+export type AppTheme = 'default' | 'halloween' | 'halloween-minimal' | 'christmas' | 'christmas-wonderland';
 
 export const useTheme = () => {
   const [activeTheme, setActiveTheme] = useState<AppTheme>('default');
@@ -81,12 +81,15 @@ export const useTheme = () => {
     localStorage.removeItem('theme-preference');
     
     // Remove ALL theme-related classes
-    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'dark', 'light');
+    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'dark', 'light');
     
     // Apply the selected theme
     if (theme === 'halloween') {
       root.classList.add('halloween');
       console.log('Halloween theme class added to HTML element');
+    } else if (theme === 'halloween-minimal') {
+      root.classList.add('halloween-minimal');
+      console.log('Halloween Minimal theme class added to HTML element');
     } else if (theme === 'christmas') {
       root.classList.add('holiday');
       console.log('Christmas theme class added to HTML element');

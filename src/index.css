@@ -98,6 +98,55 @@ All colors MUST be HSL.
     --sidebar-ring: 110 100% 50%;
   }
 
+  /* Halloween Minimal Theme (Same colors without animations) */
+  :root.halloween-minimal {
+    --background: 265 60% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 265 50% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 265 50% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 25 100% 55%;
+    --primary-foreground: 265 60% 8%;
+    
+    --secondary: 280 85% 55%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 265 40% 18%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 110 100% 50%;
+    --accent-foreground: 265 60% 8%;
+
+    --destructive: 340 100% 55%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 265 50% 20%;
+    --input: 265 50% 20%;
+    --ring: 25 100% 55%;
+
+    --radius: 0.75rem;
+
+    --gradient-primary: linear-gradient(135deg, hsl(25 100% 55%), hsl(280 85% 55%));
+    --gradient-festive: linear-gradient(135deg, hsl(25 100% 55%) 0%, hsl(110 100% 50%) 50%, hsl(280 85% 55%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(265 60% 8%), hsl(265 50% 12%));
+    --shadow-card: 0 4px 6px -1px hsl(25 100% 55% / 0.12), 0 2px 4px -2px hsl(280 85% 55% / 0.08);
+    --shadow-elevated: 0 10px 15px -3px hsl(25 100% 55% / 0.15), 0 4px 6px -4px hsl(280 85% 55% / 0.1);
+    --shadow-festive-glow: 0 0 20px hsl(110 100% 50% / 0.3), 0 0 40px hsl(25 100% 55% / 0.2);
+
+    --sidebar-background: 265 55% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 25 100% 55%;
+    --sidebar-primary-foreground: 265 60% 8%;
+    --sidebar-accent: 265 50% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 280 85% 55%;
+    --sidebar-ring: 110 100% 50%;
+  }
+
   /* Christmas Theme (Classic Red & Green) */
   :root.holiday {
     --background: 355 85% 97%;
@@ -344,6 +393,10 @@ All colors MUST be HSL.
   }
   
   .halloween body {
+    background-image: radial-gradient(ellipse at center, hsl(280 85% 55% / 0.15), transparent 50%);
+  }
+
+  .halloween-minimal body {
     background-image: radial-gradient(ellipse at center, hsl(280 85% 55% / 0.15), transparent 50%);
   }
 }
