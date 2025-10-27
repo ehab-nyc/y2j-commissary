@@ -247,23 +247,23 @@ All colors MUST be HSL.
 
   /* Liquid Glass Theme (Translucent Glassmorphism) */
   :root.liquid-glass {
-    --background: 210 20% 98%;
-    --foreground: 220 15% 20%;
+    --background: 210 50% 92%;
+    --foreground: 220 20% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 20%;
+    --card: 210 30% 96%;
+    --card-foreground: 220 20% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
+    --popover: 210 30% 96%;
+    --popover-foreground: 220 20% 15%;
 
     --primary: 210 100% 55%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 15% 20%;
+    --secondary: 220 25% 88%;
+    --secondary-foreground: 220 20% 15%;
 
-    --muted: 220 10% 95%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 220 20% 90%;
+    --muted-foreground: 220 15% 45%;
 
     --accent: 280 60% 65%;
     --accent-foreground: 0 0% 100%;
@@ -271,33 +271,33 @@ All colors MUST be HSL.
     --destructive: 0 85% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 92%;
+    --border: 220 25% 80%;
+    --input: 220 20% 88%;
     --ring: 210 100% 55%;
 
     --radius: 1rem;
 
     /* Glass-specific variables */
-    --glass-bg: 0 0% 100%;
-    --glass-bg-opacity: 0.7;
-    --glass-border: 220 15% 90%;
-    --glass-border-opacity: 0.3;
-    --glass-blur: 16px;
-    --glass-shadow: 0 8px 32px hsl(220 15% 20% / 0.08);
-    --glass-shadow-hover: 0 12px 40px hsl(220 15% 20% / 0.12);
-    --glass-glow: 0 0 20px hsl(210 100% 55% / 0.15);
+    --glass-bg: 210 30% 96%;
+    --glass-bg-opacity: 0.65;
+    --glass-border: 220 25% 85%;
+    --glass-border-opacity: 0.35;
+    --glass-blur: 20px;
+    --glass-shadow: 0 8px 32px hsl(220 20% 15% / 0.12);
+    --glass-shadow-hover: 0 12px 40px hsl(220 20% 15% / 0.18);
+    --glass-glow: 0 0 24px hsl(210 100% 55% / 0.2);
 
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(220 15% 95% / 0.8));
+    --gradient-glass: linear-gradient(135deg, hsl(210 30% 96% / 0.85), hsl(220 25% 92% / 0.75));
     --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(280 60% 65%));
-    --shadow-soft: 0 4px 24px hsl(220 15% 20% / 0.06), 0 2px 8px hsl(220 15% 20% / 0.04);
+    --shadow-soft: 0 4px 24px hsl(220 20% 15% / 0.08), 0 2px 8px hsl(220 20% 15% / 0.05);
 
-    --sidebar-background: 220 15% 95%;
-    --sidebar-foreground: 220 15% 20%;
+    --sidebar-background: 220 25% 92%;
+    --sidebar-foreground: 220 20% 15%;
     --sidebar-primary: 210 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 12% 90%;
-    --sidebar-accent-foreground: 220 15% 20%;
-    --sidebar-border: 220 15% 85%;
+    --sidebar-accent: 220 20% 88%;
+    --sidebar-accent-foreground: 220 20% 15%;
+    --sidebar-border: 220 25% 82%;
     --sidebar-ring: 210 100% 55%;
   }
 

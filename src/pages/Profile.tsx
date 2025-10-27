@@ -60,11 +60,20 @@ const Profile = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     fetchProfile();
     fetchOrders();
     fetchPhoneNumbers();
+    
+    // Restore dark mode preference
+    const savedMode = localStorage.getItem('theme-mode');
+    const isDark = savedMode === 'dark' || document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
   }, [user]);
 
   const fetchProfile = async () => {
@@ -335,6 +344,28 @@ const Profile = () => {
                   />
                 </div>
                 <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="dark-mode">Dark Mode</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Toggle dark mode appearance
+                      </p>
+                    </div>
+                    <Switch
+                      id="dark-mode"
+                      checked={isDarkMode}
+                      onCheckedChange={(checked) => {
+                        setIsDarkMode(checked);
+                        if (checked) {
+                          document.documentElement.classList.add('dark');
+                          localStorage.setItem('theme-mode', 'dark');
+                        } else {
+                          document.documentElement.classList.remove('dark');
+                          localStorage.setItem('theme-mode', 'light');
+                        }
+                      }}
+                    />
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="email-notifications">Email Notifications</Label>
