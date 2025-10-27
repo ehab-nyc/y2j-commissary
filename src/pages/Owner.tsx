@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ShoppingCart, TrendingUp, Users, ArrowUpDown, Eye } from 'lucide-react';
+import { Loader2, ShoppingCart, TrendingUp, Users, ArrowUpDown, Eye, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -75,7 +75,8 @@ export default function Owner() {
   const [balances, setBalances] = useState<WeeklyBalance[]>([]);
   const [stats, setStats] = useState({
     totalCustomers: 0,
-    totalRevenue: 0,
+    totalOrders: 0,
+    totalPaid: 0,
     activeOrders: 0,
   });
   const [sortField, setSortField] = useState<OrderSortField>('created_at');
@@ -152,12 +153,14 @@ export default function Owner() {
       })) || []);
 
       // Calculate stats
-      const totalRevenue = customersList.reduce((sum, c) => sum + (c.total_spent || 0), 0);
+      const totalOrders = ordersData?.length || 0;
       const activeOrders = ordersData?.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length || 0;
+      const totalPaid = balancesData?.reduce((sum, b) => sum + (b.amount_paid || 0), 0) || 0;
 
       setStats({
         totalCustomers: customersList.length,
-        totalRevenue,
+        totalOrders,
+        totalPaid,
         activeOrders,
       });
     } catch (error: any) {
@@ -249,7 +252,7 @@ export default function Owner() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Carts</CardTitle>
@@ -261,17 +264,26 @@ export default function Owner() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Total Cart Orders</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.totalPaid.toFixed(2)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.activeOrders}</div>
