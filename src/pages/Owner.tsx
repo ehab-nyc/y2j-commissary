@@ -77,6 +77,7 @@ export default function Owner() {
     totalCustomers: 0,
     totalOrders: 0,
     totalPaid: 0,
+    remainingBalance: 0,
     activeOrders: 0,
   });
   const [sortField, setSortField] = useState<OrderSortField>('created_at');
@@ -156,11 +157,13 @@ export default function Owner() {
       const totalOrders = ordersData?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
       const activeOrders = ordersData?.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length || 0;
       const totalPaid = balancesData?.reduce((sum, b) => sum + (b.amount_paid || 0), 0) || 0;
+      const remainingBalance = balancesData?.reduce((sum, b) => sum + (b.remaining_balance || 0), 0) || 0;
 
       setStats({
         totalCustomers: customersList.length,
         totalOrders,
         totalPaid,
+        remainingBalance,
         activeOrders,
       });
     } catch (error: any) {
@@ -252,7 +255,7 @@ export default function Owner() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Carts</CardTitle>
@@ -278,6 +281,15 @@ export default function Owner() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${stats.totalPaid.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Remaining Balance</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.remainingBalance.toFixed(2)}</div>
             </CardContent>
           </Card>
           <Card>
