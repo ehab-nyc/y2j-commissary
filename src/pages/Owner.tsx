@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ShoppingCart, TrendingUp, Users, ArrowUpDown } from 'lucide-react';
+import { Loader2, ShoppingCart, TrendingUp, Users, ArrowUpDown, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type OrderSortField = 'created_at' | 'status' | 'total' | 'customer';
 type SortDirection = 'asc' | 'desc';
@@ -23,6 +24,16 @@ interface Customer {
   total_spent: number;
 }
 
+interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  box_size: string;
+  products: {
+    name: string;
+  };
+}
+
 interface Order {
   id: string;
   created_at: string;
@@ -31,6 +42,7 @@ interface Order {
   customer: {
     full_name: string;
     cart_name: string;
+    cart_number: string;
   };
 }
 
@@ -50,6 +62,7 @@ interface WeeklyBalance {
   customer: {
     full_name: string;
     cart_name: string;
+    cart_number: string;
   };
 }
 
@@ -67,6 +80,8 @@ export default function Owner() {
   });
   const [sortField, setSortField] = useState<OrderSortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -94,7 +109,7 @@ export default function Owner() {
       // Fetch orders for these customers
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, created_at, status, total, profiles!orders_customer_id_fkey(full_name, cart_name)')
+        .select('id, created_at, status, total, profiles!orders_customer_id_fkey(full_name, cart_name, cart_number)')
         .in('customer_id', customerIds)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -104,13 +119,13 @@ export default function Owner() {
 
       setOrders(ordersData?.map(o => ({
         ...o,
-        customer: o.profiles as { full_name: string; cart_name: string }
+        customer: o.profiles as { full_name: string; cart_name: string; cart_number: string }
       })) || []);
 
       // Fetch weekly balances
       const { data: balancesData, error: balancesError } = await supabase
         .from('weekly_balances')
-        .select('*, profiles!weekly_balances_customer_id_fkey(full_name, cart_name)')
+        .select('*, profiles!weekly_balances_customer_id_fkey(full_name, cart_name, cart_number)')
         .in('customer_id', customerIds)
         .order('week_start_date', { ascending: false });
 
@@ -119,7 +134,7 @@ export default function Owner() {
       setBalances(balancesData?.map(b => ({
         ...b,
         payment_status: b.payment_status as 'unpaid' | 'partial' | 'paid_full',
-        customer: b.profiles as { full_name: string; cart_name: string }
+        customer: b.profiles as { full_name: string; cart_name: string; cart_number: string }
       })) || []);
 
       // Calculate stats
@@ -178,6 +193,28 @@ export default function Owner() {
     
     return sortDirection === 'asc' ? comparison : -comparison;
   });
+
+  const handleViewOrder = async (order: Order) => {
+    setSelectedOrder(order);
+    try {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('id, quantity, price, box_size, products!order_items_product_id_fkey(name)')
+        .eq('order_id', order.id);
+
+      if (error) throw error;
+      setOrderItems(data?.map(item => ({
+        ...item,
+        products: item.products as { name: string }
+      })) || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -313,10 +350,12 @@ export default function Owner() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Order ID</TableHead>
-                      <TableHead>Customer</TableHead>
+                      <TableHead>Cart Name</TableHead>
+                      <TableHead>Cart #</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -326,6 +365,7 @@ export default function Owner() {
                         <TableCell>
                           {order.customer.cart_name || order.customer.full_name}
                         </TableCell>
+                        <TableCell>{order.customer.cart_number || '-'}</TableCell>
                         <TableCell>{format(new Date(order.created_at), 'MMM d, yyyy')}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusColor(order.status)}>
@@ -333,6 +373,15 @@ export default function Owner() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewOrder(order)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -351,7 +400,8 @@ export default function Owner() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Customer</TableHead>
+                      <TableHead>Cart Name</TableHead>
+                      <TableHead>Cart #</TableHead>
                       <TableHead>Week</TableHead>
                       <TableHead className="text-right">Old Balance</TableHead>
                       <TableHead className="text-right">Orders</TableHead>
@@ -372,6 +422,7 @@ export default function Owner() {
                       return (
                         <TableRow key={balance.id}>
                           <TableCell>{balance.customer.cart_name || balance.customer.full_name}</TableCell>
+                          <TableCell>{balance.customer.cart_number || '-'}</TableCell>
                           <TableCell>
                             {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
                           </TableCell>
@@ -404,6 +455,63 @@ export default function Owner() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              Order #{selectedOrder?.id.substring(0, 8)} - {selectedOrder?.customer.cart_name || selectedOrder?.customer.full_name}
+              {selectedOrder?.customer.cart_number && ` (${selectedOrder.customer.cart_number})`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Date</p>
+                <p className="font-medium">{selectedOrder && format(new Date(selectedOrder.created_at), 'MMM d, yyyy h:mm a')}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge variant={selectedOrder ? getStatusColor(selectedOrder.status) : 'outline'}>
+                  {selectedOrder?.status}
+                </Badge>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Items</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Box Size</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orderItems.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.products.name}</TableCell>
+                      <TableCell>{item.box_size}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">${(item.quantity * item.price).toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-end pt-4 border-t">
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold">${selectedOrder?.total.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
