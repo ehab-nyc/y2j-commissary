@@ -375,19 +375,19 @@ export default function Owner() {
                           <TableCell>
                             {format(new Date(balance.week_start_date), 'MMM d')} - {format(new Date(balance.week_end_date), 'MMM d, yyyy')}
                           </TableCell>
-                          <TableCell className="text-right">${balance.old_balance.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">${balance.orders_total.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${(balance.old_balance ?? 0).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${(balance.orders_total ?? 0).toFixed(2)}</TableCell>
                           <TableCell className="text-right">
-                            ${(balance.franchise_fee + balance.commissary_rent).toFixed(2)}
+                            ${((balance.franchise_fee ?? 0) + (balance.commissary_rent ?? 0)).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            ${(balance.total_balance + balance.old_balance).toFixed(2)}
+                            ${((balance.total_balance ?? 0) + (balance.old_balance ?? 0)).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right text-green-600">
-                            ${balance.amount_paid.toFixed(2)}
+                            ${(balance.amount_paid ?? 0).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right font-bold">
-                            ${balance.remaining_balance.toFixed(2)}
+                            ${(balance.remaining_balance ?? 0).toFixed(2)}
                           </TableCell>
                           <TableCell className={`text-right font-semibold ${statusColor}`}>
                             {balance.payment_status === 'paid_full' ? 'Paid Full' : 
