@@ -59,7 +59,7 @@ export default function Violations() {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [selectedCart, setSelectedCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
-  const [formData, setFormData] = useState<{\
+  const [formData, setFormData] = useState<{
     customer_id: string;
     violation_type: string;
     description: string;
@@ -412,10 +412,10 @@ export default function Violations() {
     <DashboardLayout>
       <div className="flex justify-between items-center mb-4">
         <div>
-          <BackButton href="/dashboard" />
+          <BackButton />
           <h1 className="text-2xl font-bold">Violations</h1>
         </div>
-        {hasRole('inspector') && (
+        {(hasRole('worker') || hasRole('manager') || hasRole('admin') || hasRole('super_admin')) && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button>Report Violation</Button>
@@ -450,7 +450,7 @@ export default function Violations() {
                   <Label htmlFor="severity" className="text-right">
                     Severity
                   </Label>
-                  <Select value={formData.severity} onValueChange={(value) => setFormData({ ...formData, severity: value })}>
+                  <Select value={formData.severity} onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') => setFormData({ ...formData, severity: value })}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select severity" />
                     </SelectTrigger>
