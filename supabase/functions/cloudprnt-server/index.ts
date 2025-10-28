@@ -22,12 +22,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`CloudPRNT poll from printer: ${printerMac}`);
-
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Handle POST requests (job acknowledgment/deletion)
+    if (req.method === 'POST' || req.method === 'DELETE') {
+      const jobToken = url.searchParams.get('jobToken') || url.searchParams.get('token');
+      
+      if (!jobToken) {
+        return new Response(JSON.stringify({ error: 'Job token required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`Job ${jobToken} completed/deleted by printer ${printerMac}`);
+      
+      // Mark job as completed
+      await supabase
+        .from('cloudprnt_queue')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', jobToken);
+
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders,
+      });
+    }
+
+    // Handle GET requests (polling for jobs)
+    console.log(`CloudPRNT poll from printer: ${printerMac}`);
 
     // Get the oldest pending job for this printer
     const { data: jobs, error: fetchError } = await supabase
