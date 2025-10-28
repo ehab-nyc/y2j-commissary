@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -12,8 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit, AlertTriangle, Info, XOctagon, TrendingUp, ShoppingCart } from 'lucide-react';
 import { violationSchema } from '@/lib/validation';
 import { TranslateButton } from '@/components/TranslateButton';
 
@@ -36,6 +38,7 @@ interface Violation {
   severity: 'low' | 'medium' | 'high' | 'critical';
   status: 'pending' | 'in_review' | 'resolved' | 'dismissed';
   resolution_notes: string | null;
+  resolved_at: string | null;
   created_at: string;
   customer: Customer;
   inspector: {
@@ -450,6 +453,16 @@ export default function Violations() {
     }
   };
 
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'critical': return <XOctagon className="h-5 w-5" />;
+      case 'high': return <AlertTriangle className="h-5 w-5" />;
+      case 'medium': return <AlertCircle className="h-5 w-5" />;
+      case 'low': return <Info className="h-5 w-5" />;
+      default: return <AlertCircle className="h-5 w-5" />;
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'resolved': return <CheckCircle className="h-4 w-4" />;
@@ -458,6 +471,77 @@ export default function Violations() {
       default: return <AlertCircle className="h-4 w-4" />;
     }
   };
+
+  // Organize violations data
+  const violationsData = useMemo(() => {
+    const active = violations.filter(v => v.status === 'pending' || v.status === 'in_review');
+    const history = violations.filter(v => v.status === 'resolved' || v.status === 'dismissed');
+    
+    // Group active violations by severity
+    const bySeverity = {
+      critical: active.filter(v => v.severity === 'critical'),
+      high: active.filter(v => v.severity === 'high'),
+      medium: active.filter(v => v.severity === 'medium'),
+      low: active.filter(v => v.severity === 'low'),
+    };
+
+    // Group by cart within each severity
+    const groupByCart = (violations: Violation[]) => {
+      return violations.reduce((acc, v) => {
+        const cartKey = v.cart_number || v.customer.cart_number || 'Unknown';
+        if (!acc[cartKey]) {
+          acc[cartKey] = {
+            cart_name: v.cart_name || v.customer.cart_name || 'Unknown Cart',
+            cart_number: cartKey,
+            customer: v.customer,
+            violations: []
+          };
+        }
+        acc[cartKey].violations.push(v);
+        return acc;
+      }, {} as Record<string, { cart_name: string; cart_number: string; customer: Customer; violations: Violation[] }>);
+    };
+
+    const severityGroups = {
+      critical: groupByCart(bySeverity.critical),
+      high: groupByCart(bySeverity.high),
+      medium: groupByCart(bySeverity.medium),
+      low: groupByCart(bySeverity.low),
+    };
+
+    // Calculate metrics
+    const totalActive = active.length;
+    const criticalCount = bySeverity.critical.length;
+    const highCount = bySeverity.high.length;
+    const mediumCount = bySeverity.medium.length;
+    const lowCount = bySeverity.low.length;
+
+    // Find most problematic carts
+    const cartViolationCounts = active.reduce((acc, v) => {
+      const cartKey = v.cart_number || v.customer.cart_number || 'Unknown';
+      acc[cartKey] = (acc[cartKey] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const topCarts = Object.entries(cartViolationCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([cart, count]) => ({ cart, count }));
+
+    return {
+      active,
+      history,
+      severityGroups,
+      metrics: {
+        totalActive,
+        criticalCount,
+        highCount,
+        mediumCount,
+        lowCount,
+        topCarts
+      }
+    };
+  }, [violations]);
 
   if (loading) {
     return (
@@ -474,7 +558,10 @@ export default function Violations() {
       <div className="space-y-6">
         <BackButton />
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Cart Violations</h1>
+          <div>
+            <h1 className="text-3xl font-bold">Cart Violations Management</h1>
+            <p className="text-muted-foreground mt-1">Monitor and resolve cart violations efficiently</p>
+          </div>
           <Dialog open={open} onOpenChange={(isOpen) => {
             setOpen(isOpen);
             if (!isOpen) resetForm();
@@ -576,140 +663,794 @@ export default function Violations() {
           </Dialog>
         </div>
 
-        <div className="grid gap-4">
-          {violations.map((violation) => (
-            <Card key={violation.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {getStatusIcon(violation.status)}
-                      {violation.violation_type}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Customer: {violation.customer.full_name || violation.customer.email}
-                      {violation.cart_name && ` - Cart: ${violation.cart_name} ${violation.cart_number || ''}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Reported by: {violation.inspector.full_name || violation.inspector.email}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant={getSeverityColor(violation.severity)}>
-                      {violation.severity}
-                    </Badge>
-                    <Badge variant="outline">{violation.status}</Badge>
-                  </div>
-                </div>
+        {/* Summary Metrics */}
+        {violationsData.metrics.totalActive > 0 && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-fade-in">
+            <Card className="hover-scale">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Active</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p>{violation.description}</p>
-                
-                {violation.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {violation.images.map((image) => (
-                      <img
-                        key={image.id}
-                        src={image.image_url}
-                        alt="Violation"
-                        className="rounded-lg object-cover w-full h-32 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => setFullScreenImage(image.image_url)}
-                      />
-                    ))}
-                  </div>
-                )}
+              <CardContent>
+                <div className="text-3xl font-bold">{violationsData.metrics.totalActive}</div>
+                <p className="text-xs text-muted-foreground mt-1">Pending & In Review</p>
+              </CardContent>
+            </Card>
 
-                {violation.resolution_notes && (
-                  <div className="bg-muted p-3 rounded-lg">
-                    <p className="text-sm font-medium">Resolution Notes:</p>
-                    <p className="text-sm">{violation.resolution_notes}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  {violation.status === 'pending' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateStatus(violation.id, 'in_review')}
-                    >
-                      Mark In Review
-                    </Button>
-                  )}
-                  {(violation.status === 'pending' || violation.status === 'in_review') && (
-                    <>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => {
-                          const notes = prompt('Enter resolution notes:');
-                          if (notes) updateStatus(violation.id, 'resolved', notes);
-                        }}
-                      >
-                        Resolve
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateStatus(violation.id, 'dismissed')}
-                      >
-                        Dismiss
-                      </Button>
-                    </>
-                  )}
+            <Card className="hover-scale border-destructive/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-destructive">Critical & High</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-destructive">
+                  {violationsData.metrics.criticalCount + violationsData.metrics.highCount}
                 </div>
-
-                {hasRole('super_admin') && (
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(violation)}
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete this violation and all associated images. This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(violation.id)}>
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
-
-                <p className="text-xs text-muted-foreground">
-                  Reported: {new Date(violation.created_at).toLocaleString()}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {violationsData.metrics.criticalCount} Critical, {violationsData.metrics.highCount} High
                 </p>
               </CardContent>
             </Card>
-          ))}
 
-          {violations.length === 0 && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No violations reported yet</p>
+            <Card className="hover-scale">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Medium & Low</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {violationsData.metrics.mediumCount + violationsData.metrics.lowCount}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {violationsData.metrics.mediumCount} Medium, {violationsData.metrics.lowCount} Low
+                </p>
               </CardContent>
             </Card>
-          )}
-        </div>
+
+            <Card className="hover-scale">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Top Problem Carts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {violationsData.metrics.topCarts.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{item.cart}</span>
+                      <Badge variant="destructive" className="text-xs">{item.count}</Badge>
+                    </div>
+                  ))}
+                  {violationsData.metrics.topCarts.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No data</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Active Violations Card */}
+        <Card className="animate-fade-in">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Active Violations
+            </CardTitle>
+            <CardDescription>Violations requiring attention, organized by severity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {violationsData.metrics.totalActive === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No active violations - All clear!</p>
+              </div>
+            ) : (
+              <Accordion type="multiple" className="w-full space-y-4">
+                {/* Critical Severity */}
+                {violationsData.metrics.criticalCount > 0 && (
+                  <AccordionItem value="critical" className="border-destructive/50 rounded-lg border-2">
+                    <AccordionTrigger className="px-4 hover:no-underline">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="p-2 bg-destructive/10 rounded-lg">
+                          {getSeverityIcon('critical')}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-lg">Critical Violations</span>
+                            <Badge variant="destructive">{violationsData.metrics.criticalCount}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Requires immediate attention</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pt-4">
+                      <div className="space-y-4">
+                        {Object.entries(violationsData.severityGroups.critical).map(([cartKey, cartData]) => (
+                          <Card key={cartKey} className="border-destructive/30">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded-lg">
+                                    <ShoppingCart className="h-4 w-4" />
+                                  </div>
+                                  <div>
+                                    <CardTitle className="text-base">{cartData.cart_name}</CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                      Cart #{cartData.cart_number} • {cartData.customer.full_name || cartData.customer.email}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant="destructive">{cartData.violations.length} violations</Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {cartData.violations.map((violation) => (
+                                <div key={violation.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        {getStatusIcon(violation.status)}
+                                        <span className="font-medium">{violation.violation_type}</span>
+                                        <Badge variant="outline" className="text-xs">{violation.status}</Badge>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-2">{violation.description}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Reported by {violation.inspector.full_name || violation.inspector.email} • {new Date(violation.created_at).toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {violation.images.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                      {violation.images.map((image) => (
+                                        <img
+                                          key={image.id}
+                                          src={image.image_url}
+                                          alt="Violation"
+                                          className="rounded-lg object-cover w-full h-24 cursor-pointer hover:opacity-80 transition-opacity"
+                                          onClick={() => setFullScreenImage(image.image_url)}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {violation.resolution_notes && (
+                                    <Alert>
+                                      <AlertTitle className="text-sm">Resolution Notes</AlertTitle>
+                                      <AlertDescription className="text-xs">{violation.resolution_notes}</AlertDescription>
+                                    </Alert>
+                                  )}
+
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                    {violation.status === 'pending' && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => updateStatus(violation.id, 'in_review')}
+                                      >
+                                        Mark In Review
+                                      </Button>
+                                    )}
+                                    {(violation.status === 'pending' || violation.status === 'in_review') && (
+                                      <>
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          onClick={() => {
+                                            const notes = prompt('Enter resolution notes:');
+                                            if (notes) updateStatus(violation.id, 'resolved', notes);
+                                          }}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-1" />
+                                          Resolve
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => updateStatus(violation.id, 'dismissed')}
+                                        >
+                                          <X className="w-4 h-4 mr-1" />
+                                          Dismiss
+                                        </Button>
+                                      </>
+                                    )}
+                                    {hasRole('super_admin') && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleEdit(violation)}
+                                        >
+                                          <Edit className="w-4 h-4 mr-1" />
+                                          Edit
+                                        </Button>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm">
+                                              <Trash2 className="w-4 h-4 mr-1" />
+                                              Delete
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This will permanently delete this violation and all associated images. This action cannot be undone.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+
+                {/* High Severity */}
+                {violationsData.metrics.highCount > 0 && (
+                  <AccordionItem value="high" className="border-orange-500/50 rounded-lg border-2">
+                    <AccordionTrigger className="px-4 hover:no-underline">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="p-2 bg-orange-500/10 rounded-lg">
+                          {getSeverityIcon('high')}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-lg">High Priority Violations</span>
+                            <Badge className="bg-orange-500">{violationsData.metrics.highCount}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Should be addressed soon</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pt-4">
+                      <div className="space-y-4">
+                        {Object.entries(violationsData.severityGroups.high).map(([cartKey, cartData]) => (
+                          <Card key={cartKey} className="border-orange-500/30">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded-lg">
+                                    <ShoppingCart className="h-4 w-4" />
+                                  </div>
+                                  <div>
+                                    <CardTitle className="text-base">{cartData.cart_name}</CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                      Cart #{cartData.cart_number} • {cartData.customer.full_name || cartData.customer.email}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge className="bg-orange-500">{cartData.violations.length} violations</Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {cartData.violations.map((violation) => (
+                                <div key={violation.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        {getStatusIcon(violation.status)}
+                                        <span className="font-medium">{violation.violation_type}</span>
+                                        <Badge variant="outline" className="text-xs">{violation.status}</Badge>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-2">{violation.description}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Reported by {violation.inspector.full_name || violation.inspector.email} • {new Date(violation.created_at).toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {violation.images.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                      {violation.images.map((image) => (
+                                        <img
+                                          key={image.id}
+                                          src={image.image_url}
+                                          alt="Violation"
+                                          className="rounded-lg object-cover w-full h-24 cursor-pointer hover:opacity-80 transition-opacity"
+                                          onClick={() => setFullScreenImage(image.image_url)}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {violation.resolution_notes && (
+                                    <Alert>
+                                      <AlertTitle className="text-sm">Resolution Notes</AlertTitle>
+                                      <AlertDescription className="text-xs">{violation.resolution_notes}</AlertDescription>
+                                    </Alert>
+                                  )}
+
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                    {violation.status === 'pending' && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => updateStatus(violation.id, 'in_review')}
+                                      >
+                                        Mark In Review
+                                      </Button>
+                                    )}
+                                    {(violation.status === 'pending' || violation.status === 'in_review') && (
+                                      <>
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          onClick={() => {
+                                            const notes = prompt('Enter resolution notes:');
+                                            if (notes) updateStatus(violation.id, 'resolved', notes);
+                                          }}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-1" />
+                                          Resolve
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => updateStatus(violation.id, 'dismissed')}
+                                        >
+                                          <X className="w-4 h-4 mr-1" />
+                                          Dismiss
+                                        </Button>
+                                      </>
+                                    )}
+                                    {hasRole('super_admin') && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleEdit(violation)}
+                                        >
+                                          <Edit className="w-4 h-4 mr-1" />
+                                          Edit
+                                        </Button>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm">
+                                              <Trash2 className="w-4 h-4 mr-1" />
+                                              Delete
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This will permanently delete this violation and all associated images. This action cannot be undone.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+
+                {/* Medium Severity */}
+                {violationsData.metrics.mediumCount > 0 && (
+                  <AccordionItem value="medium" className="border-yellow-500/50 rounded-lg border">
+                    <AccordionTrigger className="px-4 hover:no-underline">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="p-2 bg-yellow-500/10 rounded-lg">
+                          {getSeverityIcon('medium')}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-lg">Medium Priority Violations</span>
+                            <Badge className="bg-yellow-500">{violationsData.metrics.mediumCount}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Monitor and resolve when possible</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pt-4">
+                      <div className="space-y-4">
+                        {Object.entries(violationsData.severityGroups.medium).map(([cartKey, cartData]) => (
+                          <Card key={cartKey} className="border-yellow-500/30">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded-lg">
+                                    <ShoppingCart className="h-4 w-4" />
+                                  </div>
+                                  <div>
+                                    <CardTitle className="text-base">{cartData.cart_name}</CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                      Cart #{cartData.cart_number} • {cartData.customer.full_name || cartData.customer.email}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge className="bg-yellow-500">{cartData.violations.length} violations</Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {cartData.violations.map((violation) => (
+                                <div key={violation.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        {getStatusIcon(violation.status)}
+                                        <span className="font-medium">{violation.violation_type}</span>
+                                        <Badge variant="outline" className="text-xs">{violation.status}</Badge>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-2">{violation.description}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Reported by {violation.inspector.full_name || violation.inspector.email} • {new Date(violation.created_at).toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {violation.images.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                      {violation.images.map((image) => (
+                                        <img
+                                          key={image.id}
+                                          src={image.image_url}
+                                          alt="Violation"
+                                          className="rounded-lg object-cover w-full h-24 cursor-pointer hover:opacity-80 transition-opacity"
+                                          onClick={() => setFullScreenImage(image.image_url)}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {violation.resolution_notes && (
+                                    <Alert>
+                                      <AlertTitle className="text-sm">Resolution Notes</AlertTitle>
+                                      <AlertDescription className="text-xs">{violation.resolution_notes}</AlertDescription>
+                                    </Alert>
+                                  )}
+
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                    {violation.status === 'pending' && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => updateStatus(violation.id, 'in_review')}
+                                      >
+                                        Mark In Review
+                                      </Button>
+                                    )}
+                                    {(violation.status === 'pending' || violation.status === 'in_review') && (
+                                      <>
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          onClick={() => {
+                                            const notes = prompt('Enter resolution notes:');
+                                            if (notes) updateStatus(violation.id, 'resolved', notes);
+                                          }}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-1" />
+                                          Resolve
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => updateStatus(violation.id, 'dismissed')}
+                                        >
+                                          <X className="w-4 h-4 mr-1" />
+                                          Dismiss
+                                        </Button>
+                                      </>
+                                    )}
+                                    {hasRole('super_admin') && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleEdit(violation)}
+                                        >
+                                          <Edit className="w-4 h-4 mr-1" />
+                                          Edit
+                                        </Button>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm">
+                                              <Trash2 className="w-4 h-4 mr-1" />
+                                              Delete
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This will permanently delete this violation and all associated images. This action cannot be undone.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+
+                {/* Low Severity */}
+                {violationsData.metrics.lowCount > 0 && (
+                  <AccordionItem value="low" className="border rounded-lg">
+                    <AccordionTrigger className="px-4 hover:no-underline">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="p-2 bg-blue-500/10 rounded-lg">
+                          {getSeverityIcon('low')}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-lg">Low Priority Violations</span>
+                            <Badge variant="secondary">{violationsData.metrics.lowCount}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">Minor issues for tracking</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pt-4">
+                      <div className="space-y-4">
+                        {Object.entries(violationsData.severityGroups.low).map(([cartKey, cartData]) => (
+                          <Card key={cartKey}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded-lg">
+                                    <ShoppingCart className="h-4 w-4" />
+                                  </div>
+                                  <div>
+                                    <CardTitle className="text-base">{cartData.cart_name}</CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                      Cart #{cartData.cart_number} • {cartData.customer.full_name || cartData.customer.email}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant="secondary">{cartData.violations.length} violations</Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {cartData.violations.map((violation) => (
+                                <div key={violation.id} className="border rounded-lg p-4 space-y-3 hover:bg-muted/50 transition-colors">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        {getStatusIcon(violation.status)}
+                                        <span className="font-medium">{violation.violation_type}</span>
+                                        <Badge variant="outline" className="text-xs">{violation.status}</Badge>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mb-2">{violation.description}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Reported by {violation.inspector.full_name || violation.inspector.email} • {new Date(violation.created_at).toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {violation.images.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                      {violation.images.map((image) => (
+                                        <img
+                                          key={image.id}
+                                          src={image.image_url}
+                                          alt="Violation"
+                                          className="rounded-lg object-cover w-full h-24 cursor-pointer hover:opacity-80 transition-opacity"
+                                          onClick={() => setFullScreenImage(image.image_url)}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {violation.resolution_notes && (
+                                    <Alert>
+                                      <AlertTitle className="text-sm">Resolution Notes</AlertTitle>
+                                      <AlertDescription className="text-xs">{violation.resolution_notes}</AlertDescription>
+                                    </Alert>
+                                  )}
+
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                    {violation.status === 'pending' && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => updateStatus(violation.id, 'in_review')}
+                                      >
+                                        Mark In Review
+                                      </Button>
+                                    )}
+                                    {(violation.status === 'pending' || violation.status === 'in_review') && (
+                                      <>
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          onClick={() => {
+                                            const notes = prompt('Enter resolution notes:');
+                                            if (notes) updateStatus(violation.id, 'resolved', notes);
+                                          }}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-1" />
+                                          Resolve
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => updateStatus(violation.id, 'dismissed')}
+                                        >
+                                          <X className="w-4 h-4 mr-1" />
+                                          Dismiss
+                                        </Button>
+                                      </>
+                                    )}
+                                    {hasRole('super_admin') && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleEdit(violation)}
+                                        >
+                                          <Edit className="w-4 h-4 mr-1" />
+                                          Edit
+                                        </Button>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm">
+                                              <Trash2 className="w-4 h-4 mr-1" />
+                                              Delete
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This will permanently delete this violation and all associated images. This action cannot be undone.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+              </Accordion>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Violations History Card */}
+        <Card className="animate-fade-in">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Violations History
+            </CardTitle>
+            <CardDescription>Resolved and dismissed violations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {violationsData.history.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Info className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No history yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {violationsData.history.map((violation) => (
+                  <Card key={violation.id} className="hover:bg-muted/50 transition-colors">
+                    <CardContent className="pt-6 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusIcon(violation.status)}
+                            <span className="font-medium">{violation.violation_type}</span>
+                            <Badge variant={getSeverityColor(violation.severity)}>{violation.severity}</Badge>
+                            <Badge variant="outline">{violation.status}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{violation.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Cart: {violation.cart_name || 'Unknown'} #{violation.cart_number || 'N/A'} • {violation.customer.full_name || violation.customer.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Reported: {new Date(violation.created_at).toLocaleString()}
+                            {violation.resolved_at && ` • Resolved: ${new Date(violation.resolved_at).toLocaleString()}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {violation.resolution_notes && (
+                        <Alert>
+                          <AlertTitle className="text-sm">Resolution Notes</AlertTitle>
+                          <AlertDescription className="text-xs">{violation.resolution_notes}</AlertDescription>
+                        </Alert>
+                      )}
+
+                      {violation.images.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {violation.images.map((image) => (
+                            <img
+                              key={image.id}
+                              src={image.image_url}
+                              alt="Violation"
+                              className="rounded-lg object-cover w-full h-24 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => setFullScreenImage(image.image_url)}
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {hasRole('super_admin') && (
+                        <div className="flex gap-2 pt-2 border-t">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete this violation and all associated images. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog open={!!fullScreenImage} onOpenChange={() => setFullScreenImage(null)}>
