@@ -118,17 +118,26 @@ export default function Violations() {
           const imagesWithSignedUrls = await Promise.all(
             violation.images.map(async (image: any) => {
               try {
-                const path = image.image_url.replace('violation-images/', '');
-                if (!path || path === image.image_url) return image;
+                // Handle both formats: with or without 'violation-images/' prefix
+                let path = image.image_url;
+                if (path.startsWith('violation-images/')) {
+                  path = path.replace('violation-images/', '');
+                }
                 
                 const { data: signedUrlData, error } = await supabase.storage
                   .from('violation-images')
                   .createSignedUrl(path, 3600);
                 
-                if (error || !signedUrlData?.signedUrl) return image;
+                if (error) {
+                  console.error('Error creating signed URL:', error);
+                  return image;
+                }
+                
+                if (!signedUrlData?.signedUrl) return image;
                 
                 return { ...image, image_url: signedUrlData.signedUrl };
               } catch (err) {
+                console.error('Error processing image:', err);
                 return image;
               }
             })
