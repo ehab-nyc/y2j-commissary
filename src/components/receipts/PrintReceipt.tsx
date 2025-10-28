@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
+import { printToStarPrinter, type ReceiptData } from "@/lib/starPrinter";
 
 interface PrintReceiptProps {
   orderNumber: string;
@@ -91,7 +92,90 @@ export function PrintReceipt({
     },
   });
 
-  const handlePrint = () => {
+  const { data: starPrinterSettings } = useQuery({
+    queryKey: ["star-printer-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("*")
+        .in("key", ["star_printer_ip", "star_printer_width", "star_printer_enabled"]);
+
+      if (error) throw error;
+
+      const settingsMap: Record<string, string> = {};
+      data?.forEach((setting) => {
+        settingsMap[setting.key] = setting.value || "";
+      });
+
+      return {
+        printerIp: settingsMap.star_printer_ip || "",
+        paperWidth: parseInt(settingsMap.star_printer_width || "80"),
+        enabled: settingsMap.star_printer_enabled === "true",
+      };
+    },
+  });
+
+  const handleStarPrint = async () => {
+    if (!starPrinterSettings?.enabled) {
+      toast.error("Star printer not enabled. Please configure in Receipt Settings.");
+      return;
+    }
+
+    if (!starPrinterSettings.printerIp) {
+      toast.error("Printer IP not configured. Please set in Receipt Settings.");
+      return;
+    }
+
+    // Check if Star WebPRNT library is loaded
+    if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
+      toast.error("Loading Star printer library...");
+      
+      // Load the library
+      const script = document.createElement('script');
+      script.src = 'https://www.star-m.jp/products/s_print/sdk/starwebprintbuilder_v1.0.0.js';
+      script.async = true;
+      script.onload = () => {
+        toast.success("Star printer library loaded. Please try again.");
+      };
+      script.onerror = () => {
+        toast.error("Failed to load Star printer library");
+      };
+      document.head.appendChild(script);
+      return;
+    }
+
+    try {
+      const receiptData: ReceiptData = {
+        orderNumber,
+        customerName,
+        items,
+        total,
+        serviceFee,
+        date,
+        cartName,
+        cartNumber,
+        processedBy,
+        companyInfo: companySettings,
+        headerText: template?.header_text || "",
+        footerText: template?.footer_text || "",
+        showLogo: template?.show_logo,
+        logoUrl: companyLogo,
+      };
+
+      await printToStarPrinter(
+        starPrinterSettings.printerIp,
+        receiptData,
+        starPrinterSettings.paperWidth
+      );
+
+      toast.success("Printing to Star printer...");
+    } catch (error) {
+      console.error("Star print error:", error);
+      toast.error("Failed to print. Check printer connection.");
+    }
+  };
+
+  const handleBrowserPrint = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       toast.error("Please allow popups to print receipts");
@@ -170,10 +254,16 @@ export function PrintReceipt({
   };
 
   return (
-    <div>
-      <Button onClick={handlePrint} variant="outline" className="gap-2">
+    <div className="flex gap-2">
+      {starPrinterSettings?.enabled && (
+        <Button onClick={handleStarPrint} variant="default" className="gap-2">
+          <Printer className="h-4 w-4" />
+          Print (Star)
+        </Button>
+      )}
+      <Button onClick={handleBrowserPrint} variant="outline" className="gap-2">
         <Printer className="h-4 w-4" />
-        Print Receipt
+        {starPrinterSettings?.enabled ? "Browser Print" : "Print Receipt"}
       </Button>
 
       <div id="receipt-content" className="hidden">

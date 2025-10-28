@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ReceiptPreview } from "@/components/receipts/ReceiptPreview";
+import { StarPrinterSettings } from "@/components/receipts/StarPrinterSettings";
 import { FileText, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -308,6 +309,8 @@ export default function ReceiptSettings() {
                 </div>
               </CardContent>
             </Card>
+
+            <StarPrinterSettings />
           </div>
 
           <div>
