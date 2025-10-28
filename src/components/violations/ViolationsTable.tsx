@@ -16,7 +16,8 @@ interface Customer {
 
 interface Violation {
   id: string;
-  customer_id: string;
+  customer_id: string | null;
+  manual_customer_name: string | null;
   inspector_id: string;
   cart_name: string | null;
   cart_number: string | null;
@@ -113,6 +114,23 @@ export function ViolationsTable({
 
             {/* Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Customer */}
+              <div className="flex items-start gap-3">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Customer</p>
+                  <p className="text-sm font-medium">
+                    {violation.manual_customer_name || violation.customer?.full_name || violation.customer?.email || 'N/A'}
+                  </p>
+                  {violation.cart_name && (
+                    <p className="text-xs text-muted-foreground mt-1">Cart: {violation.cart_name}</p>
+                  )}
+                  {violation.cart_number && (
+                    <p className="text-xs text-muted-foreground">Cart #: {violation.cart_number}</p>
+                  )}
+                </div>
+              </div>
+
               {/* Inspector */}
               <div className="flex items-start gap-3">
                 <User className="h-4 w-4 text-muted-foreground mt-0.5" />

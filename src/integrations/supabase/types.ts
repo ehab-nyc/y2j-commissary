@@ -1208,10 +1208,11 @@ export type Database = {
           cart_name: string | null
           cart_number: string | null
           created_at: string
-          customer_id: string
+          customer_id: string | null
           description: string
           id: string
           inspector_id: string
+          manual_customer_name: string | null
           resolution_notes: string | null
           resolved_at: string | null
           severity: string
@@ -1223,10 +1224,11 @@ export type Database = {
           cart_name?: string | null
           cart_number?: string | null
           created_at?: string
-          customer_id: string
+          customer_id?: string | null
           description: string
           id?: string
           inspector_id: string
+          manual_customer_name?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           severity: string
@@ -1238,10 +1240,11 @@ export type Database = {
           cart_name?: string | null
           cart_number?: string | null
           created_at?: string
-          customer_id?: string
+          customer_id?: string | null
           description?: string
           id?: string
           inspector_id?: string
+          manual_customer_name?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           severity?: string

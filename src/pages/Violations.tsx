@@ -28,7 +28,8 @@ interface Customer {
 
 interface Violation {
   id: string;
-  customer_id: string;
+  customer_id: string | null;
+  manual_customer_name: string | null;
   inspector_id: string;
   cart_name: string | null;
   cart_number: string | null;
@@ -62,13 +63,20 @@ export default function Violations() {
   const [selectedCart, setSelectedCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
   const [selectedHistorySeverity, setSelectedHistorySeverity] = useState<string | null>(null);
   const [selectedHistoryCart, setSelectedHistoryCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
+  const [isManualEntry, setIsManualEntry] = useState(false);
   const [formData, setFormData] = useState<{
     customer_id: string;
+    manual_customer_name: string;
+    cart_name: string;
+    cart_number: string;
     violation_type: string;
     description: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
   }>({
     customer_id: '',
+    manual_customer_name: '',
+    cart_name: '',
+    cart_number: '',
     violation_type: '',
     description: '',
     severity: 'medium',
@@ -178,32 +186,42 @@ export default function Violations() {
     if (!user) return;
 
     try {
-      const selectedCustomer = customers.find(c => c.id === formData.customer_id);
-      const validationResult = violationSchema.safeParse({
-        customer_id: formData.customer_id,
-        violation_type: formData.violation_type,
-        severity: formData.severity,
-        description: formData.description,
-        cart_name: selectedCustomer?.cart_name || undefined,
-        cart_number: selectedCustomer?.cart_number || undefined,
-      });
-
-      if (!validationResult.success) {
-        toast({ variant: 'destructive', title: 'Validation Error', description: validationResult.error.errors[0].message });
+      // Validate based on entry type
+      if (!isManualEntry && !formData.customer_id) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please select a customer or switch to manual entry' });
         return;
+      }
+      
+      if (isManualEntry && !formData.manual_customer_name) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter a customer name' });
+        return;
+      }
+
+      if (!formData.violation_type || !formData.description) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please fill in all required fields' });
+        return;
+      }
+      
+      const insertData: any = {
+        inspector_id: user.id,
+        violation_type: formData.violation_type,
+        description: formData.description,
+        severity: formData.severity,
+      };
+
+      if (isManualEntry) {
+        insertData.manual_customer_name = formData.manual_customer_name;
+        insertData.cart_name = formData.cart_name || null;
+        insertData.cart_number = formData.cart_number || null;
+      } else {
+        insertData.customer_id = formData.customer_id;
+        insertData.cart_name = formData.cart_name || null;
+        insertData.cart_number = formData.cart_number || null;
       }
       
       const { data: violation, error: violationError } = await supabase
         .from('violations')
-        .insert({
-          customer_id: formData.customer_id,
-          inspector_id: user.id,
-          cart_name: selectedCustomer?.cart_name,
-          cart_number: selectedCustomer?.cart_number,
-          violation_type: formData.violation_type,
-          description: formData.description,
-          severity: formData.severity,
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -248,8 +266,12 @@ export default function Violations() {
 
   const handleEdit = (violation: Violation) => {
     setEditingViolation(violation);
+    setIsManualEntry(!violation.customer_id);
     setFormData({
-      customer_id: violation.customer_id,
+      customer_id: violation.customer_id || '',
+      manual_customer_name: violation.manual_customer_name || '',
+      cart_name: violation.cart_name || '',
+      cart_number: violation.cart_number || '',
       violation_type: violation.violation_type,
       description: violation.description,
       severity: violation.severity,
@@ -262,31 +284,43 @@ export default function Violations() {
     if (!editingViolation) return;
 
     try {
-      const selectedCustomer = customers.find(c => c.id === formData.customer_id);
-      const validationResult = violationSchema.safeParse({
-        customer_id: formData.customer_id,
-        violation_type: formData.violation_type,
-        severity: formData.severity,
-        description: formData.description,
-        cart_name: selectedCustomer?.cart_name || undefined,
-        cart_number: selectedCustomer?.cart_number || undefined,
-      });
-
-      if (!validationResult.success) {
-        toast({ variant: 'destructive', title: 'Validation Error', description: validationResult.error.errors[0].message });
+      // Validate based on entry type
+      if (!isManualEntry && !formData.customer_id) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please select a customer or switch to manual entry' });
         return;
+      }
+      
+      if (isManualEntry && !formData.manual_customer_name) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter a customer name' });
+        return;
+      }
+
+      if (!formData.violation_type || !formData.description) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please fill in all required fields' });
+        return;
+      }
+
+      const updateData: any = {
+        violation_type: formData.violation_type,
+        description: formData.description,
+        severity: formData.severity,
+      };
+
+      if (isManualEntry) {
+        updateData.customer_id = null;
+        updateData.manual_customer_name = formData.manual_customer_name;
+        updateData.cart_name = formData.cart_name || null;
+        updateData.cart_number = formData.cart_number || null;
+      } else {
+        updateData.customer_id = formData.customer_id;
+        updateData.manual_customer_name = null;
+        updateData.cart_name = formData.cart_name || null;
+        updateData.cart_number = formData.cart_number || null;
       }
       
       const { error } = await supabase
         .from('violations')
-        .update({
-          customer_id: formData.customer_id,
-          cart_name: selectedCustomer?.cart_name,
-          cart_number: selectedCustomer?.cart_number,
-          violation_type: formData.violation_type,
-          description: formData.description,
-          severity: formData.severity,
-        })
+        .update(updateData)
         .eq('id', editingViolation.id);
 
       if (error) throw error;
@@ -316,7 +350,16 @@ export default function Violations() {
 
   const resetForm = () => {
     setEditingViolation(null);
-    setFormData({ customer_id: '', violation_type: '', description: '', severity: 'medium' });
+    setIsManualEntry(false);
+    setFormData({ 
+      customer_id: '', 
+      manual_customer_name: '',
+      cart_name: '',
+      cart_number: '',
+      violation_type: '', 
+      description: '', 
+      severity: 'medium' 
+    });
     setSelectedImages([]);
   };
 
@@ -456,19 +499,95 @@ export default function Violations() {
               </DialogHeader>
               <form onSubmit={editingViolation ? handleUpdate : handleSubmit} className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="customer_id" className="text-right">
-                    Customer
+                  <Label className="text-right">Entry Type</Label>
+                  <div className="col-span-3 flex gap-2">
+                    <Button
+                      type="button"
+                      variant={!isManualEntry ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsManualEntry(false)}
+                    >
+                      Select Customer
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={isManualEntry ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsManualEntry(true)}
+                    >
+                      Manual Entry
+                    </Button>
+                  </div>
+                </div>
+
+                {!isManualEntry ? (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="customer_id" className="text-right">
+                      Customer
+                    </Label>
+                    <Select 
+                      value={formData.customer_id} 
+                      onValueChange={(value) => {
+                        const customer = customers.find(c => c.id === value);
+                        setFormData({ 
+                          ...formData, 
+                          customer_id: value,
+                          cart_name: customer?.cart_name || '',
+                          cart_number: customer?.cart_number || ''
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a customer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.full_name || customer.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="manual_customer_name" className="text-right">
+                      Customer Name
+                    </Label>
+                    <Input 
+                      id="manual_customer_name" 
+                      value={formData.manual_customer_name} 
+                      className="col-span-3" 
+                      placeholder="Enter customer name"
+                      onChange={(e) => setFormData({ ...formData, manual_customer_name: e.target.value })} 
+                    />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="cart_name" className="text-right">
+                    Cart Name
                   </Label>
-                  <Select value={formData.customer_id} onValueChange={(value) => setFormData({ ...formData, customer_id: value })} >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>{customer.full_name || customer.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input 
+                    id="cart_name" 
+                    value={formData.cart_name} 
+                    className="col-span-3" 
+                    placeholder="Enter cart name"
+                    onChange={(e) => setFormData({ ...formData, cart_name: e.target.value })} 
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="cart_number" className="text-right">
+                    Cart Number
+                  </Label>
+                  <Input 
+                    id="cart_number" 
+                    value={formData.cart_number} 
+                    className="col-span-3" 
+                    placeholder="Enter cart number"
+                    onChange={(e) => setFormData({ ...formData, cart_number: e.target.value })} 
+                  />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="violation_type" className="text-right">
