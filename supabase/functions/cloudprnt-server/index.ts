@@ -30,14 +30,15 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get the oldest pending job for this printer
-    const { data: job, error: fetchError } = await supabase
+    const { data: jobs, error: fetchError } = await supabase
       .from('cloudprnt_queue')
       .select('*')
       .eq('printer_mac', printerMac)
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
-      .limit(1)
-      .single();
+      .limit(1);
+
+    const job = jobs?.[0];
 
     if (fetchError || !job) {
       // No jobs available
