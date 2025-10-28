@@ -133,13 +133,9 @@ export function CloudPRNTSettings() {
             <strong>CloudPRNT Setup Instructions:</strong>
             <ol className="list-decimal list-inside mt-2 space-y-1 ml-2">
               <li>Print the printer's configuration page to find the MAC address</li>
-              <li>Enable CloudPRNT mode on your printer (see printer manual)</li>
-              <li>Configure the printer to poll this URL:
-                <code className="block mt-1 p-2 bg-muted rounded text-xs break-all">
-                  {window.location.origin}/functions/v1/cloudprnt-server?mac=YOUR_MAC_ADDRESS
-                </code>
-              </li>
               <li>Enter the MAC address below and enable CloudPRNT</li>
+              <li>Enable CloudPRNT mode on your printer (see printer manual)</li>
+              <li>Configure your printer to poll the CloudPRNT server URL (shown below in Troubleshooting section)</li>
             </ol>
             <div className="mt-3 p-2 bg-primary/10 border border-primary/20 rounded">
               <strong className="text-primary">✅ Works with HTTPS!</strong>
