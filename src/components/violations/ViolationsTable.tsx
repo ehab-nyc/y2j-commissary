@@ -89,7 +89,7 @@ export function ViolationsTable({
             <Separator />
 
             {/* Images */}
-            {violation.images.length > 0 && (
+            {violation.images && violation.images.length > 0 && (
               <>
                 <div>
                   <div className="flex items-center gap-2 mb-3">
@@ -104,6 +104,10 @@ export function ViolationsTable({
                         alt="Violation evidence"
                         className="aspect-square rounded-lg object-cover cursor-pointer hover:opacity-80 transition-all hover:scale-105 border"
                         onClick={() => setFullScreenImage(image.image_url)}
+                        onError={(e) => {
+                          console.error('Failed to load image:', image.image_url);
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                     ))}
                   </div>

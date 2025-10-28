@@ -1080,7 +1080,7 @@ export default function Violations() {
 
           <div className="grid gap-4 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="animate-fade-in border-l-4 border-l-green-500">
+              <Card className="animate-fade-in border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-all hover:scale-105">
                 <CardHeader>
                   <CardTitle>Active Violations</CardTitle>
                   <CardDescription>Total number of active violations</CardDescription>
@@ -1089,7 +1089,10 @@ export default function Violations() {
                   <div className="text-2xl font-bold">{violationsData.metrics.totalActive}</div>
                 </CardContent>
               </Card>
-              <Card className="border-l-4 border-l-red-500">
+              <Card 
+                className="border-l-4 border-l-red-500 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => violationsData.metrics.criticalCount > 0 && setSelectedSeverity('critical')}
+              >
                 <CardHeader>
                   <CardTitle>Critical</CardTitle>
                   <CardDescription>Number of critical violations</CardDescription>
@@ -1098,7 +1101,10 @@ export default function Violations() {
                   <div className="text-2xl font-bold">{violationsData.metrics.criticalCount}</div>
                 </CardContent>
               </Card>
-              <Card className="border-l-4 border-l-orange-500">
+              <Card 
+                className="border-l-4 border-l-orange-500 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => violationsData.metrics.highCount > 0 && setSelectedSeverity('high')}
+              >
                 <CardHeader>
                   <CardTitle>High</CardTitle>
                   <CardDescription>Number of high violations</CardDescription>
@@ -1107,7 +1113,10 @@ export default function Violations() {
                   <div className="text-2xl font-bold">{violationsData.metrics.highCount}</div>
                 </CardContent>
               </Card>
-              <Card className="border-l-4 border-l-yellow-500">
+              <Card 
+                className="border-l-4 border-l-yellow-500 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => violationsData.metrics.mediumCount > 0 && setSelectedSeverity('medium')}
+              >
                 <CardHeader>
                   <CardTitle>Medium</CardTitle>
                   <CardDescription>Number of medium violations</CardDescription>
