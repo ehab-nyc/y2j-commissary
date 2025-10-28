@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Printer, CheckCircle2, XCircle, Info } from "lucide-react";
+import { Printer, CheckCircle2, XCircle, Info, AlertTriangle, Copy } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export function CloudPRNTSettings() {
   const [printerMac, setPrinterMac] = useState("");
@@ -48,6 +49,22 @@ export function CloudPRNTSettings() {
     },
   });
 
+  // Fetch pending jobs for troubleshooting
+  const { data: pendingJobs } = useQuery({
+    queryKey: ['cloudprnt-pending-jobs', printerMac],
+    queryFn: async () => {
+      if (!printerMac) return [];
+      const { data } = await supabase
+        .from('cloudprnt_queue')
+        .select('*')
+        .eq('printer_mac', printerMac)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: !!printerMac && enabled,
+  });
+
   useEffect(() => {
     if (settings) {
       setPrinterMac(settings.printer_mac);
@@ -55,6 +72,16 @@ export function CloudPRNTSettings() {
       setPaperWidth(settings.paper_width);
     }
   }, [settings]);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: "The URL has been copied to your clipboard.",
+    });
+  };
+
+  const cloudPrntUrl = `https://jscmqiktfesaggpdeegk.supabase.co/functions/v1/cloudprnt-server?mac=${printerMac}`;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -185,6 +212,86 @@ export function CloudPRNTSettings() {
             it will retrieve and print the job automatically.
           </AlertDescription>
         </Alert>
+
+        {enabled && printerMac && (
+          <>
+            <Separator className="my-6" />
+            
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-warning" />
+                <h3 className="font-semibold">Troubleshooting</h3>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-3">
+                    <div>
+                      <strong className="block mb-1">Your CloudPRNT Server URL:</strong>
+                      <div className="flex items-center gap-2 mt-1">
+                        <code className="flex-1 p-2 bg-muted rounded text-xs break-all">
+                          {cloudPrntUrl}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(cloudPrntUrl)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Configure this URL in your printer's CloudPRNT settings
+                      </p>
+                    </div>
+
+                    <div>
+                      <strong className="block mb-1">Connection Status:</strong>
+                      {pendingJobs && pendingJobs.length > 0 ? (
+                        <div className="flex items-center gap-2 text-warning">
+                          <XCircle className="h-4 w-4" />
+                          <span className="text-sm">
+                            {pendingJobs.length} job(s) pending - Printer may not be polling
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-success">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span className="text-sm">No pending jobs</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-muted/50 p-3 rounded text-xs space-y-2">
+                      <p><strong>If print jobs are stuck as "pending":</strong></p>
+                      <ol className="list-decimal list-inside space-y-1 ml-2">
+                        <li>Verify the printer is powered on and connected to your network</li>
+                        <li>Check that the printer's CloudPRNT URL exactly matches the URL above</li>
+                        <li>Ensure the printer's polling interval is set to 3-5 seconds</li>
+                        <li>Verify the MAC address entered above matches your printer's MAC</li>
+                        <li>Try power cycling the printer after configuring CloudPRNT</li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-primary/10 border border-primary/20 p-3 rounded text-xs">
+                      <strong className="block mb-1">Printer Configuration:</strong>
+                      <ol className="list-decimal list-inside space-y-1 ml-2">
+                        <li>Access printer web interface at <code>http://[PRINTER-IP]</code></li>
+                        <li>Go to CloudPRNT settings</li>
+                        <li>Set Server Type: <strong>URL</strong></li>
+                        <li>Paste the URL above into Server URL field</li>
+                        <li>Set Polling Interval: <strong>3-5 seconds</strong></li>
+                        <li>Set Upload Method: <strong>POST</strong></li>
+                        <li>Enable CloudPRNT and save settings</li>
+                      </ol>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
