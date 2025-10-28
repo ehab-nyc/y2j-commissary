@@ -73,6 +73,7 @@ export default function Violations() {
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
+  const [cartOwners, setCartOwners] = useState<Record<string, { full_name: string | null }>>({});
   const [formData, setFormData] = useState<{
     customer_id: string;
     manual_customer_name: string;
@@ -95,6 +96,7 @@ export default function Violations() {
     fetchViolations();
     fetchCustomers();
     fetchCarts();
+    fetchCartOwners();
 
     const channel = supabase
       .channel('violations-changes')
@@ -114,6 +116,27 @@ export default function Violations() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const fetchCartOwners = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cart_ownership')
+        .select('customer_id, owner:profiles!cart_ownership_owner_id_fkey(full_name)');
+      
+      if (error) throw error;
+      
+      const ownerMap: Record<string, { full_name: string | null }> = {};
+      data?.forEach((item: any) => {
+        if (item.customer_id && item.owner) {
+          ownerMap[item.customer_id] = item.owner;
+        }
+      });
+      
+      setCartOwners(ownerMap);
+    } catch (error: any) {
+      console.error('Error fetching cart owners:', error);
+    }
+  };
 
   const fetchViolations = async () => {
     try {
@@ -572,24 +595,30 @@ export default function Violations() {
     const totalActive = active.length;
     const cartViolationCounts = active.reduce((acc, v) => {
       const cartKey = v.cart_number || v.customer.cart_number || 'Unknown';
-      acc[cartKey] = (acc[cartKey] || 0) + 1;
+      const cartName = v.cart_name || v.customer.cart_name || 'Unknown Cart';
+      if (!acc[cartKey]) {
+        acc[cartKey] = {
+          cart_name: cartName,
+          cart_number: cartKey,
+          customer_id: v.customer_id || null,
+          violations: []
+        };
+      }
+      acc[cartKey].violations.push(v);
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, { cart_name: string; cart_number: string; customer_id: string | null; violations: Violation[] }>);
     
     const topCarts = Object.entries(cartViolationCounts)
-      .sort(([, a], [, b]) => b - a)
+      .sort(([, a], [, b]) => b.violations.length - a.violations.length)
       .slice(0, 3)
-      .map(([cart, count]) => ({ cart, count }));
-
-    // Calculate resolution time metrics
-    const resolvedViolations = history.filter(v => v.status === 'resolved' && v.resolved_at);
-    const avgResolutionTime = resolvedViolations.length > 0
-      ? resolvedViolations.reduce((acc, v) => {
-          const created = new Date(v.created_at).getTime();
-          const resolved = new Date(v.resolved_at!).getTime();
-          return acc + (resolved - created);
-        }, 0) / resolvedViolations.length
-      : 0;
+      .map(([cart, data]) => ({ 
+        cart, 
+        cart_name: data.cart_name,
+        cart_number: data.cart_number,
+        count: data.violations.length,
+        customer_id: data.customer_id,
+        violations: data.violations
+      }));
 
     return {
       active,
@@ -604,9 +633,7 @@ export default function Violations() {
         highCount: bySeverity.high.length,
         mediumCount: bySeverity.medium.length,
         lowCount: bySeverity.low.length,
-        topCarts,
-        avgResolutionTimeHours: Math.round(avgResolutionTime / (1000 * 60 * 60) * 10) / 10,
-        totalResolved: resolvedViolations.length
+        topCarts
       }
     };
   }, [violations, searchQuery, dateRange, statusFilter, severityFilter]);
@@ -1052,8 +1079,8 @@ export default function Violations() {
           </div>
 
           <div className="grid gap-4 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card className="animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="animate-fade-in border-l-4 border-l-green-500">
                 <CardHeader>
                   <CardTitle>Active Violations</CardTitle>
                   <CardDescription>Total number of active violations</CardDescription>
@@ -1062,19 +1089,7 @@ export default function Violations() {
                   <div className="text-2xl font-bold">{violationsData.metrics.totalActive}</div>
                 </CardContent>
               </Card>
-              <Card className="animate-fade-in">
-                <CardHeader>
-                  <CardTitle>Avg Resolution</CardTitle>
-                  <CardDescription>Average time to resolve</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{violationsData.metrics.avgResolutionTimeHours}h</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {violationsData.metrics.totalResolved} resolved
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
+              <Card className="border-l-4 border-l-red-500">
                 <CardHeader>
                   <CardTitle>Critical</CardTitle>
                   <CardDescription>Number of critical violations</CardDescription>
@@ -1083,7 +1098,7 @@ export default function Violations() {
                   <div className="text-2xl font-bold">{violationsData.metrics.criticalCount}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="border-l-4 border-l-orange-500">
                 <CardHeader>
                   <CardTitle>High</CardTitle>
                   <CardDescription>Number of high violations</CardDescription>
@@ -1092,7 +1107,7 @@ export default function Violations() {
                   <div className="text-2xl font-bold">{violationsData.metrics.highCount}</div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="border-l-4 border-l-yellow-500">
                 <CardHeader>
                   <CardTitle>Medium</CardTitle>
                   <CardDescription>Number of medium violations</CardDescription>
@@ -1110,16 +1125,70 @@ export default function Violations() {
                   <CardDescription>Carts with the most active violations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ul className="list-none pl-0">
-                    {violationsData.metrics.topCarts.map((item) => (
-                      <li key={item.cart} className="py-2 border-b last:border-b-0">
-                        <div className="flex justify-between items-center">
-                          <span>{item.cart}</span>
-                          <Badge variant="secondary">{item.count} Violations</Badge>
+                  <div className="space-y-3">
+                    {violationsData.metrics.topCarts.map((item) => {
+                      const cartViolations = violationsData.active.filter(
+                        v => (v.cart_number || v.customer.cart_number) === item.cart_number
+                      );
+                      const sampleViolation = cartViolations[0];
+                      const customer = sampleViolation?.customer;
+                      const ownerInfo = item.customer_id ? cartOwners[item.customer_id] : null;
+                      
+                      return (
+                        <div key={item.cart} className="p-4 border rounded-lg hover:shadow-md transition-all">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                  <ShoppingCart className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                  <div className="font-semibold">{item.cart_name}</div>
+                                  <div className="text-sm text-muted-foreground">Cart #{item.cart_number}</div>
+                                </div>
+                              </div>
+                              {customer && (
+                                <div className="text-sm text-muted-foreground pl-13">
+                                  <span className="font-medium">Customer:</span> {customer.full_name || customer.email}
+                                </div>
+                              )}
+                              {ownerInfo && (
+                                <div className="text-sm text-muted-foreground pl-13">
+                                  <span className="font-medium">Owner:</span> {ownerInfo.full_name || 'N/A'}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="destructive">{item.count} Violations</Badge>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const severities = ['critical', 'high', 'medium', 'low'] as const;
+                                  for (const severity of severities) {
+                                    const cartData = violationsData.severityGroups[severity]?.[item.cart_number];
+                                    if (cartData) {
+                                      setSelectedSeverity(severity);
+                                      setTimeout(() => {
+                                        setSelectedCart({ 
+                                          cartKey: item.cart_number, 
+                                          severity, 
+                                          data: cartData 
+                                        });
+                                      }, 0);
+                                      break;
+                                    }
+                                  }
+                                }}
+                              >
+                                Preview
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}
