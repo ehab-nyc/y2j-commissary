@@ -54,6 +54,7 @@ export default function Violations() {
   const { toast } = useToast();
   const [violations, setViolations] = useState<Violation[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [carts, setCarts] = useState<{ cart_name: string; cart_number: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingViolation, setEditingViolation] = useState<Violation | null>(null);
@@ -85,6 +86,7 @@ export default function Violations() {
   useEffect(() => {
     fetchViolations();
     fetchCustomers();
+    fetchCarts();
 
     const channel = supabase
       .channel('violations-changes')
@@ -174,6 +176,28 @@ export default function Violations() {
       setCustomers(data || []);
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error fetching customers', description: error.message });
+    }
+  };
+
+  const fetchCarts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('cart_name, cart_number')
+        .not('cart_name', 'is', null)
+        .not('cart_number', 'is', null)
+        .order('cart_name');
+      
+      if (error) throw error;
+      
+      // Get unique combinations
+      const uniqueCarts = Array.from(
+        new Map(data?.map(item => [`${item.cart_name}-${item.cart_number}`, item])).values()
+      );
+      
+      setCarts(uniqueCarts || []);
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error fetching carts', description: error.message });
     }
   };
 
@@ -568,26 +592,49 @@ export default function Violations() {
                   <Label htmlFor="cart_name" className="text-right">
                     Cart Name
                   </Label>
-                  <Input 
-                    id="cart_name" 
+                  <Select 
                     value={formData.cart_name} 
-                    className="col-span-3" 
-                    placeholder="Enter cart name"
-                    onChange={(e) => setFormData({ ...formData, cart_name: e.target.value })} 
-                  />
+                    onValueChange={(value) => {
+                      const selectedCart = carts.find(c => c.cart_name === value);
+                      setFormData({ 
+                        ...formData, 
+                        cart_name: value,
+                        cart_number: selectedCart?.cart_number || formData.cart_number
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select cart name" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(new Set(carts.map(c => c.cart_name).filter((name): name is string => !!name))).map((cartName) => (
+                        <SelectItem key={cartName} value={cartName}>
+                          {cartName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="cart_number" className="text-right">
                     Cart Number
                   </Label>
-                  <Input 
-                    id="cart_number" 
+                  <Select 
                     value={formData.cart_number} 
-                    className="col-span-3" 
-                    placeholder="Enter cart number"
-                    onChange={(e) => setFormData({ ...formData, cart_number: e.target.value })} 
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, cart_number: value })}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select cart number" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(new Set(carts.map(c => c.cart_number).filter((num): num is string => !!num))).map((cartNumber) => (
+                        <SelectItem key={cartNumber} value={cartNumber}>
+                          {cartNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="violation_type" className="text-right">
