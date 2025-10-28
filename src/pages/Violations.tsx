@@ -13,10 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit, AlertTriangle, Info, XOctagon, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit, AlertTriangle, Info, XOctagon, ShoppingCart, ArrowLeft, Download, Mail, MessageSquare, Search, CalendarIcon, Filter } from 'lucide-react';
 import { violationSchema } from '@/lib/validation';
 import { ViolationsTable } from '@/components/violations/ViolationsTable';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface Customer {
   id: string;
@@ -65,6 +69,10 @@ export default function Violations() {
   const [selectedHistorySeverity, setSelectedHistorySeverity] = useState<string | null>(null);
   const [selectedHistoryCart, setSelectedHistoryCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
   const [isManualEntry, setIsManualEntry] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [formData, setFormData] = useState<{
     customer_id: string;
     manual_customer_name: string;
@@ -372,6 +380,70 @@ export default function Violations() {
     }
   };
 
+  const handleResolveAll = async (cartViolations: Violation[]) => {
+    try {
+      const notes = prompt('Enter resolution notes for all violations:');
+      if (!notes) return;
+
+      for (const violation of cartViolations) {
+        await supabase.from('violations').update({
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
+          resolution_notes: notes
+        }).eq('id', violation.id);
+      }
+
+      toast({ title: 'All violations resolved', description: `Resolved ${cartViolations.length} violation(s)` });
+      fetchViolations();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error resolving violations', description: error.message });
+    }
+  };
+
+  const handleContactCustomer = async (customer: Customer | null, manualName: string | null) => {
+    if (!customer && !manualName) {
+      toast({ variant: 'destructive', title: 'No customer information', description: 'Cannot contact customer' });
+      return;
+    }
+
+    const customerName = manualName || customer?.full_name || customer?.email || 'Customer';
+    
+    toast({ 
+      title: 'Contact Options', 
+      description: `You can contact ${customerName} via SMS or email from their profile page.` 
+    });
+  };
+
+  const exportToCSV = (data: Violation[]) => {
+    const headers = ['Date', 'Customer', 'Cart', 'Type', 'Severity', 'Status', 'Description', 'Resolution'];
+    const rows = data.map(v => [
+      new Date(v.created_at).toLocaleDateString(),
+      v.manual_customer_name || v.customer?.full_name || v.customer?.email || 'N/A',
+      `${v.cart_name || 'N/A'} #${v.cart_number || 'N/A'}`,
+      v.violation_type,
+      v.severity,
+      v.status,
+      v.description.replace(/,/g, ';'),
+      v.resolution_notes?.replace(/,/g, ';') || 'N/A'
+    ]);
+
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `violations-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({ title: 'Export successful', description: 'CSV file downloaded' });
+  };
+
+  const getCartInitials = (cartName: string | null) => {
+    if (!cartName) return '?';
+    return cartName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   const resetForm = () => {
     setEditingViolation(null);
     setIsManualEntry(false);
@@ -417,8 +489,40 @@ export default function Violations() {
   };
 
   const violationsData = useMemo(() => {
-    const active = violations.filter(v => v.status === 'pending' || v.status === 'in_review');
-    const history = violations.filter(v => v.status === 'resolved' || v.status === 'dismissed')
+    // Filter violations based on search and filters
+    let filtered = violations;
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(v => 
+        v.cart_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.cart_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.violation_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.customer?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.manual_customer_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply date range filter
+    if (dateRange.from && dateRange.to) {
+      filtered = filtered.filter(v => {
+        const vDate = new Date(v.created_at);
+        return vDate >= dateRange.from! && vDate <= dateRange.to!;
+      });
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(v => v.status === statusFilter);
+    }
+
+    // Apply severity filter
+    if (severityFilter !== 'all') {
+      filtered = filtered.filter(v => v.severity === severityFilter);
+    }
+
+    const active = filtered.filter(v => v.status === 'pending' || v.status === 'in_review');
+    const history = filtered.filter(v => v.status === 'resolved' || v.status === 'dismissed')
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     const bySeverity = {
@@ -477,6 +581,16 @@ export default function Violations() {
       .slice(0, 3)
       .map(([cart, count]) => ({ cart, count }));
 
+    // Calculate resolution time metrics
+    const resolvedViolations = history.filter(v => v.status === 'resolved' && v.resolved_at);
+    const avgResolutionTime = resolvedViolations.length > 0
+      ? resolvedViolations.reduce((acc, v) => {
+          const created = new Date(v.created_at).getTime();
+          const resolved = new Date(v.resolved_at!).getTime();
+          return acc + (resolved - created);
+        }, 0) / resolvedViolations.length
+      : 0;
+
     return {
       active,
       history,
@@ -490,10 +604,12 @@ export default function Violations() {
         highCount: bySeverity.high.length,
         mediumCount: bySeverity.medium.length,
         lowCount: bySeverity.low.length,
-        topCarts
+        topCarts,
+        avgResolutionTimeHours: Math.round(avgResolutionTime / (1000 * 60 * 60) * 10) / 10,
+        totalResolved: resolvedViolations.length
       }
     };
-  }, [violations]);
+  }, [violations, searchQuery, dateRange, statusFilter, severityFilter]);
 
   if (loading) {
     return (
@@ -706,21 +822,50 @@ export default function Violations() {
         // Level 3: Show violations table for selected cart
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedCart(null)}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <CardTitle>
-                  {selectedCart.data.cart_name} ({selectedCart.data.cart_number})
-                </CardTitle>
-                <CardDescription>
-                  {selectedCart.data.violations.length} violation(s) - Severity: {selectedCart.severity}
-                </CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedCart(null)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg font-bold text-primary">
+                      {getCartInitials(selectedCart.data.cart_name)}
+                    </span>
+                  </div>
+                  <div>
+                    <CardTitle>
+                      {selectedCart.data.cart_name} ({selectedCart.data.cart_number})
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedCart.data.violations.length} violation(s) - Severity: {selectedCart.severity}
+                    </CardDescription>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleContactCustomer(selectedCart.data.customer, selectedCart.data.violations[0]?.manual_customer_name)}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Contact
+                </Button>
+                {(selectedCart.data.violations.some((v: Violation) => v.status === 'pending' || v.status === 'in_review')) && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleResolveAll(selectedCart.data.violations.filter((v: Violation) => v.status === 'pending' || v.status === 'in_review'))}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Resolve All
+                  </Button>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -759,12 +904,16 @@ export default function Violations() {
             {Object.entries(violationsData.severityGroups[selectedSeverity as keyof typeof violationsData.severityGroups] || {}).map(([cartKey, cartData]: [string, any]) => (
               <Card 
                 key={cartKey}
-                className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 animate-fade-in"
                 onClick={() => setSelectedCart({ cartKey, severity: selectedSeverity, data: cartData })}
               >
                 <CardHeader>
                   <div className="flex items-start gap-3">
-                    <ShoppingCart className="h-6 w-6 mt-1" />
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-primary">
+                        {getCartInitials(cartData.cart_name)}
+                      </span>
+                    </div>
                     <div className="flex-1">
                       <CardTitle className="text-lg">
                         {cartData.cart_name}
@@ -809,15 +958,120 @@ export default function Violations() {
       ) : (
         // Level 1: Show severity cards
         <>
+          {/* Filters and Search */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by cart name, number, or type..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("justify-start text-left font-normal", !dateRange.from && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange.from}
+                    selected={{ from: dateRange.from, to: dateRange.to }}
+                    onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+                    numberOfMonths={2}
+                    className="pointer-events-auto"
+                  />
+                  <div className="p-3 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => setDateRange({ from: undefined, to: undefined })}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Severity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Severities</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_review">In Review</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="dismissed">Dismissed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                onClick={() => exportToCSV(violations)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
+
           <div className="grid gap-4 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card className="animate-fade-in">
                 <CardHeader>
                   <CardTitle>Active Violations</CardTitle>
                   <CardDescription>Total number of active violations</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{violationsData.metrics.totalActive}</div>
+                </CardContent>
+              </Card>
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Avg Resolution</CardTitle>
+                  <CardDescription>Average time to resolve</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{violationsData.metrics.avgResolutionTimeHours}h</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {violationsData.metrics.totalResolved} resolved
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -888,31 +1142,38 @@ export default function Violations() {
                 
                 if (cartCount === 0) return null;
 
+                const borderColors = {
+                  critical: 'border-l-4 border-l-destructive',
+                  high: 'border-l-4 border-l-orange-500',
+                  medium: 'border-l-4 border-l-yellow-500',
+                  low: 'border-l-4 border-l-blue-500'
+                };
+
                 return (
-                  <Card
+                  <Alert
                     key={severity}
-                    className="cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+                    className={cn(
+                      "cursor-pointer hover:shadow-xl transition-all hover:scale-105 animate-fade-in",
+                      borderColors[severity]
+                    )}
                     onClick={() => setSelectedSeverity(severity)}
                   >
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-2">
-                        {getSeverityIcon(severity)}
-                        <CardTitle className="capitalize text-xl">{severity}</CardTitle>
-                      </div>
-                      <CardDescription>Click to view affected carts</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
+                    <div className="flex items-center gap-3 mb-3">
+                      {getSeverityIcon(severity)}
+                      <AlertTitle className="capitalize text-xl mb-0">{severity}</AlertTitle>
+                    </div>
+                    <AlertDescription>
+                      <div className="space-y-2 mt-2">
                         <div className="flex items-baseline gap-2">
                           <div className="text-3xl font-bold">{violationCount}</div>
-                          <div className="text-sm text-muted-foreground">violations</div>
+                          <div className="text-sm">violations</div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm">
                           across <span className="font-semibold">{cartCount}</span> cart(s)
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </AlertDescription>
+                  </Alert>
                 );
               })}
             </div>
@@ -971,14 +1232,23 @@ export default function Violations() {
                 {Object.entries(violationsData.historySeverityGroups[selectedHistorySeverity] || {}).map(([cartKey, cartData]: [string, any]) => (
                   <Card
                     key={cartKey}
-                    className="cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+                    className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 animate-fade-in"
                     onClick={() => setSelectedHistoryCart({ cartKey, severity: selectedHistorySeverity, data: cartData })}
                   >
                     <CardHeader>
-                      <CardTitle className="text-lg">{cartData.cart_name}</CardTitle>
-                      <CardDescription>
-                        Cart #{cartData.cart_number}
-                      </CardDescription>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-bold text-primary">
+                            {getCartInitials(cartData.cart_name)}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{cartData.cart_name}</CardTitle>
+                          <CardDescription>
+                            Cart #{cartData.cart_number}
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
@@ -1028,10 +1298,20 @@ export default function Violations() {
                     
                     if (cartCount === 0) return null;
 
+                    const borderColors = {
+                      critical: 'border-l-4 border-l-destructive',
+                      high: 'border-l-4 border-l-orange-500',
+                      medium: 'border-l-4 border-l-yellow-500',
+                      low: 'border-l-4 border-l-blue-500'
+                    };
+
                     return (
                       <Card
                         key={severity}
-                        className="cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+                        className={cn(
+                          "cursor-pointer hover:shadow-xl transition-all hover:scale-105 animate-fade-in",
+                          borderColors[severity]
+                        )}
                         onClick={() => setSelectedHistorySeverity(severity)}
                       >
                         <CardHeader>
