@@ -245,60 +245,68 @@ All colors MUST be HSL.
     --sidebar-ring: 40 85% 85%;
   }
 
-  /* Liquid Glass Theme (Translucent Glassmorphism) */
+  /* Liquid Glass Theme (iOS-Style Glassmorphism) */
   :root.liquid-glass {
-    --background: 210 50% 92%;
-    --foreground: 220 20% 15%;
+    /* Gradient background like iOS */
+    --background: 210 60% 94%;
+    --foreground: 220 30% 12%;
 
-    --card: 210 30% 96%;
-    --card-foreground: 220 20% 15%;
+    /* Translucent cards with blur */
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 12%;
 
-    --popover: 210 30% 96%;
-    --popover-foreground: 220 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 12%;
 
-    --primary: 210 100% 55%;
+    --primary: 210 100% 56%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 220 25% 88%;
-    --secondary-foreground: 220 20% 15%;
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 220 30% 12%;
 
-    --muted: 220 20% 90%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 220 12% 94%;
+    --muted-foreground: 220 15% 50%;
 
-    --accent: 280 60% 65%;
+    --accent: 280 65% 62%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 85% 60%;
+    --destructive: 0 85% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 25% 80%;
-    --input: 220 20% 88%;
-    --ring: 210 100% 55%;
+    --border: 220 20% 88%;
+    --input: 220 15% 95%;
+    --ring: 210 100% 56%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
-    /* Glass-specific variables */
-    --glass-bg: 210 30% 96%;
-    --glass-bg-opacity: 0.65;
-    --glass-border: 220 25% 85%;
-    --glass-border-opacity: 0.35;
-    --glass-blur: 20px;
-    --glass-shadow: 0 8px 32px hsl(220 20% 15% / 0.12);
-    --glass-shadow-hover: 0 12px 40px hsl(220 20% 15% / 0.18);
-    --glass-glow: 0 0 24px hsl(210 100% 55% / 0.2);
+    /* iOS-style Glass variables */
+    --glass-bg: 0 0% 100%;
+    --glass-bg-opacity: 0.7;
+    --glass-border: 220 20% 90%;
+    --glass-border-opacity: 0.3;
+    --glass-blur: 40px;
+    --glass-shadow: 0 8px 32px hsl(220 30% 12% / 0.1), 0 1px 2px hsl(220 30% 12% / 0.06);
+    --glass-shadow-hover: 0 12px 48px hsl(220 30% 12% / 0.15), 0 2px 4px hsl(220 30% 12% / 0.08);
+    --glass-glow: 0 0 32px hsl(210 100% 56% / 0.15);
+    
+    /* iOS vibrancy effect */
+    --vibrancy-bg: 0 0% 100%;
+    --vibrancy-opacity: 0.85;
 
-    --gradient-glass: linear-gradient(135deg, hsl(210 30% 96% / 0.85), hsl(220 25% 92% / 0.75));
-    --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(280 60% 65%));
-    --shadow-soft: 0 4px 24px hsl(220 20% 15% / 0.08), 0 2px 8px hsl(220 20% 15% / 0.05);
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.75), hsl(220 20% 98% / 0.65));
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 56%), hsl(280 65% 62%));
+    --gradient-vibrant: linear-gradient(180deg, hsl(210 60% 94%), hsl(195 50% 90%));
+    --shadow-soft: 0 4px 24px hsl(220 30% 12% / 0.06), 0 2px 8px hsl(220 30% 12% / 0.03);
+    --shadow-depth: 0 20px 60px hsl(220 30% 12% / 0.12), 0 8px 24px hsl(220 30% 12% / 0.08);
 
-    --sidebar-background: 220 25% 92%;
-    --sidebar-foreground: 220 20% 15%;
-    --sidebar-primary: 210 100% 55%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 30% 12%;
+    --sidebar-primary: 210 100% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 88%;
-    --sidebar-accent-foreground: 220 20% 15%;
-    --sidebar-border: 220 25% 82%;
-    --sidebar-ring: 210 100% 55%;
+    --sidebar-accent: 220 12% 96%;
+    --sidebar-accent-foreground: 220 30% 12%;
+    --sidebar-border: 220 20% 90%;
+    --sidebar-ring: 210 100% 56%;
   }
 
   .dark {
@@ -438,60 +446,67 @@ All colors MUST be HSL.
     --sidebar-ring: 40 70% 75%;
   }
 
-  /* Liquid Glass Theme - Dark Mode */
+  /* Liquid Glass Theme - Dark Mode (iOS-Style) */
   .dark.liquid-glass {
-    --background: 220 20% 8%;
-    --foreground: 210 15% 90%;
+    --background: 220 25% 6%;
+    --foreground: 210 20% 92%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 210 15% 90%;
+    /* Translucent dark glass */
+    --card: 220 18% 10%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 220 18% 12%;
-    --popover-foreground: 210 15% 90%;
+    --popover: 220 18% 10%;
+    --popover-foreground: 210 20% 92%;
 
-    --primary: 210 95% 60%;
+    --primary: 210 95% 62%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 15% 90%;
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 20% 92%;
 
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 220 15% 14%;
+    --muted-foreground: 220 12% 65%;
 
-    --accent: 280 60% 60%;
+    --accent: 280 60% 65%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 80% 55%;
+    --destructive: 0 80% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 18%;
-    --ring: 210 95% 60%;
+    --border: 220 15% 20%;
+    --input: 220 15% 16%;
+    --ring: 210 95% 62%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
-    /* Glass-specific variables for dark mode */
-    --glass-bg: 220 18% 12%;
-    --glass-bg-opacity: 0.6;
-    --glass-border: 220 15% 25%;
-    --glass-border-opacity: 0.25;
-    --glass-blur: 20px;
-    --glass-shadow: 0 8px 32px hsl(0 0% 0% / 0.4);
-    --glass-shadow-hover: 0 12px 40px hsl(0 0% 0% / 0.5);
-    --glass-glow: 0 0 24px hsl(210 95% 60% / 0.25);
+    /* iOS-style Glass variables for dark */
+    --glass-bg: 220 18% 10%;
+    --glass-bg-opacity: 0.65;
+    --glass-border: 220 15% 24%;
+    --glass-border-opacity: 0.3;
+    --glass-blur: 40px;
+    --glass-shadow: 0 8px 32px hsl(0 0% 0% / 0.5), 0 1px 2px hsl(0 0% 0% / 0.3);
+    --glass-shadow-hover: 0 12px 48px hsl(0 0% 0% / 0.6), 0 2px 4px hsl(0 0% 0% / 0.4);
+    --glass-glow: 0 0 32px hsl(210 95% 62% / 0.2);
 
-    --gradient-glass: linear-gradient(135deg, hsl(220 18% 12% / 0.85), hsl(220 15% 18% / 0.7));
-    --gradient-primary: linear-gradient(135deg, hsl(210 95% 60%), hsl(280 60% 60%));
-    --shadow-soft: 0 4px 24px hsl(0 0% 0% / 0.3), 0 2px 8px hsl(0 0% 0% / 0.2);
+    /* Dark vibrancy */
+    --vibrancy-bg: 220 15% 12%;
+    --vibrancy-opacity: 0.8;
 
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 210 15% 90%;
-    --sidebar-primary: 210 95% 60%;
+    --gradient-glass: linear-gradient(135deg, hsl(220 18% 10% / 0.75), hsl(220 15% 15% / 0.65));
+    --gradient-primary: linear-gradient(135deg, hsl(210 95% 62%), hsl(280 60% 65%));
+    --gradient-vibrant: linear-gradient(180deg, hsl(220 25% 6%), hsl(220 20% 8%));
+    --shadow-soft: 0 4px 24px hsl(0 0% 0% / 0.4), 0 2px 8px hsl(0 0% 0% / 0.25);
+    --shadow-depth: 0 20px 60px hsl(0 0% 0% / 0.6), 0 8px 24px hsl(0 0% 0% / 0.4);
+
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 210 95% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 15%;
-    --sidebar-accent-foreground: 210 15% 90%;
-    --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 210 95% 60%;
+    --sidebar-accent: 220 15% 14%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 210 95% 62%;
   }
 }
 
@@ -851,53 +866,63 @@ All colors MUST be HSL.
   animation: christmas-lights 2s linear infinite;
 }
 
-/* ==================== Liquid Glass Theme Effects ==================== */
+/* ==================== Liquid Glass Theme Effects (iOS-Style) ==================== */
 
-/* Glass background effect on body */
+/* iOS-style gradient background */
 .liquid-glass body {
   background-image: 
-    radial-gradient(ellipse at top left, hsl(210 100% 55% / 0.08), transparent 40%),
-    radial-gradient(ellipse at bottom right, hsl(280 60% 65% / 0.08), transparent 40%);
+    linear-gradient(to bottom, hsl(210 60% 94%), hsl(195 50% 90%)),
+    radial-gradient(ellipse at top left, hsl(210 100% 56% / 0.12), transparent 50%),
+    radial-gradient(ellipse at bottom right, hsl(280 65% 62% / 0.12), transparent 50%);
+  background-attachment: fixed;
 }
 
 .dark.liquid-glass body {
   background-image: 
-    radial-gradient(ellipse at top left, hsl(210 95% 60% / 0.12), transparent 40%),
-    radial-gradient(ellipse at bottom right, hsl(280 60% 60% / 0.12), transparent 40%);
+    linear-gradient(to bottom, hsl(220 25% 6%), hsl(220 20% 8%)),
+    radial-gradient(ellipse at top left, hsl(210 95% 62% / 0.15), transparent 50%),
+    radial-gradient(ellipse at bottom right, hsl(280 60% 65% / 0.15), transparent 50%);
+  background-attachment: fixed;
 }
 
-/* Cards with glass effect */
+/* iOS-style frosted glass cards */
 .liquid-glass .rounded-lg.border.bg-card,
 .liquid-glass [class*="card"] {
-  background: hsl(var(--glass-bg) / var(--glass-bg-opacity));
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+  background: hsl(var(--glass-bg) / var(--glass-bg-opacity)) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 0.5px solid hsl(var(--glass-border) / var(--glass-border-opacity));
   box-shadow: var(--glass-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .liquid-glass .rounded-lg.border.bg-card:hover,
 .liquid-glass [class*="card"]:hover {
-  box-shadow: var(--glass-shadow-hover), var(--glass-glow);
-  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-1px) scale(1.005);
+  border-color: hsl(var(--glass-border) / calc(var(--glass-border-opacity) + 0.1));
 }
 
-/* Buttons with glass effect */
+/* iOS-style buttons with vibrancy */
 .liquid-glass button:not(.ghost):not([data-state="open"]) {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
 .liquid-glass button:not(.ghost):hover {
-  box-shadow: var(--glass-glow);
-  transform: translateY(-1px);
+  transform: scale(1.02);
+  filter: brightness(1.05);
 }
 
-/* Ripple effect on button click */
+.liquid-glass button:not(.ghost):active {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+/* iOS ripple effect */
 .liquid-glass button:not(.ghost)::after {
   content: '';
   position: absolute;
@@ -906,74 +931,78 @@ All colors MUST be HSL.
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary-foreground) / 0.2);
   transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  transition: width 0.5s ease-out, height 0.5s ease-out, opacity 0.5s ease-out;
+  opacity: 0;
 }
 
 .liquid-glass button:not(.ghost):active::after {
-  width: 300px;
-  height: 300px;
+  width: 200px;
+  height: 200px;
+  opacity: 1;
+  transition: width 0s, height 0s, opacity 0s;
 }
 
-/* Input fields with frosted glass */
+/* iOS-style input fields */
 .liquid-glass input,
 .liquid-glass textarea,
 .liquid-glass select {
-  background: hsl(var(--glass-bg) / 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
-  transition: all 0.3s ease;
+  background: hsl(var(--vibrancy-bg) / var(--vibrancy-opacity));
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 0.5px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .liquid-glass input:focus,
 .liquid-glass textarea:focus,
 .liquid-glass select:focus {
-  background: hsl(var(--glass-bg) / 0.7);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1), var(--glass-glow);
-  border-color: hsl(var(--primary) / 0.5);
+  background: hsl(var(--vibrancy-bg) / calc(var(--vibrancy-opacity) + 0.05));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.08), var(--shadow-soft);
+  border-color: hsl(var(--primary) / 0.3);
+  transform: translateY(-1px);
 }
 
-/* Dialogs and modals with heavy blur */
+/* iOS-style dialogs with ultra blur */
 .liquid-glass [role="dialog"],
 .liquid-glass [role="alertdialog"],
 .liquid-glass [data-radix-dialog-content] {
-  background: hsl(var(--glass-bg) / 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid hsl(var(--glass-border) / 0.4);
-  box-shadow: var(--glass-shadow-hover);
+  background: hsl(var(--vibrancy-bg) / 0.9) !important;
+  backdrop-filter: blur(60px) saturate(180%);
+  -webkit-backdrop-filter: blur(60px) saturate(180%);
+  border: 0.5px solid hsl(var(--glass-border) / 0.5);
+  box-shadow: var(--shadow-depth);
 }
 
-/* Dialog overlay with blur */
+/* iOS dialog overlay */
 .liquid-glass [data-radix-dialog-overlay] {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: hsl(var(--background) / 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: hsl(var(--background) / 0.4);
 }
 
-/* Dropdowns and popovers - IMPORTANT: proper background for visibility */
+/* iOS-style menus and popovers */
 .liquid-glass [role="menu"],
 .liquid-glass [role="listbox"],
 .liquid-glass [data-radix-popover-content],
 .liquid-glass [data-radix-dropdown-menu-content],
 .liquid-glass [data-radix-select-content] {
-  background: hsl(var(--glass-bg) / 0.95) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid hsl(var(--glass-border) / 0.4);
-  box-shadow: var(--glass-shadow);
+  background: hsl(var(--vibrancy-bg) / 0.95) !important;
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  border: 0.5px solid hsl(var(--glass-border) / 0.5);
+  box-shadow: var(--shadow-depth);
   z-index: 50;
 }
 
-/* Sidebar with glass effect */
+/* iOS-style sidebar */
 .liquid-glass aside,
 .liquid-glass nav {
-  background: hsl(var(--sidebar-background) / 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-right: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+  background: hsl(var(--sidebar-background) / 0.85);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-right: 0.5px solid hsl(var(--glass-border) / var(--glass-border-opacity));
 }
 
 /* Tabs with subtle glass */
