@@ -1185,20 +1185,34 @@ export default function Violations() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
+                                  // Collect ALL violations for this cart across all severity levels
                                   const severities = ['critical', 'high', 'medium', 'low'] as const;
-                                  for (const severity of severities) {
-                                    const cartData = violationsData.severityGroups[severity]?.[item.cart_number];
-                                    if (cartData) {
-                                      setSelectedSeverity(severity);
-                                      setTimeout(() => {
-                                        setSelectedCart({ 
-                                          cartKey: item.cart_number, 
-                                          severity, 
-                                          data: cartData 
-                                        });
-                                      }, 0);
-                                      break;
+                                  const allViolationsForCart: Violation[] = [];
+                                  let cartData: any = null;
+                                  
+                                  severities.forEach(severity => {
+                                    const data = violationsData.severityGroups[severity]?.[item.cart_number];
+                                    if (data) {
+                                      allViolationsForCart.push(...data.violations);
+                                      if (!cartData) {
+                                        // Use the first found cart data as base
+                                        cartData = {
+                                          cart_name: data.cart_name,
+                                          cart_number: data.cart_number,
+                                          customer: data.customer,
+                                          violations: []
+                                        };
+                                      }
                                     }
+                                  });
+                                  
+                                  if (cartData) {
+                                    cartData.violations = allViolationsForCart;
+                                    setSelectedCart({ 
+                                      cartKey: item.cart_number, 
+                                      severity: 'all', 
+                                      data: cartData 
+                                    });
                                   }
                                 }}
                               >
