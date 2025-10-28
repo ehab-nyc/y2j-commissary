@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CheckCircle, X, Edit, Trash2, Clock } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { CheckCircle, X, Edit, Trash2, Clock, User, Calendar, Image as ImageIcon } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -57,155 +58,174 @@ export function ViolationsTable({
   getSeverityColor
 }: ViolationsTableProps) {
   return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Images</TableHead>
-            <TableHead>Inspector</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {violations.map((violation) => (
-            <TableRow key={violation.id}>
-              <TableCell>
-                <div className="flex flex-col gap-1">
-                  <span className="font-medium">{violation.violation_type}</span>
-                  <Badge variant={getSeverityColor(violation.severity)} className="w-fit">
+    <div className="grid gap-4">
+      {violations.map((violation) => (
+        <Card key={violation.id} className="overflow-hidden">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl">{violation.violation_type}</CardTitle>
+                <CardDescription className="flex items-center gap-2">
+                  <Badge variant={getSeverityColor(violation.severity)}>
                     {violation.severity}
                   </Badge>
-                </div>
-              </TableCell>
-              <TableCell className="max-w-xs">
-                <p className="text-sm line-clamp-2">{violation.description}</p>
-                {violation.resolution_notes && (
-                  <Alert className="mt-2">
-                    <AlertTitle className="text-xs">Resolution</AlertTitle>
-                    <AlertDescription className="text-xs">{violation.resolution_notes}</AlertDescription>
-                  </Alert>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(violation.status)}
-                  <Badge variant="outline">{violation.status}</Badge>
-                </div>
-              </TableCell>
-              <TableCell>
-                {violation.images.length > 0 ? (
-                  <div className="flex gap-1">
-                    {violation.images.slice(0, 3).map((image) => (
+                  <span className="flex items-center gap-1">
+                    {getStatusIcon(violation.status)}
+                    <Badge variant="outline">{violation.status}</Badge>
+                  </span>
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {/* Description */}
+            <div>
+              <p className="text-sm text-muted-foreground font-medium mb-1">Description</p>
+              <p className="text-sm">{violation.description}</p>
+            </div>
+
+            <Separator />
+
+            {/* Images */}
+            {violation.images.length > 0 && (
+              <>
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-medium">Images ({violation.images.length})</p>
+                  </div>
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {violation.images.map((image) => (
                       <img
                         key={image.id}
                         src={image.image_url}
-                        alt="Violation"
-                        className="h-12 w-12 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                        alt="Violation evidence"
+                        className="aspect-square rounded-lg object-cover cursor-pointer hover:opacity-80 transition-all hover:scale-105 border"
                         onClick={() => setFullScreenImage(image.image_url)}
                       />
                     ))}
-                    {violation.images.length > 3 && (
-                      <div className="h-12 w-12 rounded bg-muted flex items-center justify-center text-xs">
-                        +{violation.images.length - 3}
-                      </div>
-                    )}
                   </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">No images</span>
-                )}
-              </TableCell>
-              <TableCell>
-                <p className="text-sm">{violation.inspector.full_name || violation.inspector.email}</p>
-              </TableCell>
-              <TableCell>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  {new Date(violation.created_at).toLocaleDateString()}
-                </p>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {violation.status === 'pending' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateStatus(violation.id, 'in_review');
-                      }}
-                    >
-                      <Clock className="w-3 h-3" />
-                    </Button>
-                  )}
-                  {(violation.status === 'pending' || violation.status === 'in_review') && (
-                    <>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const notes = prompt('Enter resolution notes:');
-                          if (notes) updateStatus(violation.id, 'resolved', notes);
-                        }}
-                      >
-                        <CheckCircle className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          updateStatus(violation.id, 'dismissed');
-                        }}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </>
-                  )}
-                  {hasRole('super_admin') && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(violation);
-                        }}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete this violation and all associated images.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(violation.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </>
-                  )}
                 </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                <Separator />
+              </>
+            )}
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Inspector */}
+              <div className="flex items-start gap-3">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Inspector</p>
+                  <p className="text-sm font-medium">
+                    {violation.inspector.full_name || violation.inspector.email}
+                  </p>
+                </div>
+              </div>
+
+              {/* Date */}
+              <div className="flex items-start gap-3">
+                <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Reported Date</p>
+                  <p className="text-sm font-medium">
+                    {new Date(violation.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Resolution Notes */}
+            {violation.resolution_notes && (
+              <>
+                <Separator />
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertTitle>Resolution Notes</AlertTitle>
+                  <AlertDescription>{violation.resolution_notes}</AlertDescription>
+                </Alert>
+              </>
+            )}
+
+            {/* Actions */}
+            <Separator />
+            <div className="flex flex-wrap gap-2">
+              {violation.status === 'pending' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateStatus(violation.id, 'in_review')}
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Mark In Review
+                </Button>
+              )}
+              {(violation.status === 'pending' || violation.status === 'in_review') && (
+                <>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      const notes = prompt('Enter resolution notes:');
+                      if (notes) updateStatus(violation.id, 'resolved', notes);
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Resolve
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateStatus(violation.id, 'dismissed')}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Dismiss
+                  </Button>
+                </>
+              )}
+              {hasRole('super_admin') && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(violation)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Violation?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete this violation and all associated images. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(violation.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
