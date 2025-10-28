@@ -145,12 +145,28 @@ export function StarPrinterSettings() {
       <CardContent className="space-y-6">
         <Alert>
           <AlertDescription>
-            <strong>Important:</strong> Your device and printer must be on the same network. 
-            WebPRNT mode must be enabled on the printer. Find the IP address on the printer's configuration page.
+            <strong>Important Setup Requirements:</strong>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Printer and device must be on the same WiFi network</li>
+              <li>WebPRNT mode must be enabled on the printer</li>
+              <li>Find the IP on the printer's configuration page</li>
+            </ul>
             {window.location.protocol === 'https:' && (
-              <p className="mt-2 text-warning">
-                ⚠️ HTTPS limitation: Connection test may not work. Save settings and try actual printing instead.
-              </p>
+              <div className="mt-3 p-2 bg-warning/10 border border-warning/20 rounded">
+                <strong className="text-warning">⚠️ HTTPS/HTTP Security Limitation:</strong>
+                <p className="mt-1 text-sm">
+                  Your web browser blocks connections from secure (HTTPS) websites to local HTTP devices. 
+                  <strong> The connection test will always fail in this web app.</strong>
+                </p>
+                <p className="mt-2 text-sm">
+                  <strong>Solutions:</strong>
+                </p>
+                <ul className="list-disc list-inside text-sm mt-1 ml-2">
+                  <li>Use <strong>Browser Print</strong> button instead (works perfectly)</li>
+                  <li>Or install the <strong>Star WebPRNT Browser</strong> mobile app from your app store</li>
+                  <li>Or access via local network HTTP (not available in Lovable)</li>
+                </ul>
+              </div>
             )}
           </AlertDescription>
         </Alert>
