@@ -60,6 +60,8 @@ export default function Violations() {
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
   const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
   const [selectedCart, setSelectedCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
+  const [selectedHistorySeverity, setSelectedHistorySeverity] = useState<string | null>(null);
+  const [selectedHistoryCart, setSelectedHistoryCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
   const [formData, setFormData] = useState<{
     customer_id: string;
     violation_type: string;
@@ -340,13 +342,21 @@ export default function Violations() {
 
   const violationsData = useMemo(() => {
     const active = violations.filter(v => v.status === 'pending' || v.status === 'in_review');
-    const history = violations.filter(v => v.status === 'resolved' || v.status === 'dismissed');
+    const history = violations.filter(v => v.status === 'resolved' || v.status === 'dismissed')
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     const bySeverity = {
       critical: active.filter(v => v.severity === 'critical'),
       high: active.filter(v => v.severity === 'high'),
       medium: active.filter(v => v.severity === 'medium'),
       low: active.filter(v => v.severity === 'low'),
+    };
+
+    const historyBySeverity = {
+      critical: history.filter(v => v.severity === 'critical'),
+      high: history.filter(v => v.severity === 'high'),
+      medium: history.filter(v => v.severity === 'medium'),
+      low: history.filter(v => v.severity === 'low'),
     };
 
     const groupByCart = (violations: Violation[]) => {
@@ -372,6 +382,13 @@ export default function Violations() {
       low: groupByCart(bySeverity.low),
     };
 
+    const historySeverityGroups = {
+      critical: groupByCart(historyBySeverity.critical),
+      high: groupByCart(historyBySeverity.high),
+      medium: groupByCart(historyBySeverity.medium),
+      low: groupByCart(historyBySeverity.low),
+    };
+
     const totalActive = active.length;
     const cartViolationCounts = active.reduce((acc, v) => {
       const cartKey = v.cart_number || v.customer.cart_number || 'Unknown';
@@ -388,7 +405,9 @@ export default function Violations() {
       active,
       history,
       bySeverity,
+      historyBySeverity,
       severityGroups,
+      historySeverityGroups,
       metrics: {
         totalActive,
         criticalCount: bySeverity.critical.length,
@@ -725,23 +744,145 @@ export default function Violations() {
           )}
 
           <h2 className="text-xl font-bold mt-8 mb-4">Violation History</h2>
-          {violationsData.history.length === 0 ? (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No violation history</AlertTitle>
-              <AlertDescription>There are no resolved or dismissed violations.</AlertDescription>
-            </Alert>
+          {selectedHistoryCart ? (
+            // Level 3: Show violations for selected cart in history
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedHistoryCart(null)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle>
+                      {selectedHistoryCart.data.cart_name} - #{selectedHistoryCart.data.cart_number}
+                    </CardTitle>
+                    <CardDescription className="capitalize">
+                      {selectedHistorySeverity} severity violations history
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ViolationsTable
+                  violations={selectedHistoryCart.data.violations}
+                  hasRole={hasRole}
+                  updateStatus={updateStatus}
+                  handleEdit={handleEdit}
+                  handleDelete={handleDelete}
+                  setFullScreenImage={setFullScreenImage}
+                  getStatusIcon={getStatusIcon}
+                  getSeverityColor={getSeverityColor}
+                />
+              </CardContent>
+            </Card>
+          ) : selectedHistorySeverity ? (
+            // Level 2: Show carts for selected severity in history
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedHistorySeverity(null)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h3 className="text-lg font-semibold capitalize">{selectedHistorySeverity} Severity - History</h3>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(violationsData.historySeverityGroups[selectedHistorySeverity] || {}).map(([cartKey, cartData]: [string, any]) => (
+                  <Card
+                    key={cartKey}
+                    className="cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+                    onClick={() => setSelectedHistoryCart({ cartKey, severity: selectedHistorySeverity, data: cartData })}
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-lg">{cartData.cart_name}</CardTitle>
+                      <CardDescription>
+                        Cart #{cartData.cart_number}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Total Violations</span>
+                          <Badge variant={getSeverityColor(selectedHistorySeverity)}>
+                            {cartData.violations.length}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <p className="font-medium">Customer:</p>
+                          <p>{cartData.customer.full_name || cartData.customer.email}</p>
+                        </div>
+                        <div className="pt-2 border-t">
+                          <p className="text-sm font-medium mb-2">Recent Violations:</p>
+                          {cartData.violations.slice(0, 3).map((v: any) => (
+                            <div key={v.id} className="text-xs text-muted-foreground truncate">
+                              • {v.violation_type}
+                            </div>
+                          ))}
+                          {cartData.violations.length > 3 && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              +{cartData.violations.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
           ) : (
-            <ViolationsTable
-              violations={violationsData.history}
-              hasRole={hasRole}
-              updateStatus={updateStatus}
-              handleEdit={handleEdit}
-              handleDelete={handleDelete}
-              setFullScreenImage={setFullScreenImage}
-              getStatusIcon={getStatusIcon}
-              getSeverityColor={getSeverityColor}
-            />
+            // Level 1: Show severity cards for history
+            <>
+              {violationsData.history.length === 0 ? (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>No violation history</AlertTitle>
+                  <AlertDescription>There are no resolved or dismissed violations.</AlertDescription>
+                </Alert>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {(['critical', 'high', 'medium', 'low'] as const).map((severity) => {
+                    const cartCount = Object.keys(violationsData.historySeverityGroups[severity] || {}).length;
+                    const violationCount = violationsData.historyBySeverity[severity].length;
+                    
+                    if (cartCount === 0) return null;
+
+                    return (
+                      <Card
+                        key={severity}
+                        className="cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+                        onClick={() => setSelectedHistorySeverity(severity)}
+                      >
+                        <CardHeader>
+                          <div className="flex items-center gap-2 mb-2">
+                            {getSeverityIcon(severity)}
+                            <CardTitle className="capitalize text-xl">{severity}</CardTitle>
+                          </div>
+                          <CardDescription>Click to view affected carts</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <div className="flex items-baseline gap-2">
+                              <div className="text-3xl font-bold">{violationCount}</div>
+                              <div className="text-sm text-muted-foreground">violations</div>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              across <span className="font-semibold">{cartCount}</span> cart(s)
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </>
       )}
