@@ -88,16 +88,20 @@ export function StarPrinterSettings() {
     setConnectionStatus("unknown");
 
     try {
-      // Check if Star WebPRNT library is loaded
-      if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
+      // Check if Star WebPRNT libraries are loaded
+      if (typeof (window as any).StarWebPrintBuilder === 'undefined' ||
+          typeof (window as any).StarWebPrintTrader === 'undefined') {
         setConnectionStatus("error");
         toast.error("Star WebPRNT library not loaded. Please refresh the page.");
         return;
       }
 
-      // Try to create a test print builder to verify the printer is accessible
+      // Try to send a minimal test print
       const builder = new (window as any).StarWebPrintBuilder();
       const url = `http://${printerIp}/StarWebPRNT/SendMessage`;
+      const papertype = 'normal';
+      
+      const request = builder.createInitializationElement();
       
       // Set up a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
@@ -106,12 +110,12 @@ export function StarPrinterSettings() {
 
       // Set up the connection test
       const connectionPromise = new Promise((resolve, reject) => {
-        builder.onSuccess = () => resolve(true);
-        builder.onError = (error: any) => reject(error);
+        const trader = new (window as any).StarWebPrintTrader({ url, papertype });
         
-        // Send a minimal test command
-        builder.createTextElement({ data: "" });
-        builder.send(url);
+        trader.onReceive = () => resolve(true);
+        trader.onError = (error: any) => reject(error);
+        
+        trader.sendMessage({ request });
       });
 
       await Promise.race([connectionPromise, timeoutPromise]);

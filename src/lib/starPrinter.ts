@@ -33,163 +33,151 @@ export interface ReceiptData {
   logoUrl?: string | null;
 }
 
-// Star WebPRNT builder class
-export class StarWebPrintBuilder {
-  private request: any;
-
-  constructor() {
-    // Check if Star WebPRNT is available
-    if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
-      throw new Error('Star WebPRNT library not loaded');
-    }
-    this.request = new (window as any).StarWebPrintBuilder();
+// Build receipt content using Star WebPRNT commands
+export function buildStarReceipt(data: ReceiptData, paperWidth: number = 80): string {
+  // Check if Star WebPRNT is available
+  if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
+    throw new Error('Star WebPRNT library not loaded');
   }
 
-  // Build receipt content using Star WebPRNT commands
-  buildReceipt(data: ReceiptData, paperWidth: number = 80): any {
-    const charWidth = paperWidth === 58 ? 32 : 48;
-    
-    this.request.onReceive = (response: any) => {
-      console.log('Star Printer Response:', response);
-    };
-
-    this.request.onError = (error: any) => {
-      console.error('Star Printer Error:', error);
-    };
-
-    // Initialize
-    this.request.createAlignmentElement({ position: 'center' });
-    
-    // Header with company info
-    if (data.companyInfo?.name) {
-      this.request.createTextElement({ 
-        data: data.companyInfo.name + '\n',
-        emphasis: true,
-        width: 2,
-        height: 2
-      });
-      
-      if (data.companyInfo.address) {
-        this.request.createTextElement({ data: data.companyInfo.address + '\n' });
-      }
-      if (data.companyInfo.phone) {
-        this.request.createTextElement({ data: 'Tel: ' + data.companyInfo.phone + '\n' });
-      }
-      if (data.companyInfo.tax_id) {
-        this.request.createTextElement({ data: 'Tax ID: ' + data.companyInfo.tax_id + '\n' });
-      }
-      
-      this.request.createRulerElement({ thickness: 'medium' });
-    }
-
-    // Custom header text
-    if (data.headerText) {
-      this.request.createTextElement({ 
-        data: data.headerText + '\n',
-        emphasis: true
-      });
-    }
-
-    // Order information
-    this.request.createAlignmentElement({ position: 'left' });
-    this.request.createTextElement({ 
-      data: `Order #: ${data.orderNumber.slice(0, 8)}\n`
-    });
-    this.request.createTextElement({ 
-      data: `Customer: ${data.customerName}\n`
-    });
-    if (data.cartName && data.cartNumber) {
-      this.request.createTextElement({ 
-        data: `Cart: ${data.cartName} ${data.cartNumber}\n`
-      });
-    }
-    if (data.processedBy) {
-      this.request.createTextElement({ 
-        data: `Processed by: ${data.processedBy}\n`
-      });
-    }
-    this.request.createTextElement({ 
-      data: `Date: ${data.date.toLocaleString()}\n`
-    });
-
-    this.request.createRulerElement({ thickness: 'medium' });
-
-    // Items header
-    this.request.createTextElement({ 
-      data: this.padRight('Item', charWidth - 10) + this.padLeft('Amount', 10) + '\n',
-      emphasis: true
-    });
-
-    // Items
-    data.items.forEach(item => {
-      const itemTotal = (item.price * item.quantity).toFixed(2);
-      this.request.createTextElement({ 
-        data: this.padRight(item.name, charWidth - 10) + this.padLeft('$' + itemTotal, 10) + '\n'
-      });
-      this.request.createTextElement({ 
-        data: `  ${item.quantity}x @ $${item.price} (${item.box_size || 'N/A'})\n`,
-        font: 'font_b'
-      });
-    });
-
-    this.request.createRulerElement({ thickness: 'medium' });
-
-    // Totals
-    const subtotal = (data.total - data.serviceFee).toFixed(2);
-    this.request.createTextElement({ 
-      data: this.padRight('Subtotal:', charWidth - 10) + this.padLeft('$' + subtotal, 10) + '\n'
-    });
-
-    if (data.serviceFee > 0) {
-      this.request.createTextElement({ 
-        data: this.padRight('Service Fee:', charWidth - 10) + this.padLeft('$' + data.serviceFee.toFixed(2), 10) + '\n'
-      });
-    }
-
-    this.request.createRulerElement({ thickness: 'thick' });
-    
-    this.request.createTextElement({ 
-      data: this.padRight('TOTAL:', charWidth - 10) + this.padLeft('$' + data.total.toFixed(2), 10) + '\n',
+  const builder = new (window as any).StarWebPrintBuilder();
+  const charWidth = paperWidth === 58 ? 32 : 48;
+  
+  let request = '';
+  
+  // Initialize
+  request += builder.createInitializationElement();
+  
+  // Center alignment for header
+  request += builder.createAlignmentElement({ position: 'center' });
+  
+  // Company info header
+  if (data.companyInfo?.name) {
+    request += builder.createTextElement({ 
+      data: data.companyInfo.name + '\n',
       emphasis: true,
       width: 2,
       height: 2
     });
-
-    // Footer
-    if (data.footerText) {
-      this.request.createRulerElement({ thickness: 'medium' });
-      this.request.createAlignmentElement({ position: 'center' });
-      this.request.createTextElement({ 
-        data: data.footerText + '\n',
-        emphasis: true
-      });
+    
+    if (data.companyInfo.address) {
+      request += builder.createTextElement({ data: data.companyInfo.address + '\n' });
     }
+    if (data.companyInfo.phone) {
+      request += builder.createTextElement({ data: 'Tel: ' + data.companyInfo.phone + '\n' });
+    }
+    if (data.companyInfo.tax_id) {
+      request += builder.createTextElement({ data: 'Tax ID: ' + data.companyInfo.tax_id + '\n' });
+    }
+    
+    request += builder.createTextElement({ data: '--------------------------------\n' });
+  }
 
-    // Powered by
-    this.request.createAlignmentElement({ position: 'center' });
-    this.request.createTextElement({ 
-      data: '\nPowered by Commissary POS\n',
-      font: 'font_b'
+  // Custom header text
+  if (data.headerText) {
+    request += builder.createTextElement({ 
+      data: data.headerText + '\n',
+      emphasis: true
     });
-
-    // Cut paper
-    this.request.createCutPaperElement({ feed: true, type: 'partial' });
-
-    return this.request;
   }
 
-  // Helper methods for formatting
-  private padRight(str: string, length: number): string {
-    return str.length >= length 
-      ? str.substring(0, length) 
-      : str + ' '.repeat(length - str.length);
+  // Order information - left aligned
+  request += builder.createAlignmentElement({ position: 'left' });
+  request += builder.createTextElement({ 
+    data: `Order #: ${data.orderNumber.slice(0, 8)}\n`
+  });
+  request += builder.createTextElement({ 
+    data: `Customer: ${data.customerName}\n`
+  });
+  if (data.cartName && data.cartNumber) {
+    request += builder.createTextElement({ 
+      data: `Cart: ${data.cartName} ${data.cartNumber}\n`
+    });
+  }
+  if (data.processedBy) {
+    request += builder.createTextElement({ 
+      data: `Processed by: ${data.processedBy}\n`
+    });
+  }
+  request += builder.createTextElement({ 
+    data: `Date: ${data.date.toLocaleString()}\n`
+  });
+
+  request += builder.createTextElement({ data: '--------------------------------\n' });
+
+  // Items header
+  request += builder.createTextElement({ 
+    data: padRight('Item', charWidth - 10) + padLeft('Amount', 10) + '\n',
+    emphasis: true
+  });
+
+  // Items
+  data.items.forEach(item => {
+    const itemTotal = (item.price * item.quantity).toFixed(2);
+    request += builder.createTextElement({ 
+      data: padRight(item.name, charWidth - 10) + padLeft('$' + itemTotal, 10) + '\n'
+    });
+    request += builder.createTextElement({ 
+      data: `  ${item.quantity}x @ $${item.price} (${item.box_size || 'N/A'})\n`
+    });
+  });
+
+  request += builder.createTextElement({ data: '--------------------------------\n' });
+
+  // Totals
+  const subtotal = (data.total - data.serviceFee).toFixed(2);
+  request += builder.createTextElement({ 
+    data: padRight('Subtotal:', charWidth - 10) + padLeft('$' + subtotal, 10) + '\n'
+  });
+
+  if (data.serviceFee > 0) {
+    request += builder.createTextElement({ 
+      data: padRight('Service Fee:', charWidth - 10) + padLeft('$' + data.serviceFee.toFixed(2), 10) + '\n'
+    });
   }
 
-  private padLeft(str: string, length: number): string {
-    return str.length >= length 
-      ? str.substring(0, length) 
-      : ' '.repeat(length - str.length) + str;
+  request += builder.createTextElement({ data: '================================\n' });
+  
+  request += builder.createTextElement({ 
+    data: padRight('TOTAL:', charWidth - 10) + padLeft('$' + data.total.toFixed(2), 10) + '\n',
+    emphasis: true,
+    width: 2,
+    height: 2
+  });
+
+  // Footer
+  if (data.footerText) {
+    request += builder.createTextElement({ data: '--------------------------------\n' });
+    request += builder.createAlignmentElement({ position: 'center' });
+    request += builder.createTextElement({ 
+      data: data.footerText + '\n',
+      emphasis: true
+    });
   }
+
+  // Powered by
+  request += builder.createAlignmentElement({ position: 'center' });
+  request += builder.createTextElement({ 
+    data: '\nPowered by Commissary POS\n'
+  });
+
+  // Cut paper
+  request += builder.createCutPaperElement({ feed: true, type: 'partial' });
+
+  return request;
+}
+
+// Helper methods for formatting
+function padRight(str: string, length: number): string {
+  return str.length >= length 
+    ? str.substring(0, length) 
+    : str + ' '.repeat(length - str.length);
+}
+
+function padLeft(str: string, length: number): string {
+  return str.length >= length 
+    ? str.substring(0, length) 
+    : ' '.repeat(length - str.length) + str;
 }
 
 // Send print job to Star printer
@@ -200,23 +188,29 @@ export async function printToStarPrinter(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      const builder = new StarWebPrintBuilder();
-      const request = builder.buildReceipt(receiptData, paperWidth);
+      // Check if Star WebPRNT libraries are available
+      if (typeof (window as any).StarWebPrintTrader === 'undefined') {
+        reject(new Error('Star WebPRNT library not loaded'));
+        return;
+      }
 
-      // Send to printer
+      const request = buildStarReceipt(receiptData, paperWidth);
       const url = `http://${printerIp}/StarWebPRNT/SendMessage`;
+      const papertype = paperWidth === 58 ? 'normal' : 'normal';
       
-      request.onSuccess = () => {
-        console.log('Print job sent successfully');
+      const trader = new (window as any).StarWebPrintTrader({ url, papertype });
+
+      trader.onReceive = (response: any) => {
+        console.log('Print job sent successfully', response);
         resolve();
       };
 
-      request.onError = (error: any) => {
+      trader.onError = (error: any) => {
         console.error('Print error:', error);
         reject(new Error(`Print failed: ${error.status || 'Unknown error'}`));
       };
 
-      request.send(url);
+      trader.sendMessage({ request });
     } catch (error) {
       reject(error);
     }
