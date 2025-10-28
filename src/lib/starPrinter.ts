@@ -204,8 +204,7 @@ export async function queueCloudPRNTJob(
       .insert({
         printer_mac: printerMac,
         job_data: {
-          mediaTypes: ['application/vnd.star.starprnt'],
-          request: request,
+          'application/vnd.star.starprnt': request,
         },
         status: 'pending',
       });
