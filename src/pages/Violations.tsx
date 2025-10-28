@@ -1203,7 +1203,7 @@ export default function Violations() {
               <AlertTitle>No active violations</AlertTitle>
               <AlertDescription>There are no pending or in review violations at the moment.</AlertDescription>
             </Alert>
-          ) : (
+           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
               {(['critical', 'high', 'medium', 'low'] as const).map((severity) => {
                 const cartCount = Object.keys(violationsData.severityGroups[severity] || {}).length;
@@ -1217,6 +1217,13 @@ export default function Violations() {
                   medium: 'border-l-4 border-l-yellow-500',
                   low: 'border-l-4 border-l-blue-500'
                 };
+
+                // Get up to 3 images from violations with images
+                const imagesPreview = violationsData.bySeverity[severity]
+                  .filter(v => v.images && v.images.length > 0)
+                  .slice(0, 3)
+                  .flatMap(v => v.images.slice(0, 1))
+                  .slice(0, 3);
 
                 return (
                   <Alert
@@ -1232,7 +1239,7 @@ export default function Violations() {
                       <AlertTitle className="capitalize text-xl mb-0">{severity}</AlertTitle>
                     </div>
                     <AlertDescription>
-                      <div className="space-y-2 mt-2">
+                      <div className="space-y-3 mt-2">
                         <div className="flex items-baseline gap-2">
                           <div className="text-3xl font-bold">{violationCount}</div>
                           <div className="text-sm">violations</div>
@@ -1240,6 +1247,23 @@ export default function Violations() {
                         <div className="text-sm">
                           across <span className="font-semibold">{cartCount}</span> cart(s)
                         </div>
+                        {imagesPreview.length > 0 && (
+                          <div className="flex gap-2 pt-2 border-t">
+                            {imagesPreview.map((img, idx) => (
+                              <div key={idx} className="relative w-16 h-16 rounded overflow-hidden border">
+                                <img
+                                  src={img.image_url}
+                                  alt="Violation preview"
+                                  className="w-full h-full object-cover"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFullScreenImage(img.image_url);
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </AlertDescription>
                   </Alert>
