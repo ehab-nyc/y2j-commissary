@@ -128,19 +128,7 @@ export function PrintReceipt({
 
     // Check if Star WebPRNT library is loaded
     if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
-      toast.error("Loading Star printer library...");
-      
-      // Load the library
-      const script = document.createElement('script');
-      script.src = 'https://www.star-m.jp/products/s_print/sdk/starwebprintbuilder_v1.0.0.js';
-      script.async = true;
-      script.onload = () => {
-        toast.success("Star printer library loaded. Please try again.");
-      };
-      script.onerror = () => {
-        toast.error("Failed to load Star printer library");
-      };
-      document.head.appendChild(script);
+      toast.error("Star printer library not loaded. Please refresh the page.");
       return;
     }
 
