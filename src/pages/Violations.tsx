@@ -58,6 +58,7 @@ export default function Violations() {
   const [editingViolation, setEditingViolation] = useState<Violation | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
   const [selectedCart, setSelectedCart] = useState<{ cartKey: string; severity: string; data: any } | null>(null);
   const [formData, setFormData] = useState<{
     customer_id: string;
@@ -386,6 +387,7 @@ export default function Violations() {
     return {
       active,
       history,
+      bySeverity,
       severityGroups,
       metrics: {
         totalActive,
@@ -506,125 +508,242 @@ export default function Violations() {
         )}
       </div>
 
-      <div className="grid gap-4 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Violations</CardTitle>
-              <CardDescription>Total number of active violations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{violationsData.metrics.totalActive}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Critical</CardTitle>
-              <CardDescription>Number of critical violations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{violationsData.metrics.criticalCount}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>High</CardTitle>
-              <CardDescription>Number of high violations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{violationsData.metrics.highCount}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Medium</CardTitle>
-              <CardDescription>Number of medium violations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{violationsData.metrics.mediumCount}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {violationsData.metrics.topCarts.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Carts with Violations</CardTitle>
-              <CardDescription>Carts with the most active violations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-none pl-0">
-                {violationsData.metrics.topCarts.map((item) => (
-                  <li key={item.cart} className="py-2 border-b last:border-b-0">
-                    <div className="flex justify-between items-center">
-                      <span>{item.cart}</span>
-                      <Badge variant="secondary">{item.count} Violations</Badge>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <h2 className="text-xl font-bold mb-4">Active Violations</h2>
-      {violationsData.active.length === 0 ? (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No active violations</AlertTitle>
-          <AlertDescription>There are no pending or in review violations at the moment.</AlertDescription>
-        </Alert>
-      ) : (
+      {selectedCart ? (
+        // Level 3: Show violations table for selected cart
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedCart(null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <CardTitle>
+                  {selectedCart.data.cart_name} ({selectedCart.data.cart_number})
+                </CardTitle>
+                <CardDescription>
+                  {selectedCart.data.violations.length} violation(s) - Severity: {selectedCart.severity}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ViolationsTable
+              violations={selectedCart.data.violations}
+              hasRole={hasRole}
+              updateStatus={updateStatus}
+              handleEdit={handleEdit}
+              handleDelete={handleDelete}
+              setFullScreenImage={setFullScreenImage}
+              getStatusIcon={getStatusIcon}
+              getSeverityColor={getSeverityColor}
+            />
+          </CardContent>
+        </Card>
+      ) : selectedSeverity ? (
+        // Level 2: Show carts for selected severity
         <>
-          {Object.entries(violationsData.severityGroups).map(([severity, cartGroups]) => (
-            Object.values(cartGroups).map((cartGroup) => (
-              <Card key={`${severity}-${cartGroup.cart_number}`} className="mb-4">
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedSeverity(null)}
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Severities
+            </Button>
+            <h2 className="text-2xl font-bold capitalize">{selectedSeverity} Severity Violations</h2>
+            <p className="text-muted-foreground">
+              {Object.keys(violationsData.severityGroups[selectedSeverity as keyof typeof violationsData.severityGroups] || {}).length} cart(s) with violations
+            </p>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(violationsData.severityGroups[selectedSeverity as keyof typeof violationsData.severityGroups] || {}).map(([cartKey, cartData]: [string, any]) => (
+              <Card 
+                key={cartKey}
+                className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => setSelectedCart({ cartKey, severity: selectedSeverity, data: cartData })}
+              >
                 <CardHeader>
-                  <CardTitle>
-                    <ShoppingCart className="mr-2 h-4 w-4 inline-block align-middle" />
-                    {cartGroup.cart_name} ({cartGroup.cart_number})
-                  </CardTitle>
-                  <CardDescription>
-                    Customer: {cartGroup.customer.full_name || cartGroup.customer.email}
-                  </CardDescription>
+                  <div className="flex items-start gap-3">
+                    <ShoppingCart className="h-6 w-6 mt-1" />
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        {cartData.cart_name}
+                      </CardTitle>
+                      <CardDescription>
+                        Cart #{cartData.cart_number}
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <ViolationsTable
-                    violations={cartGroup.violations}
-                    hasRole={hasRole}
-                    updateStatus={updateStatus}
-                    handleEdit={handleEdit}
-                    handleDelete={handleDelete}
-                    setFullScreenImage={setFullScreenImage}
-                    getStatusIcon={getStatusIcon}
-                    getSeverityColor={getSeverityColor}
-                  />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Total Violations</span>
+                      <Badge variant={getSeverityColor(selectedSeverity)}>
+                        {cartData.violations.length}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <p className="font-medium">Customer:</p>
+                      <p>{cartData.customer.full_name || cartData.customer.email}</p>
+                    </div>
+                    <div className="pt-2 border-t">
+                      <p className="text-sm font-medium mb-2">Recent Violations:</p>
+                      {cartData.violations.slice(0, 3).map((v: any) => (
+                        <div key={v.id} className="text-xs text-muted-foreground truncate">
+                          • {v.violation_type}
+                        </div>
+                      ))}
+                      {cartData.violations.length > 3 && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          +{cartData.violations.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-            ))
-          ))}
+            ))}
+          </div>
         </>
-      )}
-
-      <h2 className="text-xl font-bold mt-8 mb-4">Violation History</h2>
-      {violationsData.history.length === 0 ? (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No violation history</AlertTitle>
-          <AlertDescription>There are no resolved or dismissed violations.</AlertDescription>
-        </Alert>
       ) : (
-        <ViolationsTable
-          violations={violationsData.history}
-          hasRole={hasRole}
-          updateStatus={updateStatus}
-          handleEdit={handleEdit}
-          handleDelete={handleDelete}
-          setFullScreenImage={setFullScreenImage}
-          getStatusIcon={getStatusIcon}
-          getSeverityColor={getSeverityColor}
-        />
+        // Level 1: Show severity cards
+        <>
+          <div className="grid gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Active Violations</CardTitle>
+                  <CardDescription>Total number of active violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{violationsData.metrics.totalActive}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Critical</CardTitle>
+                  <CardDescription>Number of critical violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{violationsData.metrics.criticalCount}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>High</CardTitle>
+                  <CardDescription>Number of high violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{violationsData.metrics.highCount}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Medium</CardTitle>
+                  <CardDescription>Number of medium violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{violationsData.metrics.mediumCount}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {violationsData.metrics.topCarts.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Carts with Violations</CardTitle>
+                  <CardDescription>Carts with the most active violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-none pl-0">
+                    {violationsData.metrics.topCarts.map((item) => (
+                      <li key={item.cart} className="py-2 border-b last:border-b-0">
+                        <div className="flex justify-between items-center">
+                          <span>{item.cart}</span>
+                          <Badge variant="secondary">{item.count} Violations</Badge>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <h2 className="text-xl font-bold mb-4">Active Violations by Severity</h2>
+          <p className="text-muted-foreground mb-6">Click on a severity level to view affected carts</p>
+          
+          {violationsData.active.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>No active violations</AlertTitle>
+              <AlertDescription>There are no pending or in review violations at the moment.</AlertDescription>
+            </Alert>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+              {(['critical', 'high', 'medium', 'low'] as const).map((severity) => {
+                const cartCount = Object.keys(violationsData.severityGroups[severity] || {}).length;
+                const violationCount = violationsData.bySeverity[severity].length;
+                
+                if (cartCount === 0) return null;
+
+                return (
+                  <Card
+                    key={severity}
+                    className="cursor-pointer hover:shadow-xl transition-all hover:scale-105"
+                    onClick={() => setSelectedSeverity(severity)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-2 mb-2">
+                        {getSeverityIcon(severity)}
+                        <CardTitle className="capitalize text-xl">{severity}</CardTitle>
+                      </div>
+                      <CardDescription>Click to view affected carts</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-baseline gap-2">
+                          <div className="text-3xl font-bold">{violationCount}</div>
+                          <div className="text-sm text-muted-foreground">violations</div>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          across <span className="font-semibold">{cartCount}</span> cart(s)
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          <h2 className="text-xl font-bold mt-8 mb-4">Violation History</h2>
+          {violationsData.history.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>No violation history</AlertTitle>
+              <AlertDescription>There are no resolved or dismissed violations.</AlertDescription>
+            </Alert>
+          ) : (
+            <ViolationsTable
+              violations={violationsData.history}
+              hasRole={hasRole}
+              updateStatus={updateStatus}
+              handleEdit={handleEdit}
+              handleDelete={handleDelete}
+              setFullScreenImage={setFullScreenImage}
+              getStatusIcon={getStatusIcon}
+              getSeverityColor={getSeverityColor}
+            />
+          )}
+        </>
       )}
 
       {fullScreenImage && (
