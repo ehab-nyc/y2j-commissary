@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
-import { printToStarPrinter, type ReceiptData } from "@/lib/starPrinter";
+import { printToStarPrinter, queueCloudPRNTJob, type ReceiptData } from "@/lib/starPrinter";
 
 interface PrintReceiptProps {
   orderNumber: string;
@@ -92,6 +92,30 @@ export function PrintReceipt({
     },
   });
 
+  // Fetch CloudPRNT settings
+  const { data: cloudPrinterSettings } = useQuery({
+    queryKey: ["cloudprnt-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("*")
+        .in("key", ["cloudprnt_printer_mac", "star_paper_width", "cloudprnt_enabled"]);
+
+      if (error) throw error;
+
+      const settingsMap: Record<string, string> = {};
+      data?.forEach((setting) => {
+        settingsMap[setting.key] = setting.value || "";
+      });
+
+      return {
+        printerMac: settingsMap.cloudprnt_printer_mac || "",
+        paperWidth: parseInt(settingsMap.star_paper_width || "80"),
+        enabled: settingsMap.cloudprnt_enabled === "true",
+      };
+    },
+  });
+
   const { data: starPrinterSettings } = useQuery({
     queryKey: ["star-printer-settings"],
     queryFn: async () => {
@@ -114,6 +138,44 @@ export function PrintReceipt({
       };
     },
   });
+
+  const handleCloudPrint = async () => {
+    if (!cloudPrinterSettings?.enabled) {
+      toast.error("CloudPRNT not enabled. Configure in Receipt Settings.");
+      return;
+    }
+
+    try {
+      const receiptData: ReceiptData = {
+        orderNumber,
+        customerName,
+        items,
+        total,
+        serviceFee,
+        date,
+        cartName,
+        cartNumber,
+        processedBy,
+        companyInfo: companySettings,
+        headerText: template?.header_text || "",
+        footerText: template?.footer_text || "",
+        showLogo: template?.show_logo,
+        logoUrl: companyLogo,
+      };
+
+      await queueCloudPRNTJob(
+        cloudPrinterSettings.printerMac,
+        receiptData,
+        cloudPrinterSettings.paperWidth,
+        supabase
+      );
+
+      toast.success("Print job queued! Printer will print shortly.");
+    } catch (error) {
+      console.error("CloudPRNT error:", error);
+      toast.error("Failed to queue print job.");
+    }
+  };
 
   const handleStarPrint = async () => {
     if (!starPrinterSettings?.enabled) {
@@ -243,15 +305,21 @@ export function PrintReceipt({
 
   return (
     <div className="flex gap-2">
-      {starPrinterSettings?.enabled && (
-        <Button onClick={handleStarPrint} variant="default" className="gap-2">
+      {cloudPrinterSettings?.enabled && (
+        <Button onClick={handleCloudPrint} variant="default" className="gap-2">
           <Printer className="h-4 w-4" />
-          Print (Star)
+          CloudPRNT
+        </Button>
+      )}
+      {starPrinterSettings?.enabled && (
+        <Button onClick={handleStarPrint} variant="secondary" className="gap-2">
+          <Printer className="h-4 w-4" />
+          WebPRNT (Legacy)
         </Button>
       )}
       <Button onClick={handleBrowserPrint} variant="outline" className="gap-2">
         <Printer className="h-4 w-4" />
-        {starPrinterSettings?.enabled ? "Browser Print" : "Print Receipt"}
+        Browser Print
       </Button>
 
       <div id="receipt-content" className="hidden">

@@ -1,8 +1,15 @@
-// Star WebPRNT utilities for TSP143IV-UE and other Star printers
+// Star Printer utilities for TSP143IV-UE with CloudPRNT support
 
+export interface CloudPRNTSettings {
+  printerMac: string;
+  paperWidth: number; // 58mm or 80mm
+  enabled: boolean;
+}
+
+// Legacy WebPRNT interface (deprecated)
 export interface StarPrinterSettings {
   printerIp: string;
-  paperWidth: number; // 58mm or 80mm
+  paperWidth: number;
   enabled: boolean;
 }
 
@@ -180,7 +187,41 @@ function padLeft(str: string, length: number): string {
     : ' '.repeat(length - str.length) + str;
 }
 
-// Send print job to Star printer
+// Queue print job for CloudPRNT
+export async function queueCloudPRNTJob(
+  printerMac: string,
+  receiptData: ReceiptData,
+  paperWidth: number = 80,
+  supabase: any
+): Promise<void> {
+  try {
+    // Build Star PRN command data
+    const request = buildStarReceipt(receiptData, paperWidth);
+    
+    // Queue the job in the database
+    const { error } = await supabase
+      .from('cloudprnt_queue')
+      .insert({
+        printer_mac: printerMac,
+        job_data: {
+          mediaTypes: ['application/vnd.star.starprnt'],
+          request: request,
+        },
+        status: 'pending',
+      });
+
+    if (error) {
+      throw new Error(`Failed to queue print job: ${error.message}`);
+    }
+
+    console.log('Print job queued successfully for CloudPRNT');
+  } catch (error) {
+    console.error('Failed to queue CloudPRNT job:', error);
+    throw error;
+  }
+}
+
+// Legacy WebPRNT print function (deprecated - use CloudPRNT instead)
 export async function printToStarPrinter(
   printerIp: string, 
   receiptData: ReceiptData,
@@ -188,7 +229,6 @@ export async function printToStarPrinter(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      // Check if Star WebPRNT libraries are available
       if (typeof (window as any).StarWebPrintTrader === 'undefined') {
         reject(new Error('Star WebPRNT library not loaded'));
         return;
@@ -217,7 +257,7 @@ export async function printToStarPrinter(
   });
 }
 
-// Check if Star printer is available
+// Check if Star printer is available (WebPRNT only)
 export async function checkStarPrinterConnection(printerIp: string): Promise<boolean> {
   try {
     const response = await fetch(`http://${printerIp}/StarWebPRNT/SendMessage`, {
