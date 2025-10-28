@@ -1079,7 +1079,7 @@ export default function Violations() {
           </div>
 
           <div className="grid gap-4 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card className="animate-fade-in border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-all hover:scale-105">
                 <CardHeader>
                   <CardTitle>Active Violations</CardTitle>
@@ -1123,6 +1123,18 @@ export default function Violations() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{violationsData.metrics.mediumCount}</div>
+                </CardContent>
+              </Card>
+              <Card 
+                className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => violationsData.metrics.lowCount > 0 && setSelectedSeverity('low')}
+              >
+                <CardHeader>
+                  <CardTitle>Low</CardTitle>
+                  <CardDescription>Number of low violations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{violationsData.metrics.lowCount}</div>
                 </CardContent>
               </Card>
             </div>
