@@ -42,9 +42,12 @@ Deno.serve(async (req) => {
     if (fetchError || !job) {
       // No jobs available
       console.log(`No jobs for printer ${printerMac}`);
-      return new Response(null, {
+      return new Response(JSON.stringify({ jobReady: false }), {
         status: 200,
-        headers: corsHeaders,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
       });
     }
 
@@ -74,7 +77,8 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('CloudPRNT server error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
