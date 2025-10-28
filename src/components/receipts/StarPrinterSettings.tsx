@@ -88,17 +88,40 @@ export function StarPrinterSettings() {
     setConnectionStatus("unknown");
 
     try {
-      const isConnected = await checkStarPrinterConnection(printerIp);
-      if (isConnected) {
-        setConnectionStatus("connected");
-        toast.success("Printer connection successful!");
-      } else {
+      // Check if Star WebPRNT library is loaded
+      if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
         setConnectionStatus("error");
-        toast.error("Could not connect to printer");
+        toast.error("Star WebPRNT library not loaded. Please refresh the page.");
+        return;
       }
+
+      // Try to create a test print builder to verify the printer is accessible
+      const builder = new (window as any).StarWebPrintBuilder();
+      const url = `http://${printerIp}/StarWebPRNT/SendMessage`;
+      
+      // Set up a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Connection timeout")), 5000);
+      });
+
+      // Set up the connection test
+      const connectionPromise = new Promise((resolve, reject) => {
+        builder.onSuccess = () => resolve(true);
+        builder.onError = (error: any) => reject(error);
+        
+        // Send a minimal test command
+        builder.createTextElement({ data: "" });
+        builder.send(url);
+      });
+
+      await Promise.race([connectionPromise, timeoutPromise]);
+      
+      setConnectionStatus("connected");
+      toast.success("Printer connection successful!");
     } catch (error) {
+      console.error("Connection test error:", error);
       setConnectionStatus("error");
-      toast.error("Connection test failed");
+      toast.error("Could not connect to printer. Check IP, network, and WebPRNT mode.");
     } finally {
       setTesting(false);
     }
@@ -118,8 +141,13 @@ export function StarPrinterSettings() {
       <CardContent className="space-y-6">
         <Alert>
           <AlertDescription>
-            Make sure your printer is connected to the same network and WebPRNT mode is enabled.
-            Default IP is usually printed on the printer's configuration page.
+            <strong>Important:</strong> Your device and printer must be on the same network. 
+            WebPRNT mode must be enabled on the printer. Find the IP address on the printer's configuration page.
+            {window.location.protocol === 'https:' && (
+              <p className="mt-2 text-warning">
+                ⚠️ HTTPS limitation: Connection test may not work. Save settings and try actual printing instead.
+              </p>
+            )}
           </AlertDescription>
         </Alert>
 
