@@ -142,8 +142,8 @@ const PrivacyPolicy = () => {
               <div className="pl-4 space-y-1">
                 <p><strong>Y2J NYC Corp</strong></p>
                 <p>Email: privacy@y2jnyc.com</p>
-                <p>Phone: [Your Contact Number]</p>
-                <p>Address: [Your Business Address]</p>
+                <p>Phone: +1 (718) 728-1530</p>
+                <p>Address: 3512 19th Ave, Astoria, NY 11105</p>
               </div>
             </section>
 
