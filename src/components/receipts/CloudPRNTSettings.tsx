@@ -282,42 +282,89 @@ export function CloudPRNTSettings() {
                     <div>
                       <strong className="block mb-1">Connection Status:</strong>
                       {pendingJobs && pendingJobs.length > 0 ? (
-                        <div className="flex items-center gap-2 text-warning">
-                          <XCircle className="h-4 w-4" />
-                          <span className="text-sm">
-                            {pendingJobs.length} job(s) pending - Printer may not be polling
-                          </span>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2 text-destructive">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-sm font-semibold">
+                              {pendingJobs.length} job(s) stuck - Printer is NOT printing
+                            </span>
+                          </div>
+                          <div className="bg-destructive/10 border border-destructive/20 p-3 rounded text-xs">
+                            <p className="font-semibold mb-2">⚠️ CRITICAL: Your printer is not configured correctly!</p>
+                            <p className="mb-2">Jobs are queuing but the printer is not acknowledging them. This means one of these issues:</p>
+                            <ol className="list-decimal list-inside space-y-1 ml-2">
+                              <li><strong>Wrong Emulation Mode</strong> - Printer MUST be in "Star Line Mode" (not ESC/POS)</li>
+                              <li><strong>CloudPRNT Disabled</strong> - CloudPRNT feature must be enabled in printer settings</li>
+                              <li><strong>Wrong Media Type</strong> - Must include "application/vnd.star.starprnt"</li>
+                              <li><strong>Wrong Server URL</strong> - Must exactly match the URL above (check for typos)</li>
+                              <li><strong>Network Issue</strong> - Printer cannot reach the server URL</li>
+                            </ol>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-success">
                           <CheckCircle2 className="h-4 w-4" />
-                          <span className="text-sm">No pending jobs</span>
+                          <span className="text-sm">No pending jobs - printer is working correctly!</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="bg-muted/50 p-3 rounded text-xs space-y-2">
-                      <p><strong>If print jobs are stuck as "pending":</strong></p>
-                      <ol className="list-decimal list-inside space-y-1 ml-2">
-                        <li>Verify the printer is powered on and connected to your network</li>
-                        <li>Check that the printer's CloudPRNT URL exactly matches the URL above</li>
-                        <li>Ensure the printer's polling interval is set to 3-5 seconds</li>
-                        <li>Verify the MAC address entered above matches your printer's MAC</li>
-                        <li>Try power cycling the printer after configuring CloudPRNT</li>
-                      </ol>
-                    </div>
-
                     <div className="bg-primary/10 border border-primary/20 p-3 rounded text-xs">
-                      <strong className="block mb-1">Printer Configuration:</strong>
-                      <ol className="list-decimal list-inside space-y-1 ml-2">
-                        <li>Access printer web interface at <code>http://[PRINTER-IP]</code></li>
-                        <li>Go to CloudPRNT settings</li>
-                        <li>Set Server Type: <strong>URL</strong></li>
-                        <li>Paste the URL above into Server URL field</li>
-                        <li>Set Polling Interval: <strong>3-5 seconds</strong></li>
-                        <li>Set Upload Method: <strong>POST</strong></li>
-                        <li>Enable CloudPRNT and save settings</li>
-                      </ol>
+                      <strong className="block mb-2 text-base">📋 Step-by-Step Printer Setup:</strong>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <strong className="block mb-1">Step 1: Access Printer Settings</strong>
+                          <ul className="list-disc list-inside ml-2 space-y-1">
+                            <li>Find your printer's IP address (print configuration page)</li>
+                            <li>Open browser: <code>http://[PRINTER-IP]</code></li>
+                            <li>Login (default: root/public or check manual)</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <strong className="block mb-1">Step 2: Set Emulation Mode</strong>
+                          <ul className="list-disc list-inside ml-2 space-y-1">
+                            <li>Go to "Emulation" or "Printer Settings"</li>
+                            <li>Set to: <strong className="text-primary">Star Line Mode</strong></li>
+                            <li>⚠️ NOT ESC/POS or any other mode!</li>
+                            <li>Save and restart printer if prompted</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <strong className="block mb-1">Step 3: Configure CloudPRNT</strong>
+                          <ul className="list-disc list-inside ml-2 space-y-1">
+                            <li>Find "CloudPRNT" or "Print Server" section</li>
+                            <li>Enable CloudPRNT: <strong className="text-primary">ON</strong></li>
+                            <li>Server Type: <strong className="text-primary">URL</strong></li>
+                            <li>Server URL: Copy the URL above and paste it exactly</li>
+                            <li>Polling Interval: <strong className="text-primary">3-5 seconds</strong></li>
+                            <li>Upload Method: <strong className="text-primary">POST</strong></li>
+                            <li>Media Types: Include <code>application/vnd.star.starprnt</code></li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <strong className="block mb-1">Step 4: Save & Test</strong>
+                          <ul className="list-disc list-inside ml-2 space-y-1">
+                            <li>Click Save/Apply in printer settings</li>
+                            <li>Power cycle the printer (turn off/on)</li>
+                            <li>Click "Send Test Print" button above</li>
+                            <li>Wait 5-10 seconds for print to appear</li>
+                          </ul>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 p-2 rounded mt-2">
+                          <p className="font-semibold">💡 Still not working?</p>
+                          <ul className="list-disc list-inside ml-2 mt-1">
+                            <li>Double-check the MAC address matches your printer exactly</li>
+                            <li>Verify printer can access the internet (try pinging google.com from printer)</li>
+                            <li>Check printer's CloudPRNT status page for errors</li>
+                            <li>Try a different browser to access printer settings</li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </AlertDescription>
