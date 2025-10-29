@@ -48,6 +48,7 @@ import FleetHistory from "./pages/FleetHistory";
 import Geofencing from "./pages/Geofencing";
 import GPSAlerts from "./pages/GPSAlerts";
 import GPSSettings from "./pages/GPSSettings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute requireAnyRole={['customer', 'worker', 'manager', 'admin', 'super_admin']}><Orders /></ProtectedRoute>} />

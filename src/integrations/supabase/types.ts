@@ -260,6 +260,8 @@ export type Database = {
           id: string
           is_primary: boolean | null
           phone: string
+          sms_consent: boolean
+          sms_consent_date: string | null
         }
         Insert: {
           created_at?: string | null
@@ -267,6 +269,8 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           phone: string
+          sms_consent?: boolean
+          sms_consent_date?: string | null
         }
         Update: {
           created_at?: string | null
@@ -274,6 +278,8 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           phone?: string
+          sms_consent?: boolean
+          sms_consent_date?: string | null
         }
         Relationships: [
           {

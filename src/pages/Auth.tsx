@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { ShoppingBag, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
@@ -25,6 +26,7 @@ const Auth = () => {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [settings, setSettings] = useState({ company_name: 'Commissary System', logo_url: '', login_background_url: '', login_blur_amount: '2' });
   const [isHalloween, setIsHalloween] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -76,6 +78,13 @@ const Auth = () => {
     const cartName = formData.get('signup-cart-name') as string;
     const cartNumber = formData.get('signup-cart-number') as string;
     const phone = formData.get('signup-phone') as string;
+
+    // Validate SMS consent
+    if (!smsConsent) {
+      toast.error('You must consent to receive messages to create an account');
+      setLoading(false);
+      return;
+    }
 
     // Validate and normalize phone format
     const phoneResult = validateAndNormalizePhone(phone);
@@ -147,13 +156,15 @@ const Auth = () => {
           })
           .eq('id', authData.user.id);
         
-        // Add phone number to customer_phones table
+        // Add phone number to customer_phones table with SMS consent
         await supabase
           .from('customer_phones')
           .insert({
             customer_id: authData.user.id,
             phone: normalizedPhone,
-            is_primary: true
+            is_primary: true,
+            sms_consent: smsConsent,
+            sms_consent_date: new Date().toISOString()
           });
       }
       toast.success('Account created successfully!');
@@ -417,6 +428,29 @@ const Auth = () => {
                     {t('auth.passwordRequirement')}
                   </p>
                 </div>
+                
+                <div className="flex items-start space-x-3 py-2">
+                  <Checkbox
+                    id="sms-consent"
+                    checked={smsConsent}
+                    onCheckedChange={(checked) => setSmsConsent(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <Label 
+                    htmlFor="sms-consent" 
+                    className="text-sm font-normal leading-relaxed cursor-pointer"
+                  >
+                    I consent to receive order updates and notifications from Y2J NYC Corp via SMS. Msg & data rates may apply.{" "}
+                    <Link 
+                      to="/privacy-policy" 
+                      className="text-primary hover:underline"
+                      target="_blank"
+                    >
+                      View our Privacy Policy
+                    </Link>
+                  </Label>
+                </div>
+                
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
                 </Button>
