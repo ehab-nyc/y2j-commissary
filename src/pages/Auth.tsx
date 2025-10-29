@@ -440,7 +440,7 @@ const Auth = () => {
                     htmlFor="sms-consent" 
                     className="text-sm font-normal leading-relaxed cursor-pointer"
                   >
-                    I consent to receive order updates and notifications from Y2J NYC Corp via SMS. Msg & data rates may apply.{" "}
+                    By checking this box, you agree to receive automated text messages from Y2J NYC Corp / Y2J Commissary about your orders, account status, and related updates. Message and data rates may apply. Reply STOP to unsubscribe or HELP for assistance.{" "}
                     <Link 
                       to="/privacy-policy" 
                       className="text-primary hover:underline"
