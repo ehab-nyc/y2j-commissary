@@ -188,6 +188,54 @@ function padLeft(str: string, length: number): string {
 }
 
 // Queue print job for CloudPRNT
+// Simple test print for CloudPRNT troubleshooting
+export async function queueTestPrint(
+  printerMac: string,
+  supabase: any
+): Promise<void> {
+  try {
+    if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
+      throw new Error('Star WebPRNT library not loaded');
+    }
+
+    const builder = new (window as any).StarWebPrintBuilder();
+    
+    // Minimal test receipt
+    let request = '';
+    request += builder.createInitializationElement();
+    request += builder.createAlignmentElement({ position: 'center' });
+    request += builder.createTextElement({ 
+      data: 'TEST PRINT\n',
+      emphasis: true,
+      width: 2,
+      height: 2
+    });
+    request += builder.createTextElement({ data: 'CloudPRNT is working!\n' });
+    request += builder.createTextElement({ data: new Date().toLocaleString() + '\n' });
+    request += builder.createCutPaperElement({ feed: true, type: 'partial' });
+    
+    // Queue the test job
+    const { error } = await supabase
+      .from('cloudprnt_queue')
+      .insert({
+        printer_mac: printerMac,
+        job_data: {
+          'application/vnd.star.starprnt': request,
+        },
+        status: 'pending',
+      });
+
+    if (error) {
+      throw new Error(`Failed to queue test print: ${error.message}`);
+    }
+
+    console.log('Test print queued successfully');
+  } catch (error) {
+    console.error('Failed to queue test print:', error);
+    throw error;
+  }
+}
+
 export async function queueCloudPRNTJob(
   printerMac: string,
   receiptData: ReceiptData,

@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Printer, CheckCircle2, XCircle, Info, AlertTriangle, Copy } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { queueTestPrint } from "@/lib/starPrinter";
 
 export function CloudPRNTSettings() {
   const [printerMac, setPrinterMac] = useState("");
@@ -79,6 +80,31 @@ export function CloudPRNTSettings() {
       title: "Copied to clipboard",
       description: "The URL has been copied to your clipboard.",
     });
+  };
+
+  const handleTestPrint = async () => {
+    if (!printerMac) {
+      toast({
+        title: "Error",
+        description: "Please enter a printer MAC address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await queueTestPrint(printerMac, supabase);
+      toast({
+        title: "Test Print Queued",
+        description: "Check your printer for a test receipt. If nothing prints, check printer mode and settings.",
+      });
+    } catch (error) {
+      toast({
+        title: "Test Failed",
+        description: error instanceof Error ? error.message : "Failed to queue test print",
+        variant: "destructive",
+      });
+    }
   };
 
   const cloudPrntUrl = `https://jscmqiktfesaggpdeegk.supabase.co/functions/v1/cloudprnt-server?mac=${printerMac}`;
@@ -193,13 +219,24 @@ export function CloudPRNTSettings() {
           </div>
         </div>
 
-        <Button
-          onClick={() => saveMutation.mutate()}
-          disabled={saveMutation.isPending || !enabled || !printerMac}
-          className="w-full"
-        >
-          {saveMutation.isPending ? "Saving..." : "Save Settings"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleTestPrint}
+            variant="outline"
+            disabled={!enabled || !printerMac}
+            className="flex-1"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Send Test Print
+          </Button>
+          <Button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending || !enabled || !printerMac}
+            className="flex-1"
+          >
+            {saveMutation.isPending ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
 
         <Alert className="mt-4">
           <AlertDescription className="text-xs">
