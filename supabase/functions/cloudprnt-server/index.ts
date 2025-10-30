@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
     }
 
     // Handle GET requests (polling for jobs)
-    console.log(`CloudPRNT poll from printer: ${printerMac}`);
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] CloudPRNT poll from printer: ${printerMac}`);
+    console.log(`[${timestamp}] Request headers:`, Object.fromEntries(req.headers.entries()));
 
     // Get the oldest pending job for this printer
     const { data: jobs, error: fetchError } = await supabase
@@ -71,7 +73,7 @@ Deno.serve(async (req) => {
 
     if (fetchError || !job) {
       // No jobs available
-      console.log(`No jobs for printer ${printerMac}`);
+      console.log(`[${timestamp}] No jobs for printer ${printerMac}`);
       return new Response(JSON.stringify({ jobReady: false }), {
         status: 200,
         headers: {
@@ -81,7 +83,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`Sending job ${job.id} to printer ${printerMac}`);
+    console.log(`[${timestamp}] Sending job ${job.id} to printer ${printerMac}`);
+    console.log(`[${timestamp}] Job data:`, JSON.stringify(job.job_data).substring(0, 200));
 
     // Mark job as printing
     await supabase
