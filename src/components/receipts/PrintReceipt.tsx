@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Printer, ChevronDown, Cloud, FileText } from "lucide-react";
 import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -153,14 +159,73 @@ export function PrintReceipt({
     }
   };
 
+  const handleBrowserPrint = () => {
+    const receiptElement = document.getElementById("receipt-content");
+    if (!receiptElement) {
+      toast.error("Receipt template not loaded");
+      return;
+    }
+
+    // Create a temporary container for print
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to print");
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Receipt - ${orderNumber}</title>
+          <style>
+            @media print {
+              @page { margin: 0; }
+              body { margin: 1.6cm; }
+            }
+            body {
+              font-family: 'Courier New', monospace;
+              margin: 0;
+              padding: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          ${receiptElement.innerHTML}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
 
   return (
     <div className="flex gap-2">
       {cloudPrinterSettings?.enabled ? (
-        <Button onClick={handleCloudPrint} variant="default" className="gap-2">
-          <Printer className="h-4 w-4" />
-          CloudPRNT
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="default" className="gap-2">
+              <Printer className="h-4 w-4" />
+              CloudPRNT
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-background z-50">
+            <DropdownMenuItem onClick={handleCloudPrint} className="gap-2 cursor-pointer">
+              <Cloud className="h-4 w-4" />
+              Send to CloudPRNT
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleBrowserPrint} className="gap-2 cursor-pointer">
+              <FileText className="h-4 w-4" />
+              Print Browser Receipt
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : (
         <div className="text-sm text-muted-foreground">
           Enable CloudPRNT in Receipt Settings to print
