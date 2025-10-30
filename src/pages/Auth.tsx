@@ -255,6 +255,8 @@ const Auth = () => {
                   width="64"
                   height="64"
                   fetchPriority="high"
+                  loading="eager"
+                  decoding="async"
                 />
               ) : (
                 <div className="p-3 rounded-full bg-primary/10">
