@@ -1,5 +1,63 @@
 // Star Printer utilities for TSP143IV-UE with CloudPRNT support
 
+// Lazy load Star WebPRNT scripts
+let scriptsLoading = false;
+let scriptsLoaded = false;
+
+export async function loadStarPrinterScripts(): Promise<void> {
+  if (scriptsLoaded) return;
+  if (scriptsLoading) {
+    // Wait for scripts to finish loading
+    return new Promise((resolve) => {
+      const checkLoaded = setInterval(() => {
+        if (scriptsLoaded) {
+          clearInterval(checkLoaded);
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  scriptsLoading = true;
+
+  return new Promise((resolve, reject) => {
+    const builder = document.createElement('script');
+    builder.src = 'https://cdn.jsdelivr.net/gh/star-micronics/starwebprnt-sdk@main/Sample/js/StarWebPrintBuilder.js';
+    builder.async = true;
+    
+    const trader = document.createElement('script');
+    trader.src = 'https://cdn.jsdelivr.net/gh/star-micronics/starwebprnt-sdk@main/Sample/js/StarWebPrintTrader.js';
+    trader.async = true;
+
+    let builderLoaded = false;
+    let traderLoaded = false;
+
+    const checkBothLoaded = () => {
+      if (builderLoaded && traderLoaded) {
+        scriptsLoaded = true;
+        scriptsLoading = false;
+        resolve();
+      }
+    };
+
+    builder.onload = () => {
+      builderLoaded = true;
+      checkBothLoaded();
+    };
+
+    trader.onload = () => {
+      traderLoaded = true;
+      checkBothLoaded();
+    };
+
+    builder.onerror = () => reject(new Error('Failed to load StarWebPrintBuilder'));
+    trader.onerror = () => reject(new Error('Failed to load StarWebPrintTrader'));
+
+    document.head.appendChild(builder);
+    document.head.appendChild(trader);
+  });
+}
+
 export interface CloudPRNTSettings {
   printerMac: string;
   paperWidth: number; // 58mm or 80mm
@@ -41,7 +99,10 @@ export interface ReceiptData {
 }
 
 // Build receipt content using Star WebPRNT commands
-export function buildStarReceipt(data: ReceiptData, paperWidth: number = 80): string {
+export async function buildStarReceipt(data: ReceiptData, paperWidth: number = 80): Promise<string> {
+  // Ensure scripts are loaded
+  await loadStarPrinterScripts();
+  
   // Check if Star WebPRNT is available
   if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
     throw new Error('Star WebPRNT library not loaded');
@@ -194,6 +255,9 @@ export async function queueTestPrint(
   supabase: any
 ): Promise<void> {
   try {
+    // Ensure scripts are loaded
+    await loadStarPrinterScripts();
+    
     if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
       throw new Error('Star WebPRNT library not loaded');
     }
@@ -244,7 +308,7 @@ export async function queueCloudPRNTJob(
 ): Promise<void> {
   try {
     // Build Star PRN command data
-    const request = buildStarReceipt(receiptData, paperWidth);
+    const request = await buildStarReceipt(receiptData, paperWidth);
     
     // Queue the job in the database
     const { error } = await supabase
@@ -274,14 +338,17 @@ export async function printToStarPrinter(
   receiptData: ReceiptData,
   paperWidth: number = 80
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  // Ensure scripts are loaded
+  await loadStarPrinterScripts();
+  
+  return new Promise(async (resolve, reject) => {
     try {
       if (typeof (window as any).StarWebPrintTrader === 'undefined') {
         reject(new Error('Star WebPRNT library not loaded'));
         return;
       }
 
-      const request = buildStarReceipt(receiptData, paperWidth);
+      const request = await buildStarReceipt(receiptData, paperWidth);
       const url = `http://${printerIp}/StarWebPRNT/SendMessage`;
       const papertype = paperWidth === 58 ? 'normal' : 'normal';
       
