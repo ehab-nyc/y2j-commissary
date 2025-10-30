@@ -248,7 +248,14 @@ const Auth = () => {
             
             <div className="flex flex-col items-center gap-2">
               {settings.logo_url ? (
-                <img src={settings.logo_url} alt="Logo" className="h-16 w-16 rounded-full object-cover" />
+                <img 
+                  src={settings.logo_url} 
+                  alt="Logo" 
+                  className="h-16 w-16 rounded-full object-cover"
+                  width="64"
+                  height="64"
+                  fetchPriority="high"
+                />
               ) : (
                 <div className="p-3 rounded-full bg-primary/10">
                   <ShoppingBag className="w-8 h-8 text-primary" />
