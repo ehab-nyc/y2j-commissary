@@ -196,36 +196,6 @@ export type Database = {
           },
         ]
       }
-      cloudprnt_queue: {
-        Row: {
-          completed_at: string | null
-          created_at: string | null
-          error_message: string | null
-          id: string
-          job_data: Json
-          printer_mac: string
-          status: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          job_data: Json
-          printer_mac: string
-          status?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          job_data?: Json
-          printer_mac?: string
-          status?: string | null
-        }
-        Relationships: []
-      }
       company_logos: {
         Row: {
           created_at: string | null

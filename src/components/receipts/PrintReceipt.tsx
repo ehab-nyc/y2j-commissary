@@ -1,16 +1,9 @@
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Printer, ChevronDown, Cloud, FileText } from "lucide-react";
+import { Printer } from "lucide-react";
 import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { queueCloudPRNTJob, type ReceiptData } from "@/lib/starPrinter";
 
 interface PrintReceiptProps {
   orderNumber: string;
@@ -97,67 +90,6 @@ export function PrintReceipt({
     },
   });
 
-  // Fetch CloudPRNT settings
-  const { data: cloudPrinterSettings } = useQuery({
-    queryKey: ["cloudprnt-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("app_settings")
-        .select("*")
-        .in("key", ["cloudprnt_printer_mac", "star_paper_width", "cloudprnt_enabled"]);
-
-      if (error) throw error;
-
-      const settingsMap: Record<string, string> = {};
-      data?.forEach((setting) => {
-        settingsMap[setting.key] = setting.value || "";
-      });
-
-      return {
-        printerMac: settingsMap.cloudprnt_printer_mac || "",
-        paperWidth: parseInt(settingsMap.star_paper_width || "80"),
-        enabled: settingsMap.cloudprnt_enabled === "true",
-      };
-    },
-  });
-
-  const handleCloudPrint = async () => {
-    if (!cloudPrinterSettings?.enabled) {
-      toast.error("CloudPRNT not enabled. Configure in Receipt Settings.");
-      return;
-    }
-
-    try {
-      const receiptData: ReceiptData = {
-        orderNumber,
-        customerName,
-        items,
-        total,
-        serviceFee,
-        date,
-        cartName,
-        cartNumber,
-        processedBy,
-        companyInfo: companySettings,
-        headerText: template?.header_text || "",
-        footerText: template?.footer_text || "",
-        showLogo: template?.show_logo,
-        logoUrl: companyLogo,
-      };
-
-      await queueCloudPRNTJob(
-        cloudPrinterSettings.printerMac,
-        receiptData,
-        cloudPrinterSettings.paperWidth,
-        supabase
-      );
-
-      toast.success("Print job queued! Printer will print shortly.");
-    } catch (error) {
-      console.error("CloudPRNT error:", error);
-      toast.error("Failed to queue print job.");
-    }
-  };
 
   const handleBrowserPrint = () => {
     const receiptElement = document.getElementById("receipt-content");
@@ -206,31 +138,10 @@ export function PrintReceipt({
 
   return (
     <div className="flex gap-2">
-      {cloudPrinterSettings?.enabled ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="default" className="gap-2">
-              <Printer className="h-4 w-4" />
-              CloudPRNT
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-background z-50">
-            <DropdownMenuItem onClick={handleCloudPrint} className="gap-2 cursor-pointer">
-              <Cloud className="h-4 w-4" />
-              Send to CloudPRNT
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleBrowserPrint} className="gap-2 cursor-pointer">
-              <FileText className="h-4 w-4" />
-              Print Browser Receipt
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="text-sm text-muted-foreground">
-          Enable CloudPRNT in Receipt Settings to print
-        </div>
-      )}
+      <Button variant="default" className="gap-2" onClick={handleBrowserPrint}>
+        <Printer className="h-4 w-4" />
+        Print Receipt
+      </Button>
 
       <div id="receipt-content" className="hidden">
         {template && companySettings && (
