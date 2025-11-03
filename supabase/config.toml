@@ -1,8 +1,5 @@
 project_id = "jscmqiktfesaggpdeegk"
 
-[functions.cloudprnt-server]
-verify_jwt = false
-
 [functions.ai-search]
 verify_jwt = true
 
@@ -24,5 +21,11 @@ verify_jwt = true
 [functions.send-bulk-sms]
 verify_jwt = true
 
-[functions.send-bulk-sms]
+[functions.send-sms]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.get-mapbox-token]
 verify_jwt = true

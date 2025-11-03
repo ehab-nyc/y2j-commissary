@@ -12,8 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    // JWT already verified by verify_jwt=true in config.toml
     const authHeader = req.headers.get("authorization");
     
     if (!authHeader) {
@@ -23,23 +22,18 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Extract JWT token from Bearer header
+    // Extract user ID from JWT (already validated by Supabase)
     const token = authHeader.replace('Bearer ', '');
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userId = payload.sub;
     
-    // Properly validate JWT using Supabase auth with explicit token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    const userId = user.id;
     console.log('Request authenticated for user:', userId);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { authorization: authHeader } }
+    });
 
     // Get user's order history - RLS ensures they can only see their own orders
     const { data: orders } = await supabase

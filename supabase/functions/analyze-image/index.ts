@@ -24,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
+    // JWT already verified by verify_jwt=true in config.toml
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return new Response(
@@ -33,25 +33,7 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
-    // Create client with user's JWT to enforce RLS
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    console.log('User authenticated:', user.id);
+    console.log('User authenticated via JWT verification');
 
     const body = await req.json();
     
