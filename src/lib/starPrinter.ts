@@ -1,4 +1,4 @@
-// Star Printer utilities for TSP143IV-UE with CloudPRNT support
+// Star Printer utilities for TSP143IV-UE with WebPRNT support
 
 // Lazy load Star WebPRNT scripts
 let scriptsLoading = false;
