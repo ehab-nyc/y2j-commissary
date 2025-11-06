@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallback: null,
         maximumFileSizeToCacheInBytes: 5000000, // 5MB limit per file
