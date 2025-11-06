@@ -98,53 +98,53 @@ All colors MUST be HSL.
     --sidebar-ring: 110 100% 50%;
   }
 
-  /* Halloween Minimal Theme (Same colors without animations) */
+  /* Halloween Minimal Theme - Light Mode */
   :root.halloween-minimal {
-    --background: 265 60% 8%;
-    --foreground: 0 0% 95%;
+    --background: 30 85% 96%;
+    --foreground: 265 50% 15%;
 
-    --card: 265 50% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 265 50% 15%;
 
-    --popover: 265 50% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 265 50% 15%;
 
-    --primary: 25 100% 55%;
-    --primary-foreground: 265 60% 8%;
+    --primary: 25 95% 50%;
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 280 85% 55%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 280 70% 50%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 265 40% 18%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 30 40% 92%;
+    --muted-foreground: 265 30% 40%;
 
-    --accent: 110 100% 50%;
-    --accent-foreground: 265 60% 8%;
+    --accent: 110 80% 45%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 340 100% 55%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 340 85% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 265 50% 20%;
-    --input: 265 50% 20%;
-    --ring: 25 100% 55%;
+    --border: 30 30% 88%;
+    --input: 30 30% 88%;
+    --ring: 25 95% 50%;
 
     --radius: 0.75rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(25 100% 55%), hsl(280 85% 55%));
-    --gradient-festive: linear-gradient(135deg, hsl(25 100% 55%) 0%, hsl(110 100% 50%) 50%, hsl(280 85% 55%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(265 60% 8%), hsl(265 50% 12%));
-    --shadow-card: 0 4px 6px -1px hsl(25 100% 55% / 0.12), 0 2px 4px -2px hsl(280 85% 55% / 0.08);
-    --shadow-elevated: 0 10px 15px -3px hsl(25 100% 55% / 0.15), 0 4px 6px -4px hsl(280 85% 55% / 0.1);
-    --shadow-festive-glow: 0 0 20px hsl(110 100% 50% / 0.3), 0 0 40px hsl(25 100% 55% / 0.2);
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 50%), hsl(280 70% 50%));
+    --gradient-festive: linear-gradient(135deg, hsl(25 95% 50%) 0%, hsl(110 80% 45%) 50%, hsl(280 70% 50%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(30 85% 96%), hsl(0 0% 100%));
+    --shadow-card: 0 4px 6px -1px hsl(25 95% 50% / 0.12), 0 2px 4px -2px hsl(280 70% 50% / 0.08);
+    --shadow-elevated: 0 10px 15px -3px hsl(25 95% 50% / 0.15), 0 4px 6px -4px hsl(280 70% 50% / 0.1);
+    --shadow-festive-glow: 0 0 20px hsl(110 80% 45% / 0.3), 0 0 40px hsl(25 95% 50% / 0.2);
 
-    --sidebar-background: 265 55% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 25 100% 55%;
-    --sidebar-primary-foreground: 265 60% 8%;
-    --sidebar-accent: 265 50% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 280 85% 55%;
-    --sidebar-ring: 110 100% 50%;
+    --sidebar-background: 30 40% 94%;
+    --sidebar-foreground: 265 50% 15%;
+    --sidebar-primary: 25 95% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 30 30% 88%;
+    --sidebar-accent-foreground: 265 50% 15%;
+    --sidebar-border: 30 25% 80%;
+    --sidebar-ring: 110 80% 45%;
   }
 
   /* Christmas Theme (Classic Red & Green) */
@@ -444,6 +444,55 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 200 20% 90%;
     --sidebar-border: 210 20% 28%;
     --sidebar-ring: 40 70% 75%;
+  }
+
+  /* Halloween Minimal Theme - Dark Mode */
+  .dark.halloween-minimal {
+    --background: 265 60% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 265 50% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 265 50% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 25 100% 55%;
+    --primary-foreground: 265 60% 8%;
+    
+    --secondary: 280 85% 55%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 265 40% 18%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 110 100% 50%;
+    --accent-foreground: 265 60% 8%;
+
+    --destructive: 340 100% 55%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 265 50% 20%;
+    --input: 265 50% 20%;
+    --ring: 25 100% 55%;
+
+    --radius: 0.75rem;
+
+    --gradient-primary: linear-gradient(135deg, hsl(25 100% 55%), hsl(280 85% 55%));
+    --gradient-festive: linear-gradient(135deg, hsl(25 100% 55%) 0%, hsl(110 100% 50%) 50%, hsl(280 85% 55%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(265 60% 8%), hsl(265 50% 12%));
+    --shadow-card: 0 4px 6px -1px hsl(25 100% 55% / 0.12), 0 2px 4px -2px hsl(280 85% 55% / 0.08);
+    --shadow-elevated: 0 10px 15px -3px hsl(25 100% 55% / 0.15), 0 4px 6px -4px hsl(280 85% 55% / 0.1);
+    --shadow-festive-glow: 0 0 20px hsl(110 100% 50% / 0.3), 0 0 40px hsl(25 100% 55% / 0.2);
+
+    --sidebar-background: 265 55% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 25 100% 55%;
+    --sidebar-primary-foreground: 265 60% 8%;
+    --sidebar-accent: 265 50% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 280 85% 55%;
+    --sidebar-ring: 110 100% 50%;
   }
 
   /* Liquid Glass Theme - Dark Mode (iOS-Style) */
