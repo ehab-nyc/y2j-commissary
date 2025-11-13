@@ -90,87 +90,53 @@ export function PrintWithStar({
         serviceFee: serviceFee,
       };
 
-      // Build Star WebPRNT commands
+      // Build Star WebPRNT commands (this loads the scripts from CDN)
       const printerCommands = await buildStarReceipt(
         receiptData,
         paperWidth
       );
 
-      // Send to printer using Star WebPRNT
+      // Check if StarWebPrintTrader is available
+      if (typeof (window as any).StarWebPrintTrader === 'undefined') {
+        toast.error('Star printer library failed to load. Please refresh the page.');
+        setIsPrinting(false);
+        return;
+      }
+
+      // Send to printer using Star WebPRNT (using already loaded scripts)
       const printerUrl = `http://${printerIp}/StarWebPRNT/SendMessage`;
       
-      // Create a hidden iframe to send the print job
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      const trader = new (window as any).StarWebPrintTrader({
+        url: printerUrl,
+        timeout: 10000
+      });
 
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (doc) {
-        doc.open();
-        doc.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <script src="http://${printerIp}/StarWebPRNT/StarWebPrintBuilder.js"></script>
-            <script src="http://${printerIp}/StarWebPRNT/StarWebPrintTrader.js"></script>
-          </head>
-          <body>
-            <script>
-              window.onload = function() {
-                try {
-                  var trader = new StarWebPrintTrader({
-                    url: '${printerUrl}',
-                    timeout: 10000
-                  });
-                  
-                  trader.onReceive = function(response) {
-                    window.parent.postMessage({ success: true }, '*');
-                  };
-                  
-                  trader.onError = function(response) {
-                    window.parent.postMessage({ success: false, error: response.message }, '*');
-                  };
-                  
-                  trader.sendMessage({ request: ${JSON.stringify(printerCommands)} });
-                } catch (error) {
-                  window.parent.postMessage({ success: false, error: error.message }, '*');
-                }
-              };
-            </script>
-          </body>
-          </html>
-        `);
-        doc.close();
+      trader.onReceive = (response: any) => {
+        console.log('Print success:', response);
+        toast.success('Receipt sent to Star printer successfully!');
+        setIsPrinting(false);
+      };
 
-        // Listen for print result
-        const handleMessage = (event: MessageEvent) => {
-          if (event.data.success !== undefined) {
-            window.removeEventListener('message', handleMessage);
-            document.body.removeChild(iframe);
-            
-            if (event.data.success) {
-              toast.success('Receipt sent to Star printer successfully!');
-            } else {
-              toast.error(`Print failed: ${event.data.error || 'Unknown error'}`);
-            }
-            setIsPrinting(false);
-          }
-        };
-        window.addEventListener('message', handleMessage);
+      trader.onError = (response: any) => {
+        console.error('Print error:', response);
+        toast.error(`Print failed: ${response.message || 'Unknown error'}`);
+        setIsPrinting(false);
+      };
 
-        // Timeout after 15 seconds
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            window.removeEventListener('message', handleMessage);
-            document.body.removeChild(iframe);
-            toast.error('Print timeout. Please check printer connection.');
-            setIsPrinting(false);
-          }
-        }, 15000);
-      }
+      // Send the print job
+      trader.sendMessage({ request: printerCommands });
+
+      // Timeout after 15 seconds
+      setTimeout(() => {
+        if (isPrinting) {
+          toast.error('Print timeout. Please check printer connection.');
+          setIsPrinting(false);
+        }
+      }, 15000);
     } catch (error) {
       console.error('Star print error:', error);
-      toast.error('Failed to print to Star printer');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to print';
+      toast.error(errorMessage);
       setIsPrinting(false);
     }
   };
