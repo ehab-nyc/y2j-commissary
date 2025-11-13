@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Printer, Smartphone, Laptop, Scan, DollarSign, Info } from "lucide-react";
+import { StarPrinterSettings } from "@/components/receipts/StarPrinterSettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function HardwareSetup() {
   return (
@@ -12,13 +14,55 @@ export default function HardwareSetup() {
         <BackButton />
         <h1 className="text-3xl font-bold">Hardware Integration</h1>
 
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>Hardware Integration Options</AlertTitle>
-          <AlertDescription>
-            Choose the best approach for your POS hardware needs based on your setup and requirements.
-          </AlertDescription>
-        </Alert>
+        <Tabs defaultValue="star-printer" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="star-printer">Star Printer Setup</TabsTrigger>
+            <TabsTrigger value="hardware-info">Hardware Options</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="star-printer" className="space-y-6">
+            <Alert>
+              <Printer className="h-4 w-4" />
+              <AlertTitle>Star TSP143IV Printer Configuration</AlertTitle>
+              <AlertDescription>
+                Configure your Star printer below. Your printer must be on the same network as this device.
+              </AlertDescription>
+            </Alert>
+
+            <StarPrinterSettings />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Finding Your Printer IP Address</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <h4 className="font-semibold mb-2">Method 1: Print a Status Report</h4>
+                  <ol className="text-sm space-y-1 list-decimal list-inside">
+                    <li>Turn off your Star printer</li>
+                    <li>Hold the FEED button while turning it on</li>
+                    <li>The printer will print a status report with the IP address</li>
+                  </ol>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Method 2: Check Your Router</h4>
+                  <p className="text-sm">
+                    Log into your router's admin panel and look for connected devices. The Star printer
+                    should be listed with its IP address.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="hardware-info" className="space-y-6">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Hardware Integration Options</AlertTitle>
+              <AlertDescription>
+                Choose the best approach for your POS hardware needs based on your setup and requirements.
+              </AlertDescription>
+            </Alert>
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Option 1: Web Browser Printing */}
@@ -200,6 +244,8 @@ export default function HardwareSetup() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

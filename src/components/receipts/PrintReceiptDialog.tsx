@@ -8,8 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Printer, FileText, Receipt } from "lucide-react";
+import { Printer, FileText } from "lucide-react";
 import { PrintReceipt } from "./PrintReceipt";
+import { PrintWithStar } from "./PrintWithStar";
 
 interface PrintReceiptDialogProps {
   orderNumber: string;
@@ -58,12 +59,13 @@ export function PrintReceiptDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Choose Receipt Design</DialogTitle>
+          <DialogTitle>Choose Print Option</DialogTitle>
           <DialogDescription>
-            Select which receipt design you want to print
+            Select how you want to print this receipt
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-4">
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
               <PrintReceipt
                 orderNumber={orderNumber}
@@ -96,6 +98,22 @@ export function PrintReceiptDialog({
               </div>
             </div>
           </Button>
+          </div>
+          
+          <div className="pt-4 border-t">
+            <p className="text-sm text-muted-foreground mb-3">Star Thermal Printer (Network)</p>
+            <PrintWithStar
+              orderNumber={orderNumber}
+              customerName={customerName}
+              items={items}
+              total={total}
+              serviceFee={serviceFee}
+              date={date}
+              cartName={cartName}
+              cartNumber={cartNumber}
+              processedBy={processedBy}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

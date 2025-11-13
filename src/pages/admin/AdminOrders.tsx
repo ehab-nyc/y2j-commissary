@@ -8,6 +8,7 @@ import { Eye, ArrowUpDown, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PrintReceiptDialog } from '@/components/receipts/PrintReceiptDialog';
 
 type SortField = 'created_at' | 'status' | 'total' | 'customer' | 'cart';
 type SortDirection = 'asc' | 'desc';
@@ -210,6 +211,23 @@ const AdminOrders = () => {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
+                    <PrintReceiptDialog
+                      orderNumber={order.id}
+                      customerName={order.profiles?.full_name || order.profiles?.email || 'Customer'}
+                      items={order.order_items?.map((item: any) => ({
+                        name: item.products?.name || 'Unknown',
+                        quantity: item.quantity,
+                        price: item.price,
+                        box_size: item.box_size,
+                      })) || []}
+                      total={order.total}
+                      serviceFee={serviceFee}
+                      date={new Date(order.created_at)}
+                      cartName={order.profiles?.cart_name}
+                      cartNumber={order.profiles?.cart_number}
+                      processedBy={order.assigned_worker?.full_name}
+                      onPOSPrint={() => window.print()}
+                    />
                     <Button
                       variant="outline"
                       size="icon"
