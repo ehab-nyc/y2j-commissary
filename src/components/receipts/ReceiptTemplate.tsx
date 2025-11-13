@@ -11,8 +11,12 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
     return (
       <div
         ref={ref}
-        className="bg-white text-black p-6 max-w-[80mm] mx-auto font-mono text-sm"
-        style={{ width: `${template?.paper_width || 80}mm`, fontWeight: 600 }}
+        className="bg-white text-black p-6 max-w-[80mm] mx-auto font-mono"
+        style={{ 
+          width: `${template?.paper_width || 80}mm`, 
+          fontWeight: 600,
+          fontSize: `${template?.text_size || 12}px`
+        }}
       >
         {/* Header */}
         {template?.show_company_info && (
