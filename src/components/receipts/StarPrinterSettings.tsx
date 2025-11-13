@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Printer, CheckCircle, XCircle } from "lucide-react";
-import { checkStarPrinterConnection } from "@/lib/starPrinter";
+import { checkStarPrinterConnection, loadStarPrinterScripts } from "@/lib/starPrinter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -88,13 +88,13 @@ export function StarPrinterSettings() {
     setConnectionStatus("unknown");
 
     try {
-      // Check if Star WebPRNT libraries are loaded
-      if (typeof (window as any).StarWebPrintBuilder === 'undefined' ||
-          typeof (window as any).StarWebPrintTrader === 'undefined') {
-        setConnectionStatus("error");
-        toast.error("Star WebPRNT library not loaded. Please refresh the page.");
-        return;
-      }
+      console.log("Testing connection to printer:", printerIp);
+      
+      // Load Star WebPRNT scripts from the printer
+      toast.info("Loading printer libraries...");
+      await loadStarPrinterScripts(printerIp);
+      
+      console.log("Scripts loaded, testing connection...");
 
       // Try to send a minimal test print
       const builder = new (window as any).StarWebPrintBuilder();
@@ -105,15 +105,21 @@ export function StarPrinterSettings() {
       
       // Set up a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Connection timeout")), 5000);
+        setTimeout(() => reject(new Error("Connection timeout - printer not responding")), 10000);
       });
 
       // Set up the connection test
       const connectionPromise = new Promise((resolve, reject) => {
         const trader = new (window as any).StarWebPrintTrader({ url, papertype });
         
-        trader.onReceive = () => resolve(true);
-        trader.onError = (error: any) => reject(error);
+        trader.onReceive = () => {
+          console.log("Printer responded successfully");
+          resolve(true);
+        };
+        trader.onError = (error: any) => {
+          console.error("Printer error:", error);
+          reject(new Error("Printer returned error"));
+        };
         
         trader.sendMessage({ request });
       });
@@ -121,11 +127,21 @@ export function StarPrinterSettings() {
       await Promise.race([connectionPromise, timeoutPromise]);
       
       setConnectionStatus("connected");
-      toast.success("Printer connection successful!");
-    } catch (error) {
-      console.error("Connection test error:", error);
+      toast.success("✓ Printer connected successfully!");
+    } catch (error: any) {
+      console.error("Connection test failed:", error);
       setConnectionStatus("error");
-      toast.error("Could not connect to printer. Check IP, network, and WebPRNT mode.");
+      
+      let errorMessage = "Connection failed";
+      if (error.message?.includes("timeout")) {
+        errorMessage = "Timeout - Check printer IP and network";
+      } else if (error.message?.includes("Failed to load")) {
+        errorMessage = "Cannot load printer scripts - Check IP or use HTTPS app";
+      } else if (window.location.protocol === 'https:') {
+        errorMessage = "HTTPS blocks HTTP printer - Use Browser Print or mobile app";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setTesting(false);
     }
