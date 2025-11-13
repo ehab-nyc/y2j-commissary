@@ -97,6 +97,14 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Get retry settings
+      const { data: retrySettings } = await supabaseClient
+        .from('app_settings')
+        .select('*')
+        .in('key', ['star_cloudprnt_retry_attempts']);
+
+      const maxRetries = retrySettings?.find(s => s.key === 'star_cloudprnt_retry_attempts')?.value || '3';
+
       // Create new print job
       const { data, error } = await supabaseClient
         .from('star_cloudprnt_jobs')
@@ -104,6 +112,8 @@ Deno.serve(async (req) => {
           device_id,
           job_data,
           status: 'pending',
+          max_retries: parseInt(maxRetries),
+          retry_count: 0,
         })
         .select()
         .single();
@@ -155,6 +165,28 @@ Deno.serve(async (req) => {
       if (jobError) {
         updateData.error_message = jobError;
         updateData.status = 'failed';
+
+        // Get job and retry settings for auto-retry logic
+        const { data: job } = await supabaseClient
+          .from('star_cloudprnt_jobs')
+          .select('retry_count, max_retries')
+          .eq('id', jobToken)
+          .single();
+
+        const { data: retrySettings } = await supabaseClient
+          .from('app_settings')
+          .select('*')
+          .in('key', ['star_cloudprnt_retry_enabled', 'star_cloudprnt_retry_delay_minutes']);
+
+        const retryEnabled = retrySettings?.find(s => s.key === 'star_cloudprnt_retry_enabled')?.value === 'true';
+        const retryDelay = parseInt(retrySettings?.find(s => s.key === 'star_cloudprnt_retry_delay_minutes')?.value || '5');
+
+        // Schedule retry if enabled and under retry limit
+        if (retryEnabled && job && job.retry_count < job.max_retries) {
+          const nextRetry = new Date();
+          nextRetry.setMinutes(nextRetry.getMinutes() + retryDelay);
+          updateData.next_retry_at = nextRetry.toISOString();
+        }
       }
 
       const { error } = await supabaseClient

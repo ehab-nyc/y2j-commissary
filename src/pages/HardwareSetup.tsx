@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Printer, Smartphone, Laptop, Scan, DollarSign, Info } from "lucide-react";
 import { StarPrinterSettings } from "@/components/receipts/StarPrinterSettings";
+import { PrintJobHistory } from "@/components/receipts/PrintJobHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function HardwareSetup() {
@@ -53,6 +54,8 @@ export default function HardwareSetup() {
                 </div>
               </CardContent>
             </Card>
+
+            <PrintJobHistory />
           </TabsContent>
 
           <TabsContent value="hardware-info" className="space-y-6">
