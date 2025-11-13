@@ -26,6 +26,7 @@ type ReceiptTemplate = {
   text_size?: number;
   font_family?: string;
   print_margin?: number;
+  logo_size?: number;
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -42,6 +43,7 @@ export default function ReceiptSettings() {
     text_size: 12,
     font_family: "Courier New, monospace",
     print_margin: 1.6,
+    logo_size: 100,
   });
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -72,6 +74,7 @@ export default function ReceiptSettings() {
           text_size: templateData.text_size || 12,
           font_family: templateData.font_family || "Courier New, monospace",
           print_margin: templateData.print_margin || 1.6,
+          logo_size: templateData.logo_size || 100,
         });
       }
       return data as ReceiptTemplate | null;
@@ -315,6 +318,23 @@ export default function ReceiptSettings() {
                         show_logo: checked,
                       })
                     }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="logo-size">Logo Size (px, 50-150)</Label>
+                  <Input
+                    id="logo-size"
+                    type="number"
+                    min="50"
+                    max="150"
+                    value={templateData.logo_size}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        logo_size: parseInt(e.target.value),
+                      })
+                    }
+                    disabled={!templateData.show_logo}
                   />
                 </div>
                 <div>

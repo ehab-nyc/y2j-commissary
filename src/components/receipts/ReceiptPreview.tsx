@@ -23,6 +23,7 @@ interface ReceiptPreviewProps {
     show_company_info: boolean;
     show_logo?: boolean;
     paper_width: number;
+    logo_size?: number;
   };
   companyInfo?: {
     name: string;
@@ -49,6 +50,7 @@ export function ReceiptPreview({
 }: ReceiptPreviewProps) {
   const subtotal = total - serviceFee;
   const paperWidth = template?.paper_width || 80;
+  const logoSize = template?.logo_size || 100;
 
   return (
     <Card
@@ -63,7 +65,8 @@ export function ReceiptPreview({
               <img 
                 src={logoUrl} 
                 alt="Company Logo" 
-                className="w-[25mm] h-auto max-h-[25mm] object-contain"
+                style={{ maxHeight: `${logoSize}px` }}
+                className="w-auto h-auto object-contain"
               />
             </div>
           )}
