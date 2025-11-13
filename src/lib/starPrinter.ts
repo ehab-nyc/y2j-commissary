@@ -4,7 +4,7 @@
 let scriptsLoading = false;
 let scriptsLoaded = false;
 
-export async function loadStarPrinterScripts(): Promise<void> {
+export async function loadStarPrinterScripts(printerIp: string): Promise<void> {
   if (scriptsLoaded) return;
   if (scriptsLoading) {
     // Wait for scripts to finish loading
@@ -22,11 +22,11 @@ export async function loadStarPrinterScripts(): Promise<void> {
 
   return new Promise((resolve, reject) => {
     const builder = document.createElement('script');
-    builder.src = 'https://cdn.jsdelivr.net/gh/star-micronics/starwebprnt-sdk@main/Sample/js/StarWebPrintBuilder.js';
+    builder.src = `http://${printerIp}/StarWebPRNT/StarWebPrintBuilder.js`;
     builder.async = true;
     
     const trader = document.createElement('script');
-    trader.src = 'https://cdn.jsdelivr.net/gh/star-micronics/starwebprnt-sdk@main/Sample/js/StarWebPrintTrader.js';
+    trader.src = `http://${printerIp}/StarWebPRNT/StarWebPrintTrader.js`;
     trader.async = true;
 
     let builderLoaded = false;
@@ -92,9 +92,9 @@ export interface ReceiptData {
 }
 
 // Build receipt content using Star WebPRNT commands
-export async function buildStarReceipt(data: ReceiptData, paperWidth: number = 80): Promise<string> {
-  // Ensure scripts are loaded
-  await loadStarPrinterScripts();
+export async function buildStarReceipt(data: ReceiptData, printerIp: string, paperWidth: number = 80): Promise<string> {
+  // Ensure scripts are loaded from the printer
+  await loadStarPrinterScripts(printerIp);
   
   // Check if Star WebPRNT is available
   if (typeof (window as any).StarWebPrintBuilder === 'undefined') {
@@ -249,8 +249,8 @@ export async function printToStarPrinter(
   receiptData: ReceiptData,
   paperWidth: number = 80
 ): Promise<void> {
-  // Ensure scripts are loaded
-  await loadStarPrinterScripts();
+  // Ensure scripts are loaded from the printer
+  await loadStarPrinterScripts(printerIp);
   
   return new Promise(async (resolve, reject) => {
     try {
@@ -259,7 +259,7 @@ export async function printToStarPrinter(
         return;
       }
 
-      const request = await buildStarReceipt(receiptData, paperWidth);
+      const request = await buildStarReceipt(receiptData, printerIp, paperWidth);
       const url = `http://${printerIp}/StarWebPRNT/SendMessage`;
       const papertype = paperWidth === 58 ? 'normal' : 'normal';
       

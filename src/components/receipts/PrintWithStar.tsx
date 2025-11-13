@@ -90,9 +90,10 @@ export function PrintWithStar({
         serviceFee: serviceFee,
       };
 
-      // Build Star WebPRNT commands (this loads the scripts from CDN)
+      // Build Star WebPRNT commands (this loads the scripts from the printer)
       const printerCommands = await buildStarReceipt(
         receiptData,
+        printerIp,
         paperWidth
       );
 
