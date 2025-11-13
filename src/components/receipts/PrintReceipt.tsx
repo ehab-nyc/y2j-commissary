@@ -8,13 +8,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Printer, Eye, Download } from "lucide-react";
+import { Printer, Eye } from "lucide-react";
 import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 interface PrintReceiptProps {
   orderNumber: string;
@@ -45,7 +43,6 @@ export function PrintReceipt({
   processedBy,
 }: PrintReceiptProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   const { data: template } = useQuery({
     queryKey: ["receipt-template"],
@@ -121,52 +118,6 @@ export function PrintReceipt({
     printWindow.document.close();
   };
 
-  const handleDownloadPDF = async () => {
-    if (!template || !companySettings) {
-      toast.error("Receipt template not loaded");
-      return;
-    }
-
-    setIsGeneratingPDF(true);
-    try {
-      const tempContainer = document.createElement("div");
-      tempContainer.style.position = "absolute";
-      tempContainer.style.left = "-9999px";
-      tempContainer.style.background = "white";
-      tempContainer.style.padding = "20px";
-      document.body.appendChild(tempContainer);
-
-      tempContainer.innerHTML = generateReceiptContent();
-
-      const canvas = await html2canvas(tempContainer, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      document.body.removeChild(tempContainer);
-
-      const imgWidth = template.paper_width || 80;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: [imgWidth, imgHeight],
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save(`receipt-${orderNumber}.pdf`);
-      
-      toast.success("Receipt downloaded as PDF");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Failed to generate PDF");
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
 
   const generateReceiptContent = () => {
     return `
@@ -329,18 +280,6 @@ export function PrintReceipt({
                 Close
               </Button>
               <Button 
-                variant="outline" 
-                className="gap-2" 
-                onClick={() => {
-                  handleDownloadPDF();
-                  setPreviewOpen(false);
-                }}
-                disabled={isGeneratingPDF}
-              >
-                <Download className="h-4 w-4" />
-                {isGeneratingPDF ? "Generating..." : "PDF"}
-              </Button>
-              <Button 
                 variant="default" 
                 className="gap-2" 
                 onClick={() => {
@@ -354,16 +293,6 @@ export function PrintReceipt({
             </div>
           </DialogContent>
         </Dialog>
-        
-        <Button 
-          variant="outline" 
-          className="gap-2 flex-1" 
-          onClick={handleDownloadPDF}
-          disabled={isGeneratingPDF}
-        >
-          <Download className="h-4 w-4" />
-          {isGeneratingPDF ? "Generating..." : "PDF"}
-        </Button>
         
         <Button variant="default" className="gap-2 flex-1" onClick={handleBrowserPrint}>
           <Printer className="h-4 w-4" />
