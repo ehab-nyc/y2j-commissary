@@ -14,6 +14,19 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Extended type for receipt template with new properties
+type ReceiptTemplate = {
+  header_text: string;
+  footer_text: string;
+  show_company_info: boolean;
+  show_logo?: boolean;
+  paper_width: number;
+  show_barcode: boolean;
+  text_size?: number;
+  font_family?: string;
+  print_margin?: number;
+};
+
 interface PrintReceiptProps {
   orderNumber: string;
   customerName: string;
@@ -45,7 +58,7 @@ export function PrintReceipt({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [zoom, setZoom] = useState(100);
   
-  const { data: template } = useQuery({
+  const { data: template } = useQuery<ReceiptTemplate | null>({
     queryKey: ["receipt-template"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -55,7 +68,7 @@ export function PrintReceipt({
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as ReceiptTemplate | null;
     },
   });
 

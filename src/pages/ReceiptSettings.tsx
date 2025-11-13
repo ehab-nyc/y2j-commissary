@@ -13,6 +13,24 @@ import { ReceiptPreview } from "@/components/receipts/ReceiptPreview";
 import { FileText, Save } from "lucide-react";
 import { toast } from "sonner";
 
+// Extended type for receipt template with new properties
+type ReceiptTemplate = {
+  id: string;
+  name: string;
+  header_text: string;
+  footer_text: string;
+  show_company_info: boolean;
+  show_logo?: boolean;
+  paper_width: number;
+  show_barcode: boolean;
+  text_size?: number;
+  font_family?: string;
+  print_margin?: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export default function ReceiptSettings() {
   const queryClient = useQueryClient();
   const [templateData, setTemplateData] = useState({
@@ -33,7 +51,7 @@ export default function ReceiptSettings() {
     tax_id: "",
   });
 
-  const { data: template } = useQuery({
+  const { data: template } = useQuery<ReceiptTemplate | null>({
     queryKey: ["receipt-template"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -44,18 +62,19 @@ export default function ReceiptSettings() {
 
       if (error) throw error;
       if (data) {
+        const templateData = data as unknown as ReceiptTemplate;
         setTemplateData({
-          header_text: data.header_text || "",
-          footer_text: data.footer_text || "",
-          show_company_info: data.show_company_info,
-          show_logo: data.show_logo ?? true,
-          paper_width: data.paper_width,
-          text_size: data.text_size || 12,
-          font_family: data.font_family || "Courier New, monospace",
-          print_margin: data.print_margin || 1.6,
+          header_text: templateData.header_text || "",
+          footer_text: templateData.footer_text || "",
+          show_company_info: templateData.show_company_info,
+          show_logo: templateData.show_logo ?? true,
+          paper_width: templateData.paper_width,
+          text_size: templateData.text_size || 12,
+          font_family: templateData.font_family || "Courier New, monospace",
+          print_margin: templateData.print_margin || 1.6,
         });
       }
-      return data;
+      return data as ReceiptTemplate | null;
     },
   });
 
