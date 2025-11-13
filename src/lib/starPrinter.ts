@@ -164,11 +164,20 @@ export async function checkStarCloudPRNTConnection(
   supabaseClient: any
 ): Promise<boolean> {
   try {
-    // Test connection by calling the edge function with deviceId as query param
-    const { error } = await supabaseClient.functions.invoke(`star-cloudprnt?deviceId=${deviceId}`);
+    // Test connection by calling the GET endpoint with deviceId
+    const response = await fetch(
+      `${supabaseClient.supabaseUrl}/functions/v1/star-cloudprnt?deviceId=${deviceId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseClient.supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    // If no error, connection is working
-    return !error;
+    // If response is OK (200-299), connection is working
+    return response.ok;
   } catch (error) {
     console.error('CloudPRNT connection test failed:', error);
     return false;
