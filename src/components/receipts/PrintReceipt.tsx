@@ -1,5 +1,14 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Printer, Eye } from "lucide-react";
 import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +42,7 @@ export function PrintReceipt({
   cartNumber,
   processedBy,
 }: PrintReceiptProps) {
+  const [previewOpen, setPreviewOpen] = useState(false);
   const { data: template } = useQuery({
     queryKey: ["receipt-template"],
     queryFn: async () => {
@@ -137,11 +147,67 @@ export function PrintReceipt({
 
 
   return (
-    <div className="flex gap-2">
-      <Button variant="default" className="gap-2" onClick={handleBrowserPrint}>
-        <Printer className="h-4 w-4" />
-        Print Receipt
-      </Button>
+    <>
+      <div className="flex gap-2 flex-col sm:flex-row w-full">
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="gap-2 flex-1">
+              <Eye className="h-4 w-4" />
+              Preview
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Receipt Preview</DialogTitle>
+              <DialogDescription>
+                Preview the receipt before printing
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <ReceiptPreview
+                orderNumber={orderNumber}
+                customerName={customerName}
+                items={items}
+                total={total}
+                serviceFee={serviceFee}
+                date={date}
+                cartName={cartName}
+                cartNumber={cartNumber}
+                processedBy={processedBy}
+                template={template}
+                companyInfo={{
+                  name: companySettings?.name || "",
+                  address: companySettings?.address || "",
+                  phone: companySettings?.phone || "",
+                  tax_id: companySettings?.tax_id || "",
+                }}
+                logoUrl={companyLogo || undefined}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+                Close
+              </Button>
+              <Button 
+                variant="default" 
+                className="gap-2" 
+                onClick={() => {
+                  handleBrowserPrint();
+                  setPreviewOpen(false);
+                }}
+              >
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        <Button variant="default" className="gap-2 flex-1" onClick={handleBrowserPrint}>
+          <Printer className="h-4 w-4" />
+          Print
+        </Button>
+      </div>
 
       <div id="receipt-content" className="hidden">
         {template && companySettings && (
@@ -167,6 +233,6 @@ export function PrintReceipt({
           />
         )}
       </div>
-    </div>
+    </>
   );
 }
