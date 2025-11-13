@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ReceiptPreview } from "@/components/receipts/ReceiptPreview";
-import { FileText, Save } from "lucide-react";
+import { FileText, Save, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 // Extended type for receipt template with new properties
@@ -36,7 +36,9 @@ type ReceiptTemplate = {
 
 export default function ReceiptSettings() {
   const queryClient = useQueryClient();
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateData, setTemplateData] = useState({
+    name: "Default Receipt",
     header_text: "Thank you for your order!",
     footer_text: "Please come again!",
     show_company_info: true,
@@ -56,34 +58,45 @@ export default function ReceiptSettings() {
     tax_id: "",
   });
 
-  const { data: template } = useQuery<ReceiptTemplate | null>({
-    queryKey: ["receipt-template"],
+  // Fetch all templates
+  const { data: templates } = useQuery({
+    queryKey: ["receipt-templates-all"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("receipt_templates")
         .select("*")
-        .eq("is_default", true)
-        .maybeSingle();
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      if (data) {
-        const templateData = data as unknown as ReceiptTemplate;
-        setTemplateData({
-          header_text: templateData.header_text || "",
-          footer_text: templateData.footer_text || "",
-          show_company_info: templateData.show_company_info,
-          show_logo: templateData.show_logo ?? true,
-          paper_width: templateData.paper_width,
-          text_size: templateData.text_size || 12,
-          font_family: templateData.font_family || "Courier New, monospace",
-          print_margin: templateData.print_margin || 1.6,
-          logo_size: templateData.logo_size || 100,
-          logo_position: templateData.logo_position || 'center',
-        });
-      }
-      return data as ReceiptTemplate | null;
+      return data as ReceiptTemplate[];
     },
   });
+
+  // Get the selected template (or default)
+  const template = templates?.find(t => 
+    selectedTemplateId ? t.id === selectedTemplateId : t.is_default
+  ) || templates?.[0];
+
+  // Update templateData when template changes
+  useEffect(() => {
+    if (template) {
+      setSelectedTemplateId(template.id);
+      setTemplateData({
+        name: template.name || "Default Receipt",
+        header_text: template.header_text || "",
+        footer_text: template.footer_text || "",
+        show_company_info: template.show_company_info,
+        show_logo: template.show_logo ?? true,
+        paper_width: template.paper_width,
+        text_size: template.text_size || 12,
+        font_family: template.font_family || "Courier New, monospace",
+        print_margin: template.print_margin || 1.6,
+        logo_size: template.logo_size || 100,
+        logo_position: template.logo_position || 'center',
+      });
+    }
+  }, [template]);
 
   const { data: companyLogo } = useQuery({
     queryKey: ["company-logo"],
@@ -137,16 +150,16 @@ export default function ReceiptSettings() {
         const { error } = await supabase
           .from("receipt_templates")
           .insert({
-            name: "Default Receipt",
-            is_default: true,
             ...templateData,
+            is_default: templates?.length === 0,
           });
         if (error) throw error;
       } else {
         // Update existing template
+        const { name, ...updateData } = templateData;
         const { error } = await supabase
           .from("receipt_templates")
-          .update(templateData)
+          .update(updateData)
           .eq("id", template.id);
         if (error) throw error;
       }
@@ -184,7 +197,7 @@ export default function ReceiptSettings() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipt-template"] });
+      queryClient.invalidateQueries({ queryKey: ["receipt-templates-all"] });
       queryClient.invalidateQueries({ queryKey: ["receipt-settings"] });
       toast.success("Receipt settings saved successfully");
     },
@@ -199,20 +212,88 @@ export default function ReceiptSettings() {
     { name: "Product B", quantity: 1, price: 8.50, box_size: "1/2 box" },
   ];
 
+  const createNewTemplate = () => {
+    setSelectedTemplateId(null);
+    setTemplateData({
+      name: "New Template",
+      header_text: "Thank you for your order!",
+      footer_text: "Please come again!",
+      show_company_info: true,
+      show_logo: true,
+      paper_width: 80,
+      text_size: 12,
+      font_family: "Courier New, monospace",
+      print_margin: 1.6,
+      logo_size: 100,
+      logo_position: 'center',
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <BackButton />
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Receipt Settings</h1>
-          <Button
-            onClick={() => saveTemplateMutation.mutate()}
-            disabled={saveTemplateMutation.isPending}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Settings
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={createNewTemplate}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              New Template
+            </Button>
+            <Button
+              onClick={() => saveTemplateMutation.mutate()}
+              disabled={saveTemplateMutation.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Settings
+            </Button>
+          </div>
         </div>
+
+        {/* Template Selector */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Template</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="template-select">Current Template</Label>
+              <select
+                id="template-select"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={selectedTemplateId || ''}
+                onChange={(e) => {
+                  const newTemplate = templates?.find(t => t.id === e.target.value);
+                  if (newTemplate) {
+                    setSelectedTemplateId(newTemplate.id);
+                    setTemplateData({
+                      name: newTemplate.name,
+                      header_text: newTemplate.header_text || "",
+                      footer_text: newTemplate.footer_text || "",
+                      show_company_info: newTemplate.show_company_info,
+                      show_logo: newTemplate.show_logo ?? true,
+                      paper_width: newTemplate.paper_width,
+                      text_size: newTemplate.text_size || 12,
+                      font_family: newTemplate.font_family || "Courier New, monospace",
+                      print_margin: newTemplate.print_margin || 1.6,
+                      logo_size: newTemplate.logo_size || 100,
+                      logo_position: newTemplate.logo_position || 'center',
+                    });
+                  }
+                }}
+              >
+                {templates?.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} {t.is_default ? '(Default)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
@@ -272,6 +353,20 @@ export default function ReceiptSettings() {
                 <CardTitle>Receipt Template</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="template-name">Template Name</Label>
+                  <Input
+                    id="template-name"
+                    value={templateData.name}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        name: e.target.value,
+                      })
+                    }
+                    disabled={!!template?.id}
+                  />
+                </div>
                 <div>
                   <Label htmlFor="header">Header Text</Label>
                   <Textarea
@@ -376,19 +471,20 @@ export default function ReceiptSettings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="text-size">Text Size (8-24)</Label>
-                  <Input
+                  <Label htmlFor="text-size">Text Size: {templateData.text_size}px</Label>
+                  <Slider
                     id="text-size"
-                    type="number"
-                    min="8"
-                    max="24"
-                    value={templateData.text_size}
-                    onChange={(e) =>
+                    min={8}
+                    max={24}
+                    step={1}
+                    value={[templateData.text_size]}
+                    onValueChange={(value) =>
                       setTemplateData({
                         ...templateData,
-                        text_size: parseInt(e.target.value),
+                        text_size: value[0],
                       })
                     }
+                    className="mt-2"
                   />
                 </div>
                 <div>
