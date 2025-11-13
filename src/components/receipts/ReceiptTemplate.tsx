@@ -12,7 +12,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
       <div
         ref={ref}
         className="bg-white text-black p-6 max-w-[80mm] mx-auto font-mono text-sm"
-        style={{ width: `${template?.paper_width || 80}mm` }}
+        style={{ width: `${template?.paper_width || 80}mm`, fontWeight: 600 }}
       >
         {/* Header */}
         {template?.show_company_info && (
@@ -22,6 +22,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                 src={companyInfo.logo_url}
                 alt="Logo"
                 className="h-16 mx-auto mb-2"
+                style={{ filter: 'contrast(1.2) brightness(0.9)' }}
               />
             )}
             <h1 className="text-lg font-bold">{companyInfo?.company_name || "Commissary"}</h1>
@@ -73,7 +74,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                 <span>{item.product_name}</span>
                 <span>${(item.price * item.quantity).toFixed(2)}</span>
               </div>
-              <div className="text-xs text-gray-600 ml-2">
+              <div className="text-xs text-black ml-2" style={{ fontWeight: 500 }}>
                 {item.quantity}x @ ${item.price} ({item.box_size})
               </div>
             </div>

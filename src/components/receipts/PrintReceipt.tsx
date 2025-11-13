@@ -121,10 +121,10 @@ export function PrintReceipt({
 
   const generateReceiptContent = () => {
     return `
-      <div style="font-family: 'Courier New', monospace; max-width: ${template?.paper_width || 80}mm; font-size: 12px; color: black;">
+      <div style="font-family: 'Courier New', monospace; max-width: ${template?.paper_width || 80}mm; font-size: 12px; color: black; font-weight: 600;">
         ${template?.show_company_info ? `
           <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px;">
-            ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: 64px; margin: 0 auto 8px; display: block;" />` : ''}
+            ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: 64px; margin: 0 auto 8px; display: block; filter: contrast(1.2) brightness(0.9);" />` : ''}
             <h1 style="font-size: 16px; font-weight: bold; margin: 0;">${companySettings?.name}</h1>
             ${companySettings?.address ? `<p style="font-size: 10px; margin: 4px 0;">${companySettings.address}</p>` : ''}
             ${companySettings?.phone ? `<p style="font-size: 10px; margin: 4px 0;">Tel: ${companySettings.phone}</p>` : ''}
@@ -159,7 +159,7 @@ export function PrintReceipt({
                 <span>${item.name}</span>
                 <span>$${(item.price * item.quantity).toFixed(2)}</span>
               </div>
-              <div style="font-size: 10px; color: #666; margin-left: 8px;">
+              <div style="font-size: 10px; color: black; margin-left: 8px; font-weight: 500;">
                 ${item.quantity}x @ $${item.price} (${item.box_size || '1 box'})
               </div>
             </div>
