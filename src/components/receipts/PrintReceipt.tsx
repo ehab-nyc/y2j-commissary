@@ -8,11 +8,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Printer, Eye } from "lucide-react";
+import { Printer, Eye, Download } from "lucide-react";
 import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface PrintReceiptProps {
   orderNumber: string;
@@ -43,6 +45,8 @@ export function PrintReceipt({
   processedBy,
 }: PrintReceiptProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  
   const { data: template } = useQuery({
     queryKey: ["receipt-template"],
     queryFn: async () => {
@@ -100,7 +104,6 @@ export function PrintReceipt({
     },
   });
 
-
   const handleBrowserPrint = () => {
     if (!template || !companySettings) {
       toast.error("Receipt template not loaded");
@@ -113,8 +116,145 @@ export function PrintReceipt({
       return;
     }
 
-    // Generate receipt HTML with inline styles matching the preview
-    const receiptHtml = `
+    const receiptHtml = generateReceiptHTML();
+    printWindow.document.write(receiptHtml);
+    printWindow.document.close();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!template || !companySettings) {
+      toast.error("Receipt template not loaded");
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "absolute";
+      tempContainer.style.left = "-9999px";
+      tempContainer.style.background = "white";
+      tempContainer.style.padding = "20px";
+      document.body.appendChild(tempContainer);
+
+      tempContainer.innerHTML = generateReceiptContent();
+
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      document.body.removeChild(tempContainer);
+
+      const imgWidth = template.paper_width || 80;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [imgWidth, imgHeight],
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`receipt-${orderNumber}.pdf`);
+      
+      toast.success("Receipt downloaded as PDF");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const generateReceiptContent = () => {
+    return `
+      <div style="font-family: 'Courier New', monospace; max-width: ${template?.paper_width || 80}mm; font-size: 12px; color: black;">
+        ${template?.show_company_info ? `
+          <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px;">
+            ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: 64px; margin: 0 auto 8px; display: block;" />` : ''}
+            <h1 style="font-size: 16px; font-weight: bold; margin: 0;">${companySettings?.name}</h1>
+            ${companySettings?.address ? `<p style="font-size: 10px; margin: 4px 0;">${companySettings.address}</p>` : ''}
+            ${companySettings?.phone ? `<p style="font-size: 10px; margin: 4px 0;">Tel: ${companySettings.phone}</p>` : ''}
+            ${companySettings?.tax_id ? `<p style="font-size: 10px; margin: 4px 0;">Tax ID: ${companySettings.tax_id}</p>` : ''}
+          </div>
+        ` : ''}
+        
+        ${template?.header_text ? `<div style="text-align: center; margin-bottom: 16px; font-weight: bold;">${template.header_text}</div>` : ''}
+        
+        <div style="margin-bottom: 16px; font-size: 10px;">
+          <table style="width: 100%;">
+            <tr>
+              <td>Order #: ${orderNumber}</td>
+              <td style="text-align: right;">Customer: ${customerName}</td>
+            </tr>
+            <tr>
+              <td>Cart: ${cartName || ''} ${cartNumber || ''}</td>
+              <td style="text-align: right;">Processed by: ${processedBy || 'N/A'}</td>
+            </tr>
+          </table>
+          <p style="margin-top: 4px;">Date: ${date.toLocaleString()}</p>
+        </div>
+        
+        <div style="border-top: 2px solid black; border-bottom: 2px solid black; padding: 8px 0; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
+            <span>Item</span>
+            <span>Amount</span>
+          </div>
+          ${items.map(item => `
+            <div style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>${item.name}</span>
+                <span>$${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+              <div style="font-size: 10px; color: #666; margin-left: 8px;">
+                ${item.quantity}x @ $${item.price} (${item.box_size || '1 box'})
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Subtotal:</span>
+            <span>$${(total - serviceFee).toFixed(2)}</span>
+          </div>
+          ${serviceFee > 0 ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Service Fee:</span>
+              <span>$${serviceFee.toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; border-top: 2px solid black; padding-top: 8px;">
+            <span>TOTAL:</span>
+            <span>$${total.toFixed(2)}</span>
+          </div>
+        </div>
+        
+        ${template?.show_barcode ? `
+          <div style="text-align: center; margin-bottom: 16px;">
+            <div style="font-family: monospace; font-size: 10px; letter-spacing: 2px;">
+              ${orderNumber.toUpperCase()}
+            </div>
+          </div>
+        ` : ''}
+        
+        ${template?.footer_text ? `
+          <div style="text-align: center; margin-top: 16px; border-top: 2px solid black; padding-top: 16px; font-weight: bold;">
+            ${template.footer_text}
+          </div>
+        ` : ''}
+        
+        <div style="text-align: center; font-size: 10px; margin-top: 16px;">
+          Powered by Commissary POS
+        </div>
+      </div>
+    `;
+  };
+
+  const generateReceiptHTML = () => {
+    return `
       <!DOCTYPE html>
       <html>
         <head>
@@ -131,115 +271,10 @@ export function PrintReceipt({
               background: white;
               color: black;
             }
-            .receipt {
-              max-width: ${template.paper_width || 80}mm;
-              margin: 0 auto;
-              font-size: 12px;
-            }
-            .text-center { text-align: center; }
-            .border-b-2 { border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px; }
-            .border-t-2 { border-top: 2px solid black; padding-top: 8px; }
-            .mb-4 { margin-bottom: 16px; }
-            .mb-2 { margin-bottom: 8px; }
-            .mt-4 { margin-top: 16px; }
-            .pt-4 { padding-top: 16px; }
-            .font-bold { font-weight: bold; }
-            .text-lg { font-size: 16px; }
-            .text-xs { font-size: 10px; }
-            .text-base { font-size: 14px; }
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
-            table { width: 100%; border-collapse: collapse; }
-            .item-row { margin-bottom: 8px; }
-            .item-details { font-size: 10px; color: #666; margin-left: 8px; }
-            img { max-height: 64px; margin: 0 auto 8px; display: block; }
           </style>
         </head>
         <body>
-          <div class="receipt">
-            ${template.show_company_info ? `
-              <div class="text-center border-b-2">
-                ${template.show_logo && companyLogo ? `
-                  <img src="${companyLogo}" alt="Logo" />
-                ` : ''}
-                <h1 class="text-lg font-bold">${companySettings.name}</h1>
-                ${companySettings.address ? `<p class="text-xs">${companySettings.address}</p>` : ''}
-                ${companySettings.phone ? `<p class="text-xs">Tel: ${companySettings.phone}</p>` : ''}
-                ${companySettings.tax_id ? `<p class="text-xs">Tax ID: ${companySettings.tax_id}</p>` : ''}
-              </div>
-            ` : ''}
-            
-            ${template.header_text ? `
-              <div class="text-center mb-4 font-bold">${template.header_text}</div>
-            ` : ''}
-            
-            <div class="mb-4 text-xs">
-              <table>
-                <tr>
-                  <td>Order #: ${orderNumber}</td>
-                  <td style="text-align: right;">Customer: ${customerName}</td>
-                </tr>
-                <tr>
-                  <td>Cart: ${cartName || ''} ${cartNumber || ''}</td>
-                  <td style="text-align: right;">Processed by: ${processedBy || 'N/A'}</td>
-                </tr>
-              </table>
-              <p style="margin-top: 4px;">Date: ${date.toLocaleString()}</p>
-            </div>
-            
-            <div class="border-t-2 border-b-2" style="padding: 8px 0; margin-bottom: 16px;">
-              <div class="flex justify-between font-bold mb-2">
-                <span>Item</span>
-                <span>Amount</span>
-              </div>
-              ${items.map(item => `
-                <div class="item-row">
-                  <div class="flex justify-between">
-                    <span>${item.name}</span>
-                    <span>$${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                  <div class="item-details">
-                    ${item.quantity}x @ $${item.price} (${item.box_size || '1 box'})
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-            
-            <div class="mb-4">
-              <div class="flex justify-between" style="margin-bottom: 4px;">
-                <span>Subtotal:</span>
-                <span>$${(total - serviceFee).toFixed(2)}</span>
-              </div>
-              ${serviceFee > 0 ? `
-                <div class="flex justify-between" style="margin-bottom: 4px;">
-                  <span>Service Fee:</span>
-                  <span>$${serviceFee.toFixed(2)}</span>
-                </div>
-              ` : ''}
-              <div class="flex justify-between font-bold text-base border-t-2" style="padding-top: 8px;">
-                <span>TOTAL:</span>
-                <span>$${total.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            ${template.show_barcode ? `
-              <div class="text-center mb-4">
-                <div style="font-family: monospace; font-size: 10px; letter-spacing: 2px;">
-                  ${orderNumber.toUpperCase()}
-                </div>
-              </div>
-            ` : ''}
-            
-            ${template.footer_text ? `
-              <div class="text-center mt-4 border-t-2 pt-4 font-bold">
-                ${template.footer_text}
-              </div>
-            ` : ''}
-            
-            <div class="text-center text-xs mt-4">
-              Powered by Commissary POS
-            </div>
-          </div>
+          ${generateReceiptContent()}
           <script>
             window.onload = () => {
               window.print();
@@ -249,11 +284,7 @@ export function PrintReceipt({
         </body>
       </html>
     `;
-
-    printWindow.document.write(receiptHtml);
-    printWindow.document.close();
   };
-
 
   return (
     <>
@@ -298,6 +329,18 @@ export function PrintReceipt({
                 Close
               </Button>
               <Button 
+                variant="outline" 
+                className="gap-2" 
+                onClick={() => {
+                  handleDownloadPDF();
+                  setPreviewOpen(false);
+                }}
+                disabled={isGeneratingPDF}
+              >
+                <Download className="h-4 w-4" />
+                {isGeneratingPDF ? "Generating..." : "PDF"}
+              </Button>
+              <Button 
                 variant="default" 
                 className="gap-2" 
                 onClick={() => {
@@ -312,35 +355,20 @@ export function PrintReceipt({
           </DialogContent>
         </Dialog>
         
+        <Button 
+          variant="outline" 
+          className="gap-2 flex-1" 
+          onClick={handleDownloadPDF}
+          disabled={isGeneratingPDF}
+        >
+          <Download className="h-4 w-4" />
+          {isGeneratingPDF ? "Generating..." : "PDF"}
+        </Button>
+        
         <Button variant="default" className="gap-2 flex-1" onClick={handleBrowserPrint}>
           <Printer className="h-4 w-4" />
           Print
         </Button>
-      </div>
-
-      <div id="receipt-content" className="hidden">
-        {template && companySettings && (
-          <ReceiptPreview
-            orderNumber={orderNumber}
-            customerName={customerName}
-            items={items}
-            total={total}
-            serviceFee={serviceFee}
-            date={date}
-            cartName={cartName}
-            cartNumber={cartNumber}
-            processedBy={processedBy}
-            template={{
-              header_text: template.header_text || "",
-              footer_text: template.footer_text || "",
-              show_company_info: template.show_company_info,
-              show_logo: template.show_logo,
-              paper_width: template.paper_width,
-            }}
-            companyInfo={companySettings}
-            logoUrl={companyLogo}
-          />
-        )}
       </div>
     </>
   );
