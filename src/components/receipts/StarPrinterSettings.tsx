@@ -8,13 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Printer, CheckCircle, XCircle } from "lucide-react";
-import { checkStarPrinterConnection, loadStarPrinterScripts } from "@/lib/starPrinter";
+import { checkStarCloudPRNTConnection } from "@/lib/starPrinter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function StarPrinterSettings() {
   const queryClient = useQueryClient();
-  const [printerIp, setPrinterIp] = useState("");
+  const [deviceId, setDeviceId] = useState("");
   const [paperWidth, setPaperWidth] = useState<"58" | "80">("80");
   const [enabled, setEnabled] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -22,12 +22,12 @@ export function StarPrinterSettings() {
 
   // Fetch settings
   const { data: settings } = useQuery({
-    queryKey: ["star-printer-settings"],
+    queryKey: ["star-cloudprnt-settings"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("app_settings")
         .select("*")
-        .in("key", ["star_printer_ip", "star_printer_width", "star_printer_enabled"]);
+        .in("key", ["star_cloudprnt_device_id", "star_printer_width", "star_cloudprnt_enabled"]);
 
       if (error) throw error;
 
@@ -37,14 +37,14 @@ export function StarPrinterSettings() {
       });
 
       // Set local state
-      if (settingsMap.star_printer_ip) {
-        setPrinterIp(settingsMap.star_printer_ip);
+      if (settingsMap.star_cloudprnt_device_id) {
+        setDeviceId(settingsMap.star_cloudprnt_device_id);
       }
       if (settingsMap.star_printer_width) {
         setPaperWidth(settingsMap.star_printer_width as "58" | "80");
       }
-      if (settingsMap.star_printer_enabled) {
-        setEnabled(settingsMap.star_printer_enabled === "true");
+      if (settingsMap.star_cloudprnt_enabled) {
+        setEnabled(settingsMap.star_cloudprnt_enabled === "true");
       }
 
       return settingsMap;
@@ -55,9 +55,9 @@ export function StarPrinterSettings() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const settingsToSave = [
-        { key: "star_printer_ip", value: printerIp },
+        { key: "star_cloudprnt_device_id", value: deviceId },
         { key: "star_printer_width", value: paperWidth },
-        { key: "star_printer_enabled", value: enabled.toString() },
+        { key: "star_cloudprnt_enabled", value: enabled.toString() },
       ];
 
       for (const setting of settingsToSave) {
@@ -69,8 +69,8 @@ export function StarPrinterSettings() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["star-printer-settings"] });
-      toast.success("Star printer settings saved!");
+      queryClient.invalidateQueries({ queryKey: ["star-cloudprnt-settings"] });
+      toast.success("Star CloudPRNT settings saved!");
     },
     onError: (error) => {
       console.error("Error saving settings:", error);
@@ -79,8 +79,8 @@ export function StarPrinterSettings() {
   });
 
   const handleTestConnection = async () => {
-    if (!printerIp) {
-      toast.error("Please enter a printer IP address");
+    if (!deviceId) {
+      toast.error("Please enter a device ID");
       return;
     }
 
@@ -88,60 +88,22 @@ export function StarPrinterSettings() {
     setConnectionStatus("unknown");
 
     try {
-      console.log("Testing connection to printer:", printerIp);
-      
-      // Load Star WebPRNT scripts from the printer
-      toast.info("Loading printer libraries...");
-      await loadStarPrinterScripts(printerIp);
-      
-      console.log("Scripts loaded, testing connection...");
+      console.log("Testing CloudPRNT connection for device:", deviceId);
+      toast.info("Testing connection...");
 
-      // Try to send a minimal test print
-      const builder = new (window as any).StarWebPrintBuilder();
-      const url = `http://${printerIp}/StarWebPRNT/SendMessage`;
-      const papertype = 'normal';
-      
-      const request = builder.createInitializationElement();
-      
-      // Set up a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Connection timeout - printer not responding")), 10000);
-      });
+      const isConnected = await checkStarCloudPRNTConnection(deviceId, supabase);
 
-      // Set up the connection test
-      const connectionPromise = new Promise((resolve, reject) => {
-        const trader = new (window as any).StarWebPrintTrader({ url, papertype });
-        
-        trader.onReceive = () => {
-          console.log("Printer responded successfully");
-          resolve(true);
-        };
-        trader.onError = (error: any) => {
-          console.error("Printer error:", error);
-          reject(new Error("Printer returned error"));
-        };
-        
-        trader.sendMessage({ request });
-      });
-
-      await Promise.race([connectionPromise, timeoutPromise]);
-      
-      setConnectionStatus("connected");
-      toast.success("✓ Printer connected successfully!");
+      if (isConnected) {
+        setConnectionStatus("connected");
+        toast.success("✓ CloudPRNT endpoint is working!");
+      } else {
+        setConnectionStatus("error");
+        toast.error("Failed to connect to CloudPRNT endpoint");
+      }
     } catch (error: any) {
       console.error("Connection test failed:", error);
       setConnectionStatus("error");
-      
-      let errorMessage = "Connection failed";
-      if (error.message?.includes("timeout")) {
-        errorMessage = "Timeout - Check printer IP and network";
-      } else if (error.message?.includes("Failed to load")) {
-        errorMessage = "Cannot load printer scripts - Check IP or use HTTPS app";
-      } else if (window.location.protocol === 'https:') {
-        errorMessage = "HTTPS blocks HTTP printer - Use Browser Print or mobile app";
-      }
-      
-      toast.error(errorMessage);
+      toast.error(error.message || "Connection test failed");
     } finally {
       setTesting(false);
     }
@@ -152,38 +114,31 @@ export function StarPrinterSettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Printer className="h-5 w-5" />
-          Star Printer Settings (TSP143IV-UE)
+          Star CloudPRNT Settings
         </CardTitle>
         <CardDescription>
-          Configure your Star TSP143IV-UE or other WebPRNT-compatible Star printer
+          Configure Star CloudPRNT for internet-based printing (works from anywhere!)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Alert>
           <AlertDescription>
-            <strong>Important Setup Requirements:</strong>
+            <strong>CloudPRNT Benefits:</strong>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Printer and device must be on the same WiFi network</li>
-              <li>WebPRNT mode must be enabled on the printer</li>
-              <li>Find the IP on the printer's configuration page</li>
+              <li>✅ No HTTPS/HTTP issues - works perfectly from web apps</li>
+              <li>✅ Print from anywhere with internet access</li>
+              <li>✅ No local network required</li>
+              <li>✅ More reliable for remote scenarios</li>
             </ul>
-            {window.location.protocol === 'https:' && (
-              <div className="mt-3 p-2 bg-warning/10 border border-warning/20 rounded">
-                <strong className="text-warning">⚠️ HTTPS/HTTP Security Limitation:</strong>
-                <p className="mt-1 text-sm">
-                  Your web browser blocks connections from secure (HTTPS) websites to local HTTP devices. 
-                  <strong> The connection test will always fail in this web app.</strong>
-                </p>
-                <p className="mt-2 text-sm">
-                  <strong>Solutions:</strong>
-                </p>
-                <ul className="list-disc list-inside text-sm mt-1 ml-2">
-                  <li>Use <strong>Browser Print</strong> button instead (works perfectly)</li>
-                  <li>Or install the <strong>Star WebPRNT Browser</strong> mobile app from your app store</li>
-                  <li>Or access via local network HTTP (not available in Lovable)</li>
-                </ul>
-              </div>
-            )}
+            <div className="mt-3 p-2 bg-primary/10 border border-primary/20 rounded">
+              <strong>Setup Steps:</strong>
+              <ol className="list-decimal list-inside text-sm mt-1 ml-2 space-y-1">
+                <li>Configure printer for CloudPRNT mode (see manual)</li>
+                <li>Set CloudPRNT Server URL to: <code className="bg-muted px-1 py-0.5 rounded text-xs">{window.location.origin}/functions/v1/star-cloudprnt</code></li>
+                <li>Get Device ID from printer settings</li>
+                <li>Enter Device ID below and test</li>
+              </ol>
+            </div>
           </AlertDescription>
         </Alert>
 
@@ -198,19 +153,19 @@ export function StarPrinterSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="printer-ip">Printer IP Address</Label>
+            <Label htmlFor="device-id">Device ID</Label>
             <div className="flex gap-2">
               <Input
-                id="printer-ip"
-                placeholder="192.168.1.100"
-                value={printerIp}
-                onChange={(e) => setPrinterIp(e.target.value)}
+                id="device-id"
+                placeholder="TSP143IV-XXXX"
+                value={deviceId}
+                onChange={(e) => setDeviceId(e.target.value)}
                 disabled={!enabled}
               />
               <Button
                 variant="outline"
                 onClick={handleTestConnection}
-                disabled={!enabled || !printerIp || testing}
+                disabled={!enabled || !deviceId || testing}
               >
                 {testing ? "Testing..." : "Test"}
               </Button>
@@ -218,13 +173,13 @@ export function StarPrinterSettings() {
             {connectionStatus === "connected" && (
               <p className="text-sm text-green-600 flex items-center gap-1">
                 <CheckCircle className="h-4 w-4" />
-                Connected successfully
+                CloudPRNT endpoint working
               </p>
             )}
             {connectionStatus === "error" && (
               <p className="text-sm text-destructive flex items-center gap-1">
                 <XCircle className="h-4 w-4" />
-                Connection failed - check IP and network
+                Connection failed - check device ID
               </p>
             )}
           </div>
@@ -258,13 +213,13 @@ export function StarPrinterSettings() {
 
         <Alert>
           <AlertDescription className="text-xs space-y-2">
-            <p><strong>Setup Instructions:</strong></p>
+            <p><strong>Finding Your Device ID:</strong></p>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Connect printer to your network (WiFi or Ethernet)</li>
-              <li>Print configuration page to find IP address</li>
-              <li>Ensure WebPRNT mode is enabled in printer settings</li>
-              <li>Enter IP address above and test connection</li>
-              <li>Enable and save settings</li>
+              <li>Access printer settings through web interface or button panel</li>
+              <li>Navigate to CloudPRNT settings</li>
+              <li>Look for "Device ID" or "Unit ID" field</li>
+              <li>Copy the ID (usually starts with printer model like TSP143IV-)</li>
+              <li>Enter it above and test connection</li>
             </ol>
           </AlertDescription>
         </Alert>

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { buildStarReceipt, ReceiptData } from '@/lib/starPrinter';
+import { printToStarCloudPRNT, ReceiptData } from '@/lib/starPrinter';
 
 interface PrintWithStarProps {
   orderNumber: string;
@@ -39,11 +39,11 @@ export function PrintWithStar({
     try {
       setIsPrinting(true);
 
-      // Fetch Star printer settings from app_settings
+      // Fetch Star CloudPRNT settings from app_settings
       const { data: settingsData, error: settingsError } = await supabase
         .from('app_settings')
         .select('*')
-        .in('key', ['star_printer_ip', 'star_printer_width', 'star_printer_enabled']);
+        .in('key', ['star_cloudprnt_device_id', 'star_printer_width', 'star_cloudprnt_enabled']);
 
       if (settingsError) {
         toast.error('Failed to load printer settings');
@@ -57,19 +57,19 @@ export function PrintWithStar({
         settingsMap[setting.key] = setting.value || '';
       });
 
-      if (!settingsMap.star_printer_enabled || settingsMap.star_printer_enabled !== 'true') {
-        toast.error('Star printer is disabled. Please enable it in Hardware Setup.');
+      if (!settingsMap.star_cloudprnt_enabled || settingsMap.star_cloudprnt_enabled !== 'true') {
+        toast.error('Star CloudPRNT is disabled. Please enable it in Hardware Setup.');
         setIsPrinting(false);
         return;
       }
 
-      if (!settingsMap.star_printer_ip) {
-        toast.error('Star printer IP address not set. Please configure it in Hardware Setup.');
+      if (!settingsMap.star_cloudprnt_device_id) {
+        toast.error('Star CloudPRNT Device ID not set. Please configure it in Hardware Setup.');
         setIsPrinting(false);
         return;
       }
 
-      const printerIp = settingsMap.star_printer_ip;
+      const deviceId = settingsMap.star_cloudprnt_device_id;
       const paperWidth = parseInt(settingsMap.star_printer_width || '80');
 
       // Build receipt data
@@ -90,53 +90,14 @@ export function PrintWithStar({
         serviceFee: serviceFee,
       };
 
-      // Build Star WebPRNT commands (this loads the scripts from the printer)
-      const printerCommands = await buildStarReceipt(
-        receiptData,
-        printerIp,
-        paperWidth
-      );
+      // Submit to CloudPRNT
+      await printToStarCloudPRNT(deviceId, receiptData, paperWidth, supabase);
 
-      // Check if StarWebPrintTrader is available
-      if (typeof (window as any).StarWebPrintTrader === 'undefined') {
-        toast.error('Star printer library failed to load. Please refresh the page.');
-        setIsPrinting(false);
-        return;
-      }
-
-      // Send to printer using Star WebPRNT (using already loaded scripts)
-      const printerUrl = `http://${printerIp}/StarWebPRNT/SendMessage`;
-      
-      const trader = new (window as any).StarWebPrintTrader({
-        url: printerUrl,
-        timeout: 10000
-      });
-
-      trader.onReceive = (response: any) => {
-        console.log('Print success:', response);
-        toast.success('Receipt sent to Star printer successfully!');
-        setIsPrinting(false);
-      };
-
-      trader.onError = (response: any) => {
-        console.error('Print error:', response);
-        toast.error(`Print failed: ${response.message || 'Unknown error'}`);
-        setIsPrinting(false);
-      };
-
-      // Send the print job
-      trader.sendMessage({ request: printerCommands });
-
-      // Timeout after 15 seconds
-      setTimeout(() => {
-        if (isPrinting) {
-          toast.error('Print timeout. Please check printer connection.');
-          setIsPrinting(false);
-        }
-      }, 15000);
+      toast.success('Print job submitted! Printer will print when it polls the server.');
+      setIsPrinting(false);
     } catch (error) {
-      console.error('Star print error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to print';
+      console.error('CloudPRNT error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit print job';
       toast.error(errorMessage);
       setIsPrinting(false);
     }
@@ -150,7 +111,7 @@ export function PrintWithStar({
       className="gap-2"
     >
       <Printer className="h-4 w-4" />
-      {isPrinting ? 'Printing...' : 'Print to Star Printer'}
+      {isPrinting ? 'Submitting...' : 'Print to Star CloudPRNT'}
     </Button>
   );
 }
