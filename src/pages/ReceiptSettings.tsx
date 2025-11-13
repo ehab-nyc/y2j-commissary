@@ -22,6 +22,8 @@ export default function ReceiptSettings() {
     show_logo: true,
     paper_width: 80,
     text_size: 12,
+    font_family: "Courier New, monospace",
+    print_margin: 1.6,
   });
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -49,6 +51,8 @@ export default function ReceiptSettings() {
           show_logo: data.show_logo ?? true,
           paper_width: data.paper_width,
           text_size: data.text_size || 12,
+          font_family: data.font_family || "Courier New, monospace",
+          print_margin: data.print_margin || 1.6,
         });
       }
       return data;
@@ -320,6 +324,43 @@ export default function ReceiptSettings() {
                       setTemplateData({
                         ...templateData,
                         text_size: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="font-family">Font Family</Label>
+                  <select
+                    id="font-family"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={templateData.font_family}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        font_family: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="Courier New, monospace">Courier New</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Times New Roman, serif">Times New Roman</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="print-margin">Print Margin (cm, 0-5)</Label>
+                  <Input
+                    id="print-margin"
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={templateData.print_margin}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        print_margin: parseFloat(e.target.value),
                       })
                     }
                   />
