@@ -31,13 +31,13 @@ export function PrintJobHistory() {
     queryKey: ["star-cloudprnt-jobs"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("star_cloudprnt_jobs")
+        .from("star_cloudprnt_jobs" as any)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      return data as PrintJob[];
+      return (data || []) as unknown as PrintJob[];
     },
   });
 
@@ -51,7 +51,7 @@ export function PrintJobHistory() {
           event: "*",
           schema: "public",
           table: "star_cloudprnt_jobs",
-        },
+        } as any,
         () => {
           queryClient.invalidateQueries({ queryKey: ["star-cloudprnt-jobs"] });
         }
@@ -67,7 +67,7 @@ export function PrintJobHistory() {
   const retryMutation = useMutation({
     mutationFn: async (jobId: string) => {
       const { data: job, error: fetchError } = await supabase
-        .from("star_cloudprnt_jobs")
+        .from("star_cloudprnt_jobs" as any)
         .select("*")
         .eq("id", jobId)
         .single();
@@ -76,13 +76,13 @@ export function PrintJobHistory() {
 
       // Reset job to pending with incremented retry count
       const { error: updateError } = await supabase
-        .from("star_cloudprnt_jobs")
+        .from("star_cloudprnt_jobs" as any)
         .update({
           status: "pending",
-          retry_count: job.retry_count + 1,
+          retry_count: (job as any).retry_count + 1,
           error_message: null,
           next_retry_at: null,
-        })
+        } as any)
         .eq("id", jobId);
 
       if (updateError) throw updateError;

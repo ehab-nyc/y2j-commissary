@@ -333,184 +333,208 @@ const Orders = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const itemsHtml = order.order_items.map(item => `
-      <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.products.name}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.box_size || '1 box'}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${item.quantity}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${item.price.toFixed(2)}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${(item.quantity * item.price).toFixed(2)}</td>
-      </tr>
-    `).join('');
+    // Create receipt data matching ReceiptTemplate format
+    const receiptData = {
+      id: order.id,
+      created_at: order.created_at,
+      customer_name: order.profiles?.full_name || 'Walk-in',
+      cart_name: order.profiles?.cart_name || '',
+      cart_number: order.profiles?.cart_number || '',
+      processed_by: order.assigned_worker?.full_name || order.assigned_worker?.email || 'N/A',
+      items: order.order_items.map(item => ({
+        product_name: item.products.name,
+        quantity: item.quantity,
+        price: item.price,
+        box_size: item.box_size || '1 box'
+      })),
+      total: order.total,
+      service_fee: serviceFee,
+      notes: order.notes
+    };
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Order #${order.id.slice(0, 8)}</title>
-          <style>
-            @media print {
-              @page { 
-                margin: 0.25in;
-                size: 8.5in 11in;
-              }
-            }
-            body {
-              font-family: system-ui, -apple-system, sans-serif;
-              max-width: 8in;
-              margin: 0 auto;
-              padding: 20px;
-              position: relative;
-              font-size: 11px;
-              background: white;
-            }
-            body::before {
-              content: '';
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: 40%;
-              height: 40%;
-              background-image: url('${logoUrl}');
-              background-size: contain;
-              background-repeat: no-repeat;
-              background-position: center;
-              opacity: 0.05;
-              z-index: 0;
-              pointer-events: none;
-            }
-            .header {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              margin-bottom: 25px;
-              padding-bottom: 20px;
-              border-bottom: 2px solid #000;
-              position: relative;
-              z-index: 1;
-            }
-            .logo-section {
-              display: flex;
-              align-items: center;
-              gap: 15px;
-            }
-            .logo {
-              max-height: 70px;
-              max-width: 140px;
-            }
-            .company-name {
-              font-size: 16px;
-              font-weight: bold;
-            }
-            .order-info {
-              text-align: right;
-              font-size: 11px;
-            }
-            .order-info h2 {
-              font-size: 16px;
-              margin: 0 0 8px 0;
-            }
-            .customer-info {
-              margin: 15px 0;
-              padding: 12px;
-              background-color: #f9fafb;
-              border-left: 4px solid #000;
-              position: relative;
-              z-index: 1;
-            }
-            .customer-info > div {
-              margin: 4px 0;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 20px 0;
-              font-size: 11px;
-              position: relative;
-              z-index: 1;
-            }
-            th {
-              background-color: #f3f4f6;
-              padding: 10px;
-              text-align: left;
-              border-bottom: 2px solid #000;
-              font-size: 11px;
-              font-weight: 600;
-            }
-            td {
-              padding: 8px 10px;
-            }
-            .total-row {
-              font-weight: bold;
-              font-size: 13px;
-              background-color: #f9fafb;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="logo-section">
-              ${logoUrl ? `<img src="${logoUrl}" alt="${companyName}" class="logo" />` : ''}
-              <div>
-                <div class="company-name">${companyName}</div>
-                ${companyAddress ? `<div style="font-size: 10px; margin-top: 4px;">${companyAddress}</div>` : ''}
-                ${companyEmail ? `<div style="font-size: 10px; margin-top: 3px;">${companyEmail}</div>` : ''}
+    // Fetch template and company info
+    Promise.all([
+      supabase
+        .from("receipt_templates")
+        .select("*")
+        .eq("is_default", true)
+        .maybeSingle(),
+      supabase
+        .from("app_settings")
+        .select("*")
+        .in("key", ["company_name", "receipt_company_address", "receipt_company_phone", "receipt_tax_id"]),
+      supabase
+        .from("company_logos")
+        .select("logo_url")
+        .eq("is_active", true)
+        .maybeSingle()
+    ])
+      .then(([{ data: template }, { data: settings }, { data: logo }]) => {
+        const settingsMap: Record<string, string> = {};
+        settings?.forEach((setting) => {
+          settingsMap[setting.key] = setting.value || "";
+        });
+
+        const companyInfo = {
+          company_name: settingsMap.company_name || "Commissary",
+          address: settingsMap.receipt_company_address || "",
+          phone: settingsMap.receipt_company_phone || "",
+          tax_id: settingsMap.receipt_tax_id || "",
+          logo_url: logo?.logo_url || ""
+        };
+
+        // Generate receipt HTML using ReceiptTemplate structure
+        const receiptHtml = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Receipt - ${order.id.slice(0, 8)}</title>
+              <style>
+                @media print {
+                  @page { margin: 0; }
+                  body { margin: 1.6cm; }
+                }
+                body {
+                  font-family: 'Courier New', monospace;
+                  margin: 0;
+                  padding: 20px;
+                  background: white;
+                  color: black;
+                }
+                .receipt {
+                  max-width: ${template?.paper_width || 80}mm;
+                  margin: 0 auto;
+                  font-size: 12px;
+                }
+                .text-center { text-align: center; }
+                .border-b-2 { border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px; }
+                .border-t-2 { border-top: 2px solid black; padding-top: 8px; }
+                .mb-4 { margin-bottom: 16px; }
+                .mb-2 { margin-bottom: 8px; }
+                .mt-4 { margin-top: 16px; }
+                .pt-4 { padding-top: 16px; }
+                .font-bold { font-weight: bold; }
+                .text-lg { font-size: 16px; }
+                .text-xs { font-size: 10px; }
+                .text-base { font-size: 14px; }
+                .flex { display: flex; }
+                .justify-between { justify-content: space-between; }
+                table { width: 100%; border-collapse: collapse; }
+                .item-row { margin-bottom: 8px; }
+                .item-details { font-size: 10px; color: #666; margin-left: 8px; }
+                img { max-height: 64px; margin: 0 auto 8px; display: block; }
+              </style>
+            </head>
+            <body>
+              <div class="receipt">
+                ${template?.show_company_info ? `
+                  <div class="text-center border-b-2">
+                    ${template?.show_logo && companyInfo.logo_url ? `
+                      <img src="${companyInfo.logo_url}" alt="Logo" />
+                    ` : ''}
+                    <h1 class="text-lg font-bold">${companyInfo.company_name}</h1>
+                    ${companyInfo.address ? `<p class="text-xs">${companyInfo.address}</p>` : ''}
+                    ${companyInfo.phone ? `<p class="text-xs">Tel: ${companyInfo.phone}</p>` : ''}
+                    ${companyInfo.tax_id ? `<p class="text-xs">Tax ID: ${companyInfo.tax_id}</p>` : ''}
+                  </div>
+                ` : ''}
+                
+                ${template?.header_text ? `
+                  <div class="text-center mb-4 font-bold">${template.header_text}</div>
+                ` : ''}
+                
+                <div class="mb-4 text-xs">
+                  <table>
+                    <tr>
+                      <td>Order #: ${receiptData.id.slice(0, 8)}</td>
+                      <td style="text-align: right;">Customer: ${receiptData.customer_name}</td>
+                    </tr>
+                    <tr>
+                      <td>Cart: ${receiptData.cart_name} ${receiptData.cart_number}</td>
+                      <td style="text-align: right;">Processed by: ${receiptData.processed_by}</td>
+                    </tr>
+                  </table>
+                  <p style="margin-top: 4px;">Date: ${new Date(receiptData.created_at).toLocaleString()}</p>
+                </div>
+                
+                <div class="border-t-2 border-b-2" style="padding: 8px 0; margin-bottom: 16px;">
+                  <div class="flex justify-between font-bold mb-2">
+                    <span>Item</span>
+                    <span>Amount</span>
+                  </div>
+                  ${receiptData.items.map(item => `
+                    <div class="item-row">
+                      <div class="flex justify-between">
+                        <span>${item.product_name}</span>
+                        <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                      <div class="item-details">
+                        ${item.quantity}x @ $${item.price} (${item.box_size})
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                
+                <div class="mb-4">
+                  <div class="flex justify-between" style="margin-bottom: 4px;">
+                    <span>Subtotal:</span>
+                    <span>$${(receiptData.total - (receiptData.service_fee || 0)).toFixed(2)}</span>
+                  </div>
+                  ${receiptData.service_fee > 0 ? `
+                    <div class="flex justify-between" style="margin-bottom: 4px;">
+                      <span>Service Fee:</span>
+                      <span>$${receiptData.service_fee.toFixed(2)}</span>
+                    </div>
+                  ` : ''}
+                  <div class="flex justify-between font-bold text-base border-t-2" style="padding-top: 8px;">
+                    <span>TOTAL:</span>
+                    <span>$${receiptData.total.toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                ${receiptData.notes ? `
+                  <div class="mb-4 text-xs" style="border-top: 1px solid #ccc; padding-top: 8px;">
+                    <p class="font-bold">Notes:</p>
+                    <p>${receiptData.notes}</p>
+                  </div>
+                ` : ''}
+                
+                ${template?.show_barcode ? `
+                  <div class="text-center mb-4">
+                    <div style="font-family: monospace; font-size: 10px; letter-spacing: 2px;">
+                      ${receiptData.id.slice(0, 12).toUpperCase()}
+                    </div>
+                  </div>
+                ` : ''}
+                
+                ${template?.footer_text ? `
+                  <div class="text-center mt-4 border-t-2 pt-4 font-bold">
+                    ${template.footer_text}
+                  </div>
+                ` : ''}
+                
+                <div class="text-center text-xs mt-4">
+                  Powered by Commissary POS
+                </div>
               </div>
-            </div>
-            <div class="order-info">
-              <h2>Invoice #${order.id.slice(0, 8)}</h2>
-              <p>${format(new Date(order.created_at), 'PPp')}</p>
-              <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
-            </div>
-           </div>
-          
-          <div class="customer-info">
-            <div><strong>Customer:</strong> ${order.profiles?.full_name || 'N/A'}</div>
-            ${order.profiles?.cart_name || order.profiles?.cart_number ? `<div><strong>Cart:</strong> ${order.profiles?.cart_name || ''} ${order.profiles?.cart_number || ''}</div>` : ''}
-            ${order.assigned_worker ? `<div><strong>Processed by:</strong> ${order.assigned_worker.full_name || order.assigned_worker.email}</div>` : ''}
-          </div>
-          
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th style="text-align: center;">Box Size</th>
-                <th style="text-align: right;">Quantity</th>
-                <th style="text-align: right;">Price</th>
-                <th style="text-align: right;">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-              <tr>
-                <td colspan="4" style="padding: 10px; text-align: right; border-top: 1px solid #e5e7eb;">Subtotal:</td>
-                <td style="padding: 10px; text-align: right; border-top: 1px solid #e5e7eb;">$${(order.total - serviceFee).toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colspan="4" style="padding: 10px; text-align: right; border-bottom: 1px solid #e5e7eb;">Service Fee:</td>
-                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #e5e7eb;">$${serviceFee.toFixed(2)}</td>
-              </tr>
-              <tr class="total-row">
-                <td colspan="4" style="padding: 15px 10px; text-align: right; border-top: 2px solid #000;">TOTAL:</td>
-                <td style="padding: 15px 10px; text-align: right; border-top: 2px solid #000;">$${order.total.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-          
-          
-          <script>
-            window.onload = () => {
-              window.print();
-              window.onafterprint = () => window.close();
-            };
-          </script>
-        </body>
-      </html>
-    `;
+              <script>
+                window.onload = () => {
+                  window.print();
+                  window.onafterprint = () => window.close();
+                };
+              </script>
+            </body>
+          </html>
+        `;
 
-    printWindow.document.write(html);
-    printWindow.document.close();
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+      })
+      .catch((error) => {
+        console.error('Error printing receipt:', error);
+        toast.error("Failed to load receipt template");
+        printWindow.close();
+      });
   };
 
   return (
