@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Printer, Eye } from "lucide-react";
+import { Printer, Eye, ZoomIn, ZoomOut } from "lucide-react";
 import { ReceiptPreview } from "./ReceiptPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,7 @@ export function PrintReceipt({
   processedBy,
 }: PrintReceiptProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [zoom, setZoom] = useState(100);
   
   const { data: template } = useQuery({
     queryKey: ["receipt-template"],
@@ -249,31 +250,62 @@ export function PrintReceipt({
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Receipt Preview</DialogTitle>
+              <DialogTitle className="flex items-center justify-between">
+                <span>Receipt Preview</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setZoom(Math.max(50, zoom - 10))}
+                    disabled={zoom <= 50}
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-normal text-muted-foreground min-w-[3rem] text-center">
+                    {zoom}%
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setZoom(Math.min(200, zoom + 10))}
+                    disabled={zoom >= 200}
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogTitle>
               <DialogDescription>
                 Preview the receipt before printing
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <ReceiptPreview
-                orderNumber={orderNumber}
-                customerName={customerName}
-                items={items}
-                total={total}
-                serviceFee={serviceFee}
-                date={date}
-                cartName={cartName}
-                cartNumber={cartNumber}
-                processedBy={processedBy}
-                template={template}
-                companyInfo={{
-                  name: companySettings?.name || "",
-                  address: companySettings?.address || "",
-                  phone: companySettings?.phone || "",
-                  tax_id: companySettings?.tax_id || "",
+            <div className="py-4 overflow-auto">
+              <div
+                style={{
+                  transform: `scale(${zoom / 100})`,
+                  transformOrigin: "top center",
+                  transition: "transform 0.2s ease-out",
                 }}
-                logoUrl={companyLogo || undefined}
-              />
+              >
+                <ReceiptPreview
+                  orderNumber={orderNumber}
+                  customerName={customerName}
+                  items={items}
+                  total={total}
+                  serviceFee={serviceFee}
+                  date={date}
+                  cartName={cartName}
+                  cartNumber={cartNumber}
+                  processedBy={processedBy}
+                  template={template}
+                  companyInfo={{
+                    name: companySettings?.name || "",
+                    address: companySettings?.address || "",
+                    phone: companySettings?.phone || "",
+                    tax_id: companySettings?.tax_id || "",
+                  }}
+                  logoUrl={companyLogo || undefined}
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setPreviewOpen(false)}>
