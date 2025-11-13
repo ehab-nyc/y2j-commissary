@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { ReceiptPreview } from "@/components/receipts/ReceiptPreview";
 import { FileText, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ type ReceiptTemplate = {
   font_family?: string;
   print_margin?: number;
   logo_size?: number;
+  logo_position?: 'left' | 'center' | 'right';
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -44,6 +46,7 @@ export default function ReceiptSettings() {
     font_family: "Courier New, monospace",
     print_margin: 1.6,
     logo_size: 100,
+    logo_position: 'center' as 'left' | 'center' | 'right',
   });
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -75,6 +78,7 @@ export default function ReceiptSettings() {
           font_family: templateData.font_family || "Courier New, monospace",
           print_margin: templateData.print_margin || 1.6,
           logo_size: templateData.logo_size || 100,
+          logo_position: templateData.logo_position || 'center',
         });
       }
       return data as ReceiptTemplate | null;
@@ -321,21 +325,41 @@ export default function ReceiptSettings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="logo-size">Logo Size (px, 50-150)</Label>
-                  <Input
+                  <Label htmlFor="logo-size">Logo Size: {templateData.logo_size}px</Label>
+                  <Slider
                     id="logo-size"
-                    type="number"
-                    min="50"
-                    max="150"
-                    value={templateData.logo_size}
-                    onChange={(e) =>
+                    min={50}
+                    max={150}
+                    step={5}
+                    value={[templateData.logo_size]}
+                    onValueChange={(value) =>
                       setTemplateData({
                         ...templateData,
-                        logo_size: parseInt(e.target.value),
+                        logo_size: value[0],
                       })
                     }
                     disabled={!templateData.show_logo}
+                    className="mt-2"
                   />
+                </div>
+                <div>
+                  <Label htmlFor="logo-position">Logo Position</Label>
+                  <select
+                    id="logo-position"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={templateData.logo_position}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        logo_position: e.target.value as 'left' | 'center' | 'right',
+                      })
+                    }
+                    disabled={!templateData.show_logo}
+                  >
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                  </select>
                 </div>
                 <div>
                   <Label htmlFor="paper-width">Paper Width (mm)</Label>

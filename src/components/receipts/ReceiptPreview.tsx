@@ -24,6 +24,7 @@ interface ReceiptPreviewProps {
     show_logo?: boolean;
     paper_width: number;
     logo_size?: number;
+    logo_position?: 'left' | 'center' | 'right';
   };
   companyInfo?: {
     name: string;
@@ -51,6 +52,15 @@ export function ReceiptPreview({
   const subtotal = total - serviceFee;
   const paperWidth = template?.paper_width || 80;
   const logoSize = template?.logo_size || 100;
+  const logoPosition = template?.logo_position || 'center';
+  
+  const getLogoAlignment = () => {
+    switch (logoPosition) {
+      case 'left': return 'items-start';
+      case 'right': return 'items-end';
+      default: return 'items-center';
+    }
+  };
 
   return (
     <Card
@@ -59,7 +69,7 @@ export function ReceiptPreview({
     >
       {/* Header */}
       <div className="border-b-2 border-dashed border-black pb-4 mb-4">
-        <div className="flex gap-3 items-start">
+        <div className={`flex gap-3 ${getLogoAlignment()}`}>
           {template?.show_logo && logoUrl && (
             <div className="flex-shrink-0">
               <img 

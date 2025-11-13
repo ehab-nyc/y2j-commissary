@@ -26,6 +26,7 @@ type ReceiptTemplate = {
   font_family?: string;
   print_margin?: number;
   logo_size?: number;
+  logo_position?: 'left' | 'center' | 'right';
 };
 
 interface PrintReceiptProps {
@@ -138,8 +139,8 @@ export function PrintReceipt({
     return `
       <div style="font-family: ${template?.font_family || 'Courier New, monospace'}; max-width: ${template?.paper_width || 80}mm; font-size: ${template?.text_size || 12}px; color: black; font-weight: 600;">
         ${template?.show_company_info ? `
-          <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px;">
-            ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: ${template?.logo_size || 100}px; margin: 0 auto 8px; display: block; filter: contrast(1.2) brightness(0.9);" />` : ''}
+          <div style="text-align: ${template?.logo_position || 'center'}; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px;">
+            ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: ${template?.logo_size || 100}px; margin: 0 ${template?.logo_position === 'center' ? 'auto' : '0'} 8px ${template?.logo_position === 'right' ? 'auto' : '0'}; display: block; filter: contrast(1.2) brightness(0.9);" />` : ''}
             <h1 style="font-size: 16px; font-weight: bold; margin: 0;">${companySettings?.name}</h1>
             ${companySettings?.address ? `<p style="font-size: 10px; margin: 4px 0;">${companySettings.address}</p>` : ''}
             ${companySettings?.phone ? `<p style="font-size: 10px; margin: 4px 0;">Tel: ${companySettings.phone}</p>` : ''}
