@@ -121,7 +121,7 @@ export function PrintReceipt({
 
   const generateReceiptContent = () => {
     return `
-      <div style="font-family: 'Courier New', monospace; max-width: ${template?.paper_width || 80}mm; font-size: 12px; color: black; font-weight: 600;">
+      <div style="font-family: 'Courier New', monospace; max-width: ${template?.paper_width || 80}mm; font-size: ${template?.text_size || 12}px; color: black; font-weight: 600;">
         ${template?.show_company_info ? `
           <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px;">
             ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: 64px; margin: 0 auto 8px; display: block; filter: contrast(1.2) brightness(0.9);" />` : ''}

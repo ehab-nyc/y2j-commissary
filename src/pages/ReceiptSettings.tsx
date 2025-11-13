@@ -21,6 +21,7 @@ export default function ReceiptSettings() {
     show_company_info: true,
     show_logo: true,
     paper_width: 80,
+    text_size: 12,
   });
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -47,6 +48,7 @@ export default function ReceiptSettings() {
           show_company_info: data.show_company_info,
           show_logo: data.show_logo ?? true,
           paper_width: data.paper_width,
+          text_size: data.text_size || 12,
         });
       }
       return data;
@@ -302,6 +304,22 @@ export default function ReceiptSettings() {
                       setTemplateData({
                         ...templateData,
                         paper_width: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="text-size">Text Size (8-24)</Label>
+                  <Input
+                    id="text-size"
+                    type="number"
+                    min="8"
+                    max="24"
+                    value={templateData.text_size}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        text_size: parseInt(e.target.value),
                       })
                     }
                   />
