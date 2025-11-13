@@ -19,6 +19,9 @@ export function StarPrinterSettings() {
   const [enabled, setEnabled] = useState(false);
   const [testing, setTesting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"unknown" | "connected" | "error">("unknown");
+  const [retryEnabled, setRetryEnabled] = useState(true);
+  const [retryAttempts, setRetryAttempts] = useState("3");
+  const [retryDelay, setRetryDelay] = useState("5");
 
   // Fetch settings
   const { data: settings } = useQuery({
@@ -27,7 +30,14 @@ export function StarPrinterSettings() {
       const { data, error } = await supabase
         .from("app_settings")
         .select("*")
-        .in("key", ["star_cloudprnt_device_id", "star_printer_width", "star_cloudprnt_enabled"]);
+        .in("key", [
+          "star_cloudprnt_device_id",
+          "star_printer_width",
+          "star_cloudprnt_enabled",
+          "star_cloudprnt_retry_enabled",
+          "star_cloudprnt_retry_attempts",
+          "star_cloudprnt_retry_delay_minutes"
+        ]);
 
       if (error) throw error;
 
@@ -46,6 +56,15 @@ export function StarPrinterSettings() {
       if (settingsMap.star_cloudprnt_enabled) {
         setEnabled(settingsMap.star_cloudprnt_enabled === "true");
       }
+      if (settingsMap.star_cloudprnt_retry_enabled) {
+        setRetryEnabled(settingsMap.star_cloudprnt_retry_enabled === "true");
+      }
+      if (settingsMap.star_cloudprnt_retry_attempts) {
+        setRetryAttempts(settingsMap.star_cloudprnt_retry_attempts);
+      }
+      if (settingsMap.star_cloudprnt_retry_delay_minutes) {
+        setRetryDelay(settingsMap.star_cloudprnt_retry_delay_minutes);
+      }
 
       return settingsMap;
     },
@@ -58,6 +77,9 @@ export function StarPrinterSettings() {
         { key: "star_cloudprnt_device_id", value: deviceId },
         { key: "star_printer_width", value: paperWidth },
         { key: "star_cloudprnt_enabled", value: enabled.toString() },
+        { key: "star_cloudprnt_retry_enabled", value: retryEnabled.toString() },
+        { key: "star_cloudprnt_retry_attempts", value: retryAttempts },
+        { key: "star_cloudprnt_retry_delay_minutes", value: retryDelay },
       ];
 
       for (const setting of settingsToSave) {
@@ -199,6 +221,51 @@ export function StarPrinterSettings() {
                 <SelectItem value="80">80mm (3 inch)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="border-t pt-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="retry-enabled">Automatic Retry</Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically retry failed print jobs
+                </p>
+              </div>
+              <Switch
+                id="retry-enabled"
+                checked={retryEnabled}
+                onCheckedChange={setRetryEnabled}
+                disabled={!enabled}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="retry-attempts">Max Retry Attempts</Label>
+                <Input
+                  id="retry-attempts"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={retryAttempts}
+                  onChange={(e) => setRetryAttempts(e.target.value)}
+                  disabled={!enabled || !retryEnabled}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="retry-delay">Retry Delay (minutes)</Label>
+                <Input
+                  id="retry-delay"
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={retryDelay}
+                  onChange={(e) => setRetryDelay(e.target.value)}
+                  disabled={!enabled || !retryEnabled}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="pt-4">
