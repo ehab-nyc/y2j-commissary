@@ -77,7 +77,18 @@ Deno.serve(async (req) => {
 
     // Submit print job endpoint (POST)
     if (req.method === 'POST') {
-      const { device_id, job_data } = await req.json();
+      let body;
+      try {
+        const text = await req.text();
+        body = text ? JSON.parse(text) : {};
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON body' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { device_id, job_data } = body;
 
       if (!device_id || !job_data) {
         return new Response(
@@ -115,7 +126,18 @@ Deno.serve(async (req) => {
 
     // Update job status endpoint (PUT)
     if (req.method === 'PUT') {
-      const { jobToken, status: jobStatus, error: jobError } = await req.json();
+      let body;
+      try {
+        const text = await req.text();
+        body = text ? JSON.parse(text) : {};
+      } catch (e) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON body' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { jobToken, status: jobStatus, error: jobError } = body;
 
       if (!jobToken) {
         return new Response(
