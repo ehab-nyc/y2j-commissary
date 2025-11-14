@@ -557,6 +557,108 @@ All colors MUST be HSL.
     --sidebar-border: 220 15% 18%;
     --sidebar-ring: 210 95% 62%;
   }
+
+  /* Gold Diamond Theme (Light Mode) */
+  :root.gold-diamond {
+    --background: 45 85% 72%;
+    --foreground: 38 100% 18%;
+
+    --card: 48 75% 85%;
+    --card-foreground: 38 100% 18%;
+
+    --popover: 48 80% 88%;
+    --popover-foreground: 38 100% 18%;
+
+    --primary: 51 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 45 70% 75%;
+    --secondary-foreground: 38 100% 18%;
+
+    --muted: 48 60% 80%;
+    --muted-foreground: 45 25% 35%;
+
+    --accent: 45 100% 51%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 45 60% 65%;
+    --input: 48 70% 90%;
+    --ring: 51 100% 50%;
+
+    --radius: 1.125rem;
+    
+    /* Gold Theme Gradients & Effects */
+    --gradient-primary: linear-gradient(135deg, hsl(51 100% 50%), hsl(45 100% 51%), hsl(48 85% 70%));
+    --gradient-subtle: linear-gradient(180deg, hsl(45 90% 75%), hsl(48 80% 80%));
+    --gradient-gold-shine: linear-gradient(90deg, transparent, hsl(51 100% 70% / 0.4), transparent);
+    --shadow-elegant: 0 8px 32px hsl(51 100% 50% / 0.2);
+    --shadow-gold: 0 4px 20px hsl(51 100% 50% / 0.3);
+    --glow-gold: 0 0 20px hsl(51 100% 50% / 0.4);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 48 75% 85%;
+    --sidebar-foreground: 38 100% 18%;
+    --sidebar-primary: 51 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 70% 78%;
+    --sidebar-accent-foreground: 38 100% 18%;
+    --sidebar-border: 45 60% 65%;
+    --sidebar-ring: 51 100% 50%;
+  }
+
+  /* Gold Diamond Theme (Dark Mode) */
+  .dark.gold-diamond {
+    --background: 38 60% 8%;
+    --foreground: 48 90% 85%;
+
+    --card: 38 50% 12%;
+    --card-foreground: 48 90% 85%;
+
+    --popover: 38 50% 12%;
+    --popover-foreground: 48 90% 85%;
+
+    --primary: 51 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    
+    --secondary: 38 40% 15%;
+    --secondary-foreground: 48 90% 85%;
+
+    --muted: 38 40% 15%;
+    --muted-foreground: 48 40% 60%;
+
+    --accent: 45 100% 51%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 38 30% 20%;
+    --input: 38 30% 20%;
+    --ring: 51 100% 50%;
+
+    --radius: 1.125rem;
+    
+    /* Gold Theme Dark Gradients & Effects */
+    --gradient-primary: linear-gradient(135deg, hsl(51 100% 50%), hsl(45 100% 51%), hsl(38 80% 40%));
+    --gradient-subtle: linear-gradient(180deg, hsl(38 60% 8%), hsl(38 50% 12%));
+    --gradient-gold-shine: linear-gradient(90deg, transparent, hsl(51 100% 50% / 0.4), transparent);
+    --shadow-elegant: 0 10px 40px hsl(51 100% 50% / 0.3);
+    --shadow-gold: 0 4px 20px hsl(51 100% 50% / 0.4);
+    --glow-gold: 0 0 30px hsl(51 100% 50% / 0.5);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 38 50% 12%;
+    --sidebar-foreground: 48 90% 85%;
+    --sidebar-primary: 51 100% 50%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 38 40% 15%;
+    --sidebar-accent-foreground: 48 90% 85%;
+    --sidebar-border: 38 30% 20%;
+    --sidebar-ring: 51 100% 50%;
+  }
 }
 
 @layer base {
