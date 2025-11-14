@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ThemePreview } from "@/components/admin/ThemePreview";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -499,46 +500,31 @@ const AdminSettings = () => {
                 Theme Management
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="theme">Active Theme</Label>
-                <Select
-                  value={settings.active_theme}
-                  onValueChange={(value) =>
-                    setSettings({ ...settings, active_theme: value })
-                  }
-                >
-                  <SelectTrigger id="theme">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {themes?.map((theme) => (
-                      <SelectItem key={theme.id} value={theme.name}>
-                        {theme.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={() => saveThemeMutation.mutate()}
-                disabled={saveThemeMutation.isPending}
-                className="w-full"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save Theme
-              </Button>
-
-              <div className="space-y-2">
-                <Label>Manage Themes</Label>
-                <div className="space-y-2">
+                <Label className="text-lg font-semibold mb-4 block">Available Themes</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {themes?.map((theme) => (
+                    <ThemePreview
+                      key={theme.id}
+                      theme={theme.name}
+                      isActive={settings.active_theme === theme.name}
+                      onActivate={async () => {
+                        setSettings({ ...settings, active_theme: theme.name });
+                        await saveThemeMutation.mutateAsync();
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label>Manage Custom Themes</Label>
+                <div className="space-y-2">
+                  {themes?.filter(t => !t.is_system).map((theme) => (
                     <div key={theme.id} className="flex items-center justify-between p-2 bg-muted rounded">
                       <span className="flex items-center gap-2">
                         {theme.name}
-                        {theme.is_system && (
-                          <span className="text-xs text-muted-foreground">(System)</span>
-                        )}
                       </span>
                       <Button
                         variant="ghost"
@@ -549,6 +535,24 @@ const AdminSettings = () => {
                       </Button>
                     </div>
                   ))}
+                  {themes?.filter(t => !t.is_system).length === 0 && (
+                    <p className="text-sm text-muted-foreground">No custom themes yet</p>
+                  )}
+                </div>
+                
+                <div className="flex gap-2 pt-2">
+                  <Input
+                    placeholder="New theme name"
+                    value={newThemeName}
+                    onChange={(e) => setNewThemeName(e.target.value)}
+                  />
+                  <Button
+                    onClick={() => addThemeMutation.mutate(newThemeName)}
+                    disabled={!newThemeName || addThemeMutation.isPending}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
                 </div>
               </div>
             </CardContent>
