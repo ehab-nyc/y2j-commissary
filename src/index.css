@@ -662,13 +662,15 @@ All colors MUST be HSL.
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+* {
+  @apply border-border;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
 
-  body {
-    @apply bg-background text-foreground;
-  }
+body {
+  @apply bg-background text-foreground;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
   
   .halloween body {
     background-image: radial-gradient(ellipse at center, hsl(280 85% 55% / 0.15), transparent 50%);
