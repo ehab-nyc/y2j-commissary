@@ -1174,6 +1174,27 @@ export type Database = {
           },
         ]
       }
+      user_favorite_themes: {
+        Row: {
+          created_at: string
+          id: string
+          theme_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          theme_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          theme_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_phone_numbers: {
         Row: {
           created_at: string
