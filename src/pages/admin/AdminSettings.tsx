@@ -54,6 +54,12 @@ const AdminSettings = () => {
   const [halloweenAnimations, setHalloweenAnimations] = useState(
     localStorage.getItem('halloween_animations') !== 'false'
   );
+  const [halloweenSpeed, setHalloweenSpeed] = useState(
+    localStorage.getItem('halloween_speed') || 'normal'
+  );
+  const [christmasAnimations, setChristmasAnimations] = useState(
+    localStorage.getItem('christmas_animations') !== 'false'
+  );
 
   const { data: appSettings } = useQuery({
     queryKey: ["app-settings"],
@@ -663,6 +669,63 @@ const AdminSettings = () => {
                     onCheckedChange={(checked) => {
                       setHalloweenAnimations(checked);
                       localStorage.setItem('halloween_animations', checked.toString());
+                      window.location.reload();
+                    }}
+                  />
+                </div>
+                
+                {halloweenAnimations && (
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label htmlFor="halloween-speed" className="text-base">
+                      Animation Speed
+                    </Label>
+                    <Select
+                      value={halloweenSpeed}
+                      onValueChange={(value) => {
+                        setHalloweenSpeed(value);
+                        localStorage.setItem('halloween_speed', value);
+                        window.location.reload();
+                      }}
+                    >
+                      <SelectTrigger id="halloween-speed">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="slow">Slow (Relaxed)</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="fast">Fast (Intense)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {(settings.active_theme === 'christmas' || settings.active_theme === 'christmas-wonderland') && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Christmas Effects
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="christmas-animations" className="text-base">
+                      Falling Snowflakes
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable falling snowflakes and festive elements
+                    </p>
+                  </div>
+                  <Switch
+                    id="christmas-animations"
+                    checked={christmasAnimations}
+                    onCheckedChange={(checked) => {
+                      setChristmasAnimations(checked);
+                      localStorage.setItem('christmas_animations', checked.toString());
                       window.location.reload();
                     }}
                   />
