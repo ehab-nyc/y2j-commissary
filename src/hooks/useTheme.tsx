@@ -8,6 +8,22 @@ export const useTheme = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for preview mode first
+    const isPreviewMode = localStorage.getItem('theme_preview_mode') === 'true';
+    
+    if (isPreviewMode) {
+      const previewTheme = localStorage.getItem('theme_preview_name');
+      const previewColors = localStorage.getItem('theme_preview_colors');
+      
+      if (previewTheme) {
+        const colors = previewColors ? JSON.parse(previewColors) : null;
+        applyTheme(previewTheme as AppTheme, colors);
+        setActiveTheme(previewTheme as AppTheme);
+        setLoading(false);
+        return;
+      }
+    }
+
     fetchActiveTheme();
 
     // Subscribe to changes with better error handling
@@ -22,6 +38,11 @@ export const useTheme = () => {
           filter: 'key=eq.active_theme',
         },
         (payload) => {
+          // Don't override if in preview mode
+          if (localStorage.getItem('theme_preview_mode') === 'true') {
+            return;
+          }
+          
           console.log('Theme change received via realtime:', payload);
           const newTheme = (payload.new.value || 'default') as AppTheme;
           setActiveTheme(newTheme);

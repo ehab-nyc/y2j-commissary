@@ -26,6 +26,8 @@ import { ThemePreview } from "@/components/admin/ThemePreview";
 import { ThemeCustomizer } from "@/components/admin/ThemeCustomizer";
 import { ThemeGallery } from "@/components/admin/ThemeGallery";
 import { ColorPaletteGenerator } from "@/components/admin/ColorPaletteGenerator";
+import { ThemePreviewManager } from "@/components/admin/ThemePreviewManager";
+import { ThemeVersionHistory } from "@/components/admin/ThemeVersionHistory";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -236,22 +238,64 @@ const AdminSettings = () => {
 
   const saveCustomThemeMutation = useMutation({
     mutationFn: async ({ name, description, colors }: { name: string; description: string; colors: any }) => {
-      const { error } = await supabase
-        .from("themes")
-        .insert({ 
-          name: name.toLowerCase().replace(/\s+/g, '-'), 
-          description,
-          colors,
-          is_system: false 
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const themeName = name.toLowerCase().replace(/\s+/g, '-');
+      
+      // Check if theme exists
+      const { data: existingTheme } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('name', themeName)
+        .maybeSingle();
+      
+      if (existingTheme) {
+        // Save current version to history before updating
+        const { data: versions } = await supabase
+          .from('theme_versions')
+          .select('version_number')
+          .eq('theme_id', existingTheme.id)
+          .order('version_number', { ascending: false })
+          .limit(1);
+        
+        const nextVersion = versions && versions.length > 0 ? versions[0].version_number + 1 : 1;
+        
+        // Save old version to history
+        await supabase.from('theme_versions').insert({
+          theme_id: existingTheme.id,
+          version_number: nextVersion,
+          colors: existingTheme.colors,
+          description: existingTheme.description,
+          created_by: userId
         });
-      if (error) throw error;
+        
+        // Update existing theme
+        const { error } = await supabase
+          .from('themes')
+          .update({ colors, description })
+          .eq('id', existingTheme.id);
+        
+        if (error) throw error;
+      } else {
+        // Create new theme
+        const { error } = await supabase
+          .from("themes")
+          .insert({ 
+            name: themeName, 
+            description,
+            colors,
+            is_system: false,
+            created_by: userId
+          });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["themes"] });
-      toast.success("Custom theme created successfully!");
+      queryClient.invalidateQueries({ queryKey: ['theme-versions'] });
+      toast.success("Custom theme saved successfully!");
     },
     onError: (error) => {
-      toast.error("Failed to create custom theme");
+      toast.error("Failed to save custom theme");
       console.error(error);
     },
   });
@@ -585,6 +629,11 @@ const AdminSettings = () => {
           </Card>
 
           <div className="lg:col-span-2 space-y-6">
+            <ThemePreviewManager 
+              currentTheme={settings.active_theme}
+              onPreviewChange={() => window.location.reload()}
+            />
+            
             <ThemeGallery 
               onImportTheme={async (name, description, colors) => {
                 await saveCustomThemeMutation.mutateAsync({ name, description, colors });
@@ -608,6 +657,24 @@ const AdminSettings = () => {
                 await saveCustomThemeMutation.mutateAsync({ name, description, colors });
               }}
             />
+            
+            {themes && themes.filter(t => !t.is_system).length > 0 && (
+              <div className="mt-6 space-y-4">
+                <h3 className="text-lg font-semibold">Theme Version History</h3>
+                {themes.filter(t => !t.is_system).map((theme) => (
+                  <ThemeVersionHistory
+                    key={theme.id}
+                    themeId={theme.id}
+                    themeName={theme.name}
+                    onRestore={(colors) => {
+                      if (typeof window !== 'undefined' && (window as any).applyThemeColors) {
+                        (window as any).applyThemeColors(colors);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <Card className="lg:col-span-2">

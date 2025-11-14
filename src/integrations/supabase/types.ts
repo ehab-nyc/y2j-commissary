@@ -1077,6 +1077,44 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_versions: {
+        Row: {
+          colors: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          theme_id: string
+          version_number: number
+        }
+        Insert: {
+          colors?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          theme_id: string
+          version_number: number
+        }
+        Update: {
+          colors?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          theme_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_versions_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       themes: {
         Row: {
           colors: Json | null

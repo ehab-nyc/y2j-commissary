@@ -288,15 +288,29 @@ export const ThemeGallery = ({ onImportTheme }: ThemeGalleryProps) => {
                       </div>
                     </div>
 
-                    <Button
-                      onClick={() => handleImport(theme)}
-                      disabled={importing === theme.id}
-                      size="sm"
-                      className="w-full"
-                    >
-                      <Download className="h-3 w-3 mr-2" />
-                      {importing === theme.id ? "Importing..." : "Import Theme"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          if (typeof window !== 'undefined' && (window as any).activateThemePreview) {
+                            (window as any).activateThemePreview(theme.name, theme.colors);
+                          }
+                        }}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Preview
+                      </Button>
+                      <Button
+                        onClick={() => handleImport(theme)}
+                        disabled={importing === theme.id}
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Download className="h-3 w-3 mr-2" />
+                        {importing === theme.id ? "..." : "Import"}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
