@@ -831,41 +831,56 @@ export type Database = {
       receipt_templates: {
         Row: {
           created_at: string | null
+          font_family: string | null
           footer_text: string | null
           header_text: string | null
           id: string
           is_default: boolean | null
+          logo_position: string | null
+          logo_size: number | null
           name: string
           paper_width: number | null
+          print_margin: number | null
           show_barcode: boolean | null
           show_company_info: boolean | null
           show_logo: boolean | null
+          text_size: number | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          font_family?: string | null
           footer_text?: string | null
           header_text?: string | null
           id?: string
           is_default?: boolean | null
+          logo_position?: string | null
+          logo_size?: number | null
           name: string
           paper_width?: number | null
+          print_margin?: number | null
           show_barcode?: boolean | null
           show_company_info?: boolean | null
           show_logo?: boolean | null
+          text_size?: number | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          font_family?: string | null
           footer_text?: string | null
           header_text?: string | null
           id?: string
           is_default?: boolean | null
+          logo_position?: string | null
+          logo_size?: number | null
           name?: string
           paper_width?: number | null
+          print_margin?: number | null
           show_barcode?: boolean | null
           show_company_info?: boolean | null
           show_logo?: boolean | null
+          text_size?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -918,6 +933,45 @@ export type Database = {
           order_id?: string | null
           phone_number?: string
           sent_at?: string
+        }
+        Relationships: []
+      }
+      star_cloudprnt_jobs: {
+        Row: {
+          created_at: string | null
+          device_id: string
+          error_message: string | null
+          id: string
+          job_data: Json
+          max_retries: number | null
+          next_retry_at: string | null
+          printed_at: string | null
+          retry_count: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_id: string
+          error_message?: string | null
+          id?: string
+          job_data: Json
+          max_retries?: number | null
+          next_retry_at?: string | null
+          printed_at?: string | null
+          retry_count?: number | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string
+          error_message?: string | null
+          id?: string
+          job_data?: Json
+          max_retries?: number | null
+          next_retry_at?: string | null
+          printed_at?: string | null
+          retry_count?: number | null
+          status?: string
         }
         Relationships: []
       }

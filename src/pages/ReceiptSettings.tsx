@@ -11,8 +11,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ReceiptPreview } from "@/components/receipts/ReceiptPreview";
-import { FileText, Save, Plus } from "lucide-react";
+import { FileText, Save, Plus, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Extended type for receipt template with new properties
 type ReceiptTemplate = {
@@ -37,6 +47,7 @@ type ReceiptTemplate = {
 export default function ReceiptSettings() {
   const queryClient = useQueryClient();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [templateData, setTemplateData] = useState({
     name: "Default Receipt",
     header_text: "Thank you for your order!",
@@ -207,6 +218,52 @@ export default function ReceiptSettings() {
     },
   });
 
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      const { error } = await supabase
+        .from("receipt_templates")
+        .delete()
+        .eq("id", templateId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["receipt-templates-all"] });
+      toast.success("Template deleted successfully");
+      setDeleteDialogOpen(false);
+      setSelectedTemplateId(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete template");
+      console.error(error);
+    },
+  });
+
+  const setDefaultTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      // First, unset all other default templates
+      const { error: unsetError } = await supabase
+        .from("receipt_templates")
+        .update({ is_default: false })
+        .neq("id", templateId);
+      if (unsetError) throw unsetError;
+
+      // Then set this one as default
+      const { error } = await supabase
+        .from("receipt_templates")
+        .update({ is_default: true })
+        .eq("id", templateId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["receipt-templates-all"] });
+      toast.success("Default template updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to set default template");
+      console.error(error);
+    },
+  });
+
   const sampleItems = [
     { name: "Product A", quantity: 2, price: 15.99, box_size: "1 box" },
     { name: "Product B", quantity: 1, price: 8.50, box_size: "1/2 box" },
@@ -240,9 +297,29 @@ export default function ReceiptSettings() {
               variant="outline"
               onClick={createNewTemplate}
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" />
               New Template
             </Button>
+            {template?.id && !template?.is_default && (
+              <Button
+                variant="outline"
+                onClick={() => setDefaultTemplateMutation.mutate(template.id)}
+                disabled={setDefaultTemplateMutation.isPending}
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Set as Default
+              </Button>
+            )}
+            {template?.id && !template?.is_default && (
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={deleteTemplateMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            )}
             <Button
               onClick={() => saveTemplateMutation.mutate()}
               disabled={saveTemplateMutation.isPending}
@@ -549,6 +626,26 @@ export default function ReceiptSettings() {
             </Card>
           </div>
         </div>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Template</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this template? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => template?.id && deleteTemplateMutation.mutate(template.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
