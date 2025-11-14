@@ -28,6 +28,7 @@ import { ThemeGallery } from "@/components/admin/ThemeGallery";
 import { ColorPaletteGenerator } from "@/components/admin/ColorPaletteGenerator";
 import { ThemePreviewManager } from "@/components/admin/ThemePreviewManager";
 import { ThemeVersionHistory } from "@/components/admin/ThemeVersionHistory";
+import { ThemeComparison } from "@/components/admin/ThemeComparison";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -648,6 +649,19 @@ const AdminSettings = () => {
                   toast.success("Palette applied! You can now save it as a theme.");
                 }
               }}
+            />
+
+            <ThemeComparison 
+              availableThemes={[
+                'default',
+                'halloween',
+                'halloween-minimal',
+                'christmas',
+                'christmas-wonderland',
+                'liquid-glass',
+                'gold-diamond',
+                ...(themes?.map(t => t.name) || [])
+              ]}
             />
           </div>
 
