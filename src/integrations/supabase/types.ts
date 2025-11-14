@@ -830,6 +830,7 @@ export type Database = {
       }
       receipt_templates: {
         Row: {
+          category: string | null
           created_at: string | null
           font_family: string | null
           footer_text: string | null
@@ -848,6 +849,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           font_family?: string | null
           footer_text?: string | null
@@ -866,6 +868,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           font_family?: string | null
           footer_text?: string | null

@@ -39,6 +39,7 @@ type ReceiptTemplate = {
   print_margin?: number;
   logo_size?: number;
   logo_position?: 'left' | 'center' | 'right';
+  category?: 'retail' | 'restaurant' | 'service' | 'other';
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -48,6 +49,7 @@ export default function ReceiptSettings() {
   const queryClient = useQueryClient();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [templateData, setTemplateData] = useState({
     name: "Default Receipt",
     header_text: "Thank you for your order!",
@@ -60,6 +62,7 @@ export default function ReceiptSettings() {
     print_margin: 1.6,
     logo_size: 100,
     logo_position: 'center' as 'left' | 'center' | 'right',
+    category: 'other' as 'retail' | 'restaurant' | 'service' | 'other',
   });
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -105,6 +108,7 @@ export default function ReceiptSettings() {
         print_margin: template.print_margin || 1.6,
         logo_size: template.logo_size || 100,
         logo_position: template.logo_position || 'center',
+        category: template.category || 'other',
       });
     }
   }, [template]);
@@ -283,7 +287,28 @@ export default function ReceiptSettings() {
       print_margin: 1.6,
       logo_size: 100,
       logo_position: 'center',
+      category: 'other',
     });
+  };
+
+  const filteredTemplates = categoryFilter === "all" 
+    ? templates 
+    : templates?.filter(t => t.category === categoryFilter);
+
+  const categoryLabels: Record<string, string> = {
+    retail: 'Retail',
+    restaurant: 'Restaurant',
+    service: 'Service',
+    other: 'Other',
+  };
+
+  const getCategoryColor = (category?: string) => {
+    switch (category) {
+      case 'retail': return 'bg-blue-500/10 text-blue-700 dark:text-blue-300';
+      case 'restaurant': return 'bg-orange-500/10 text-orange-700 dark:text-orange-300';
+      case 'service': return 'bg-green-500/10 text-green-700 dark:text-green-300';
+      default: return 'bg-muted text-muted-foreground';
+    }
   };
 
   return (
@@ -333,11 +358,50 @@ export default function ReceiptSettings() {
         {/* Template Grid View */}
         <Card>
           <CardHeader>
-            <CardTitle>All Templates</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>All Templates</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant={categoryFilter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={categoryFilter === "retail" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter("retail")}
+                >
+                  Retail
+                </Button>
+                <Button
+                  variant={categoryFilter === "restaurant" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter("restaurant")}
+                >
+                  Restaurant
+                </Button>
+                <Button
+                  variant={categoryFilter === "service" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter("service")}
+                >
+                  Service
+                </Button>
+                <Button
+                  variant={categoryFilter === "other" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter("other")}
+                >
+                  Other
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {templates?.map((t) => (
+              {filteredTemplates?.map((t) => (
                 <div
                   key={t.id}
                   onClick={() => {
@@ -354,6 +418,7 @@ export default function ReceiptSettings() {
                       print_margin: t.print_margin || 1.6,
                       logo_size: t.logo_size || 100,
                       logo_position: t.logo_position || 'center',
+                      category: t.category || 'other',
                     });
                   }}
                   className={`relative cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-lg ${
@@ -362,11 +427,18 @@ export default function ReceiptSettings() {
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="font-semibold text-sm truncate">{t.name}</h3>
-                    {t.is_default && (
-                      <Star className="h-4 w-4 fill-primary text-primary" />
-                    )}
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h3 className="font-semibold text-sm truncate flex-1">{t.name}</h3>
+                    <div className="flex items-center gap-1">
+                      {t.is_default && (
+                        <Star className="h-4 w-4 fill-primary text-primary flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(t.category)}`}>
+                      {categoryLabels[t.category || 'other']}
+                    </span>
                   </div>
                   <div className="bg-muted rounded overflow-hidden" style={{ height: '200px' }}>
                     <div className="scale-[0.4] origin-top-left" style={{ width: '250%' }}>
@@ -470,6 +542,25 @@ export default function ReceiptSettings() {
                     }
                     disabled={!!template?.id}
                   />
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <select
+                    id="category"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={templateData.category}
+                    onChange={(e) =>
+                      setTemplateData({
+                        ...templateData,
+                        category: e.target.value as 'retail' | 'restaurant' | 'service' | 'other',
+                      })
+                    }
+                  >
+                    <option value="retail">Retail</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="service">Service</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
                 <div>
                   <Label htmlFor="header">Header Text</Label>
