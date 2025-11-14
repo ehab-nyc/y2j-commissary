@@ -1079,22 +1079,28 @@ export type Database = {
       }
       themes: {
         Row: {
+          colors: Json | null
           created_at: string | null
           created_by: string | null
+          description: string | null
           id: string
           is_system: boolean | null
           name: string
         }
         Insert: {
+          colors?: Json | null
           created_at?: string | null
           created_by?: string | null
+          description?: string | null
           id?: string
           is_system?: boolean | null
           name: string
         }
         Update: {
+          colors?: Json | null
           created_at?: string | null
           created_by?: string | null
+          description?: string | null
           id?: string
           is_system?: boolean | null
           name?: string

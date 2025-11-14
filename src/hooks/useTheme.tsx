@@ -25,7 +25,16 @@ export const useTheme = () => {
           console.log('Theme change received via realtime:', payload);
           const newTheme = (payload.new.value || 'default') as AppTheme;
           setActiveTheme(newTheme);
-          applyTheme(newTheme);
+          
+          // Fetch theme colors if it's a custom theme
+          supabase
+            .from('themes')
+            .select('colors')
+            .eq('name', newTheme)
+            .maybeSingle()
+            .then(({ data }) => {
+              applyTheme(newTheme, data?.colors);
+            });
           
           // Force reload in PWA to clear cached styles
           if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -44,23 +53,30 @@ export const useTheme = () => {
 
   const fetchActiveTheme = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from('app_settings')
         .select('value')
         .eq('key', 'active_theme')
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching active theme in useTheme:', error);
+      if (settingsError) {
+        console.error('Error fetching active theme in useTheme:', settingsError);
         setLoading(false);
         return;
       }
 
-      const theme = (data?.value || 'default') as AppTheme;
-      console.log('useTheme: Fetched active theme:', theme);
+      const themeName = (settingsData?.value || 'default') as string;
+      console.log('useTheme: Fetched active theme:', themeName);
       
-      setActiveTheme(theme);
-      applyTheme(theme);
+      // Fetch theme data including custom colors
+      const { data: themeData } = await supabase
+        .from('themes')
+        .select('colors')
+        .eq('name', themeName)
+        .maybeSingle();
+      
+      setActiveTheme(themeName as AppTheme);
+      applyTheme(themeName as AppTheme, themeData?.colors);
       
       // Clear the reload flag once theme is successfully applied
       sessionStorage.removeItem('theme-reloaded');
@@ -71,10 +87,10 @@ export const useTheme = () => {
     }
   };
 
-  const applyTheme = (theme: AppTheme) => {
+  const applyTheme = (theme: AppTheme, customColors?: any) => {
     const root = document.documentElement;
     
-    console.log('Applying theme:', theme);
+    console.log('Applying theme:', theme, customColors ? 'with custom colors' : '');
     
     // Only clear theme-related storage (not auth!)
     localStorage.removeItem('theme');
@@ -83,7 +99,17 @@ export const useTheme = () => {
     // Remove ALL theme-related classes
     root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'liquid-glass', 'gold-diamond', 'dark', 'light');
     
-    // Apply the selected theme
+    // Apply custom colors if available
+    if (customColors && typeof customColors === 'object') {
+      Object.entries(customColors).forEach(([key, value]) => {
+        const cssVarName = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+        root.style.setProperty(cssVarName, value as string);
+      });
+      console.log('Custom theme colors applied');
+      return;
+    }
+    
+    // Apply the selected predefined theme
     if (theme === 'halloween') {
       root.classList.add('halloween');
       console.log('Halloween theme class added to HTML element');

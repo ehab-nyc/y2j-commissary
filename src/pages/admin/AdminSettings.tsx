@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ThemePreview } from "@/components/admin/ThemePreview";
+import { ThemeCustomizer } from "@/components/admin/ThemeCustomizer";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -226,6 +227,28 @@ const AdminSettings = () => {
     },
     onError: (error) => {
       toast.error("Failed to add theme");
+      console.error(error);
+    },
+  });
+
+  const saveCustomThemeMutation = useMutation({
+    mutationFn: async ({ name, description, colors }: { name: string; description: string; colors: any }) => {
+      const { error } = await supabase
+        .from("themes")
+        .insert({ 
+          name: name.toLowerCase().replace(/\s+/g, '-'), 
+          description,
+          colors,
+          is_system: false 
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["themes"] });
+      toast.success("Custom theme created successfully!");
+    },
+    onError: (error) => {
+      toast.error("Failed to create custom theme");
       console.error(error);
     },
   });
@@ -557,6 +580,14 @@ const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+
+          <div className="lg:col-span-2">
+            <ThemeCustomizer 
+              onSave={async (name, description, colors) => {
+                await saveCustomThemeMutation.mutateAsync({ name, description, colors });
+              }}
+            />
+          </div>
 
           <Card className="lg:col-span-2">
             <CardHeader>
