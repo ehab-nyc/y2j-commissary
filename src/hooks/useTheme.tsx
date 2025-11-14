@@ -122,7 +122,14 @@ export const useTheme = () => {
     localStorage.removeItem('theme-preference');
     
     // Remove ALL theme-related classes
-    root.classList.remove('holiday', 'christmas-wonderland', 'christmas-animated', 'halloween', 'halloween-minimal', 'halloween-animated', 'halloween-speed-slow', 'halloween-speed-normal', 'halloween-speed-fast', 'liquid-glass', 'gold-diamond', 'dark', 'light');
+    root.classList.remove(
+      'holiday', 'christmas-wonderland', 'christmas-animated', 
+      'halloween', 'halloween-minimal', 'halloween-animated', 
+      'halloween-speed-slow', 'halloween-speed-normal', 'halloween-speed-fast', 
+      'show-pumpkins', 'show-ghosts', 'show-bats', 'show-skulls', 'show-leaves',
+      'show-snowflakes', 'show-stars', 'show-trees', 'show-gifts', 'show-bells',
+      'liquid-glass', 'gold-diamond', 'dark', 'light'
+    );
     
     // Apply custom colors if available
     if (customColors && typeof customColors === 'object') {
@@ -140,28 +147,49 @@ export const useTheme = () => {
       // Check if animations should be enabled (default: true)
       const animationsEnabled = localStorage.getItem('halloween_animations') !== 'false';
       const speed = localStorage.getItem('halloween_speed') || 'normal';
+      const selectedEmojis = JSON.parse(localStorage.getItem('halloween_emojis') || '["pumpkins", "leaves"]');
+      
       if (animationsEnabled) {
         root.classList.add('halloween-animated');
         root.classList.add(`halloween-speed-${speed}`);
+        
+        // Add classes for selected emoji types
+        selectedEmojis.forEach((emoji: string) => {
+          root.classList.add(`show-${emoji}`);
+        });
       }
-      console.log('Halloween theme class added to HTML element', animationsEnabled ? `with animations (${speed})` : 'without animations');
+      console.log('Halloween theme class added to HTML element', animationsEnabled ? `with animations (${speed}, emojis: ${selectedEmojis.join(', ')})` : 'without animations');
     } else if (theme === 'halloween-minimal') {
       root.classList.add('halloween-minimal');
       console.log('Halloween Minimal theme class added to HTML element');
     } else if (theme === 'christmas') {
       root.classList.add('holiday');
       const christmasAnimations = localStorage.getItem('christmas_animations') !== 'false';
+      const selectedEmojis = JSON.parse(localStorage.getItem('christmas_emojis') || '["snowflakes", "stars"]');
+      
       if (christmasAnimations) {
         root.classList.add('christmas-animated');
+        
+        // Add classes for selected emoji types
+        selectedEmojis.forEach((emoji: string) => {
+          root.classList.add(`show-${emoji}`);
+        });
       }
-      console.log('Christmas theme class added to HTML element', christmasAnimations ? 'with animations' : 'without animations');
+      console.log('Christmas theme class added to HTML element', christmasAnimations ? `with animations (emojis: ${selectedEmojis.join(', ')})` : 'without animations');
     } else if (theme === 'christmas-wonderland') {
       root.classList.add('christmas-wonderland');
       const christmasAnimations = localStorage.getItem('christmas_animations') !== 'false';
+      const selectedEmojis = JSON.parse(localStorage.getItem('christmas_emojis') || '["snowflakes", "stars"]');
+      
       if (christmasAnimations) {
         root.classList.add('christmas-animated');
+        
+        // Add classes for selected emoji types
+        selectedEmojis.forEach((emoji: string) => {
+          root.classList.add(`show-${emoji}`);
+        });
       }
-      console.log('Christmas Wonderland theme class added to HTML element', christmasAnimations ? 'with animations' : 'without animations');
+      console.log('Christmas Wonderland theme class added to HTML element', christmasAnimations ? `with animations (emojis: ${selectedEmojis.join(', ')})` : 'without animations');
     } else if (theme === 'liquid-glass') {
       root.classList.add('liquid-glass');
       console.log('Liquid Glass theme class added to HTML element');

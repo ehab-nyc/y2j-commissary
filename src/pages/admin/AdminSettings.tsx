@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Save, Upload, Image as ImageIcon, Palette, Plus, Trash2, Check, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
@@ -60,6 +61,32 @@ const AdminSettings = () => {
   const [christmasAnimations, setChristmasAnimations] = useState(
     localStorage.getItem('christmas_animations') !== 'false'
   );
+  
+  const halloweenEmojiOptions = [
+    { value: 'pumpkins', label: '🎃 Pumpkins', emoji: '🎃' },
+    { value: 'ghosts', label: '👻 Ghosts', emoji: '👻' },
+    { value: 'bats', label: '🦇 Bats', emoji: '🦇' },
+    { value: 'skulls', label: '💀 Skulls', emoji: '💀' },
+    { value: 'leaves', label: '🍁 Leaves', emoji: '🍁' },
+  ];
+  
+  const christmasEmojiOptions = [
+    { value: 'snowflakes', label: '❄️ Snowflakes', emoji: '❄️' },
+    { value: 'stars', label: '⭐ Stars', emoji: '⭐' },
+    { value: 'trees', label: '🎄 Trees', emoji: '🎄' },
+    { value: 'gifts', label: '🎁 Gifts', emoji: '🎁' },
+    { value: 'bells', label: '🔔 Bells', emoji: '🔔' },
+  ];
+  
+  const [selectedHalloweenEmojis, setSelectedHalloweenEmojis] = useState<string[]>(() => {
+    const stored = localStorage.getItem('halloween_emojis');
+    return stored ? JSON.parse(stored) : ['pumpkins', 'leaves'];
+  });
+  
+  const [selectedChristmasEmojis, setSelectedChristmasEmojis] = useState<string[]>(() => {
+    const stored = localStorage.getItem('christmas_emojis');
+    return stored ? JSON.parse(stored) : ['snowflakes', 'stars'];
+  });
 
   const { data: appSettings } = useQuery({
     queryKey: ["app-settings"],
@@ -675,28 +702,63 @@ const AdminSettings = () => {
                 </div>
                 
                 {halloweenAnimations && (
-                  <div className="space-y-2 pt-4 border-t">
-                    <Label htmlFor="halloween-speed" className="text-base">
-                      Animation Speed
-                    </Label>
-                    <Select
-                      value={halloweenSpeed}
-                      onValueChange={(value) => {
-                        setHalloweenSpeed(value);
-                        localStorage.setItem('halloween_speed', value);
-                        window.location.reload();
-                      }}
-                    >
-                      <SelectTrigger id="halloween-speed">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="slow">Slow (Relaxed)</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="fast">Fast (Intense)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <>
+                    <div className="space-y-2 pt-4 border-t">
+                      <Label htmlFor="halloween-speed" className="text-base">
+                        Animation Speed
+                      </Label>
+                      <Select
+                        value={halloweenSpeed}
+                        onValueChange={(value) => {
+                          setHalloweenSpeed(value);
+                          localStorage.setItem('halloween_speed', value);
+                          window.location.reload();
+                        }}
+                      >
+                        <SelectTrigger id="halloween-speed">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="slow">Slow (Relaxed)</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="fast">Fast (Intense)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-3 pt-4 border-t">
+                      <Label className="text-base">
+                        Animation Elements
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Choose which emojis appear in the falling animations
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {halloweenEmojiOptions.map((option) => (
+                          <div key={option.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`halloween-${option.value}`}
+                              checked={selectedHalloweenEmojis.includes(option.value)}
+                              onCheckedChange={(checked) => {
+                                const newSelection = checked
+                                  ? [...selectedHalloweenEmojis, option.value]
+                                  : selectedHalloweenEmojis.filter(e => e !== option.value);
+                                setSelectedHalloweenEmojis(newSelection);
+                                localStorage.setItem('halloween_emojis', JSON.stringify(newSelection));
+                                window.location.reload();
+                              }}
+                            />
+                            <Label
+                              htmlFor={`halloween-${option.value}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -730,6 +792,41 @@ const AdminSettings = () => {
                     }}
                   />
                 </div>
+                
+                {christmasAnimations && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-base">
+                      Animation Elements
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Choose which emojis appear in the falling animations
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {christmasEmojiOptions.map((option) => (
+                        <div key={option.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`christmas-${option.value}`}
+                            checked={selectedChristmasEmojis.includes(option.value)}
+                            onCheckedChange={(checked) => {
+                              const newSelection = checked
+                                ? [...selectedChristmasEmojis, option.value]
+                                : selectedChristmasEmojis.filter(e => e !== option.value);
+                              setSelectedChristmasEmojis(newSelection);
+                              localStorage.setItem('christmas_emojis', JSON.stringify(newSelection));
+                              window.location.reload();
+                            }}
+                          />
+                          <Label
+                            htmlFor={`christmas-${option.value}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {option.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
