@@ -122,7 +122,7 @@ export const useTheme = () => {
     localStorage.removeItem('theme-preference');
     
     // Remove ALL theme-related classes
-    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'liquid-glass', 'gold-diamond', 'dark', 'light');
+    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'halloween-animated', 'liquid-glass', 'gold-diamond', 'dark', 'light');
     
     // Apply custom colors if available
     if (customColors && typeof customColors === 'object') {
@@ -137,7 +137,12 @@ export const useTheme = () => {
     // Apply the selected predefined theme
     if (theme === 'halloween') {
       root.classList.add('halloween');
-      console.log('Halloween theme class added to HTML element');
+      // Check if animations should be enabled (default: true)
+      const animationsEnabled = localStorage.getItem('halloween_animations') !== 'false';
+      if (animationsEnabled) {
+        root.classList.add('halloween-animated');
+      }
+      console.log('Halloween theme class added to HTML element', animationsEnabled ? 'with animations' : 'without animations');
     } else if (theme === 'halloween-minimal') {
       root.classList.add('halloween-minimal');
       console.log('Halloween Minimal theme class added to HTML element');

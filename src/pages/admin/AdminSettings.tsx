@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Save, Upload, Image as ImageIcon, Palette, Plus, Trash2, Check } from "lucide-react";
+import { Save, Upload, Image as ImageIcon, Palette, Plus, Trash2, Check, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -50,6 +51,9 @@ const AdminSettings = () => {
   const [themeToDelete, setThemeToDelete] = useState<string | null>(null);
   const [backgroundToDelete, setBackgroundToDelete] = useState<string | null>(null);
   const [logoToDelete, setLogoToDelete] = useState<string | null>(null);
+  const [halloweenAnimations, setHalloweenAnimations] = useState(
+    localStorage.getItem('halloween_animations') !== 'false'
+  );
 
   const { data: appSettings } = useQuery({
     queryKey: ["app-settings"],
@@ -634,6 +638,38 @@ const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+
+          {settings.active_theme === 'halloween' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Halloween Effects
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="halloween-animations" className="text-base">
+                      Falling Animations
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable falling pumpkins and leaves effects
+                    </p>
+                  </div>
+                  <Switch
+                    id="halloween-animations"
+                    checked={halloweenAnimations}
+                    onCheckedChange={(checked) => {
+                      setHalloweenAnimations(checked);
+                      localStorage.setItem('halloween_animations', checked.toString());
+                      window.location.reload();
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="lg:col-span-2 space-y-6">
             <ThemePreviewManager 
