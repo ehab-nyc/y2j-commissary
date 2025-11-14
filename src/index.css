@@ -719,8 +719,8 @@ body {
   }
 }
 
-/* Pumpkins */
-.halloween::before {
+/* Pumpkins - only on root html element, not in previews */
+html.halloween::before {
   content: "🎃";
   position: fixed;
   top: -10vh;
@@ -732,7 +732,7 @@ body {
   filter: drop-shadow(0 0 10px hsl(25 100% 55%));
 }
 
-.halloween::after {
+html.halloween::after {
   content: "🎃";
   position: fixed;
   top: -10vh;
@@ -744,7 +744,7 @@ body {
   filter: drop-shadow(0 0 10px hsl(25 100% 55%));
 }
 
-.halloween body::before {
+html.halloween body::before {
   content: "🎃";
   position: fixed;
   top: -10vh;
@@ -756,7 +756,7 @@ body {
   filter: drop-shadow(0 0 8px hsl(25 100% 55%));
 }
 
-.halloween body::after {
+html.halloween body::after {
   content: "🎃";
   position: fixed;
   top: -10vh;
@@ -768,8 +768,8 @@ body {
   filter: drop-shadow(0 0 8px hsl(25 100% 55%));
 }
 
-/* Red leaves */
-.halloween main::before {
+/* Red leaves - only on root html element */
+html.halloween main::before {
   content: "🍁";
   position: fixed;
   top: -10vh;
@@ -781,7 +781,7 @@ body {
   filter: drop-shadow(0 0 5px hsl(0 80% 50%));
 }
 
-.halloween main::after {
+html.halloween main::after {
   content: "🍁";
   position: fixed;
   top: -10vh;
@@ -793,8 +793,8 @@ body {
   filter: drop-shadow(0 0 5px hsl(0 80% 50%));
 }
 
-/* Yellow/orange leaves */
-.halloween nav::before {
+/* Yellow/orange leaves - only on root html element */
+html.halloween nav::before {
   content: "🍂";
   position: fixed;
   top: -10vh;
@@ -806,7 +806,7 @@ body {
   filter: drop-shadow(0 0 5px hsl(45 100% 50%));
 }
 
-.halloween nav::after {
+html.halloween nav::after {
   content: "🍂";
   position: fixed;
   top: -10vh;
@@ -818,8 +818,8 @@ body {
   filter: drop-shadow(0 0 5px hsl(45 100% 50%));
 }
 
-/* More pumpkins */
-.halloween div[class*="max-w"]::before {
+/* More pumpkins - only on root html element */
+html.halloween div[class*="max-w"]::before {
   content: "🎃";
   position: fixed;
   top: -10vh;
@@ -831,7 +831,7 @@ body {
   filter: drop-shadow(0 0 10px hsl(25 100% 55%));
 }
 
-.halloween div[class*="max-w"]::after {
+html.halloween div[class*="max-w"]::after {
   content: "🎃";
   position: fixed;
   top: -10vh;
@@ -843,8 +843,8 @@ body {
   filter: drop-shadow(0 0 10px hsl(25 100% 55%));
 }
 
-/* Additional red and yellow leaves */
-.halloween header::before {
+/* Additional red and yellow leaves - only on root html element */
+html.halloween header::before {
   content: "🍁";
   position: fixed;
   top: -10vh;
@@ -856,7 +856,7 @@ body {
   filter: drop-shadow(0 0 5px hsl(0 80% 50%));
 }
 
-.halloween header::after {
+html.halloween header::after {
   content: "🍂";
   position: fixed;
   top: -10vh;
