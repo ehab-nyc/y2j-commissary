@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -196,6 +198,53 @@ const preMadeThemes: PreMadeTheme[] = [
 export const ThemeGallery = ({ onImportTheme }: ThemeGalleryProps) => {
   const [importing, setImporting] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const queryClient = useQueryClient();
+
+  const { data: favorites = [] } = useQuery({
+    queryKey: ["favorite-themes"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("user_favorite_themes")
+        .select("theme_name")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return data.map(f => f.theme_name);
+    },
+  });
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async (themeName: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const isFavorite = favorites.includes(themeName);
+
+      if (isFavorite) {
+        const { error } = await supabase
+          .from("user_favorite_themes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("theme_name", themeName);
+
+        if (error) throw error;
+        toast.success("Removed from favorites");
+      } else {
+        const { error } = await supabase
+          .from("user_favorite_themes")
+          .insert({ user_id: user.id, theme_name: themeName });
+
+        if (error) throw error;
+        toast.success("Added to favorites");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["favorite-themes"] });
+    },
+  });
 
   const handleImport = async (theme: PreMadeTheme) => {
     setImporting(theme.id);
@@ -241,13 +290,28 @@ export const ThemeGallery = ({ onImportTheme }: ThemeGalleryProps) => {
                         <CardTitle className="text-base flex items-center gap-2">
                           {theme.name}
                           {theme.featured && (
-                            <Star className="h-3 w-3 fill-primary text-primary" />
+                            <Badge variant="secondary" className="text-xs">Featured</Badge>
                           )}
                         </CardTitle>
                         <CardDescription className="text-xs mt-1">
                           {theme.description}
                         </CardDescription>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => toggleFavoriteMutation.mutate(theme.id)}
+                        disabled={toggleFavoriteMutation.isPending}
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            favorites.includes(theme.id)
+                              ? "fill-yellow-500 text-yellow-500"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                      </Button>
                       <Badge variant="outline" className="capitalize text-xs">
                         {theme.category}
                       </Badge>

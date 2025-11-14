@@ -29,6 +29,7 @@ import { ColorPaletteGenerator } from "@/components/admin/ColorPaletteGenerator"
 import { ThemePreviewManager } from "@/components/admin/ThemePreviewManager";
 import { ThemeVersionHistory } from "@/components/admin/ThemeVersionHistory";
 import { ThemeComparison } from "@/components/admin/ThemeComparison";
+import { ThemeFavorites } from "@/components/admin/ThemeFavorites";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -633,6 +634,14 @@ const AdminSettings = () => {
             <ThemePreviewManager 
               currentTheme={settings.active_theme}
               onPreviewChange={() => window.location.reload()}
+            />
+            
+            <ThemeFavorites 
+              onSelectTheme={async (themeName) => {
+                setSettings({ ...settings, active_theme: themeName });
+                await saveThemeMutation.mutateAsync();
+              }}
+              currentTheme={settings.active_theme as any}
             />
             
             <ThemeGallery 
