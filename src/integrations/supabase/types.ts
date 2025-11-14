@@ -1077,6 +1077,33 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_analytics: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          session_duration: number | null
+          theme_name: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          session_duration?: number | null
+          theme_name: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          session_duration?: number | null
+          theme_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       theme_versions: {
         Row: {
           colors: Json | null
@@ -1550,7 +1577,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      theme_popularity_stats: {
+        Row: {
+          activation_count: number | null
+          avg_session_duration: number | null
+          favorite_count: number | null
+          last_used_at: string | null
+          preview_count: number | null
+          theme_name: string | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_low_stock: { Args: never; Returns: undefined }
