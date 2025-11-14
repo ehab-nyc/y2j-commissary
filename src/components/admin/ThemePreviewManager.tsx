@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { trackThemeAction } from "@/lib/themeAnalytics";
 
 interface ThemePreviewManagerProps {
   currentTheme: string;
@@ -24,6 +25,10 @@ export const ThemePreviewManager = ({ currentTheme, onPreviewChange }: ThemePrev
       localStorage.removeItem('theme_preview_colors');
     }
     setIsPreviewMode(true);
+    
+    // Track preview action
+    trackThemeAction(themeName, 'preview');
+    
     onPreviewChange();
     toast.success("Preview mode activated", {
       description: "Navigate to different pages to test the theme"

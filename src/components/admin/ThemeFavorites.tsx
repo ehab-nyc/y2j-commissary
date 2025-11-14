@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Star, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppTheme } from "@/hooks/useTheme";
+import { trackThemeAction } from "@/lib/themeAnalytics";
 
 interface ThemeFavoritesProps {
   onSelectTheme: (themeName: AppTheme) => void;
@@ -46,12 +47,18 @@ export const ThemeFavorites = ({ onSelectTheme, currentTheme }: ThemeFavoritesPr
           .eq("theme_name", themeName);
 
         if (error) throw error;
+        
+        // Track unfavorite action
+        trackThemeAction(themeName, 'unfavorite');
       } else {
         const { error } = await supabase
           .from("user_favorite_themes")
           .insert({ user_id: user.id, theme_name: themeName });
 
         if (error) throw error;
+        
+        // Track favorite action
+        trackThemeAction(themeName, 'favorite');
       }
     },
     onSuccess: () => {

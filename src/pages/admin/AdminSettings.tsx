@@ -30,6 +30,8 @@ import { ThemePreviewManager } from "@/components/admin/ThemePreviewManager";
 import { ThemeVersionHistory } from "@/components/admin/ThemeVersionHistory";
 import { ThemeComparison } from "@/components/admin/ThemeComparison";
 import { ThemeFavorites } from "@/components/admin/ThemeFavorites";
+import { ThemeAnalyticsDashboard } from "@/components/admin/ThemeAnalyticsDashboard";
+import { trackThemeAction } from "@/lib/themeAnalytics";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -191,6 +193,9 @@ const AdminSettings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["app-settings"] });
       toast.success("Theme saved successfully");
+      
+      // Track theme activation
+      trackThemeAction(settings.active_theme, 'activate');
       
       if (settings.active_theme !== appSettings?.active_theme) {
         setTimeout(() => window.location.reload(), 500);
@@ -672,6 +677,8 @@ const AdminSettings = () => {
                 ...(themes?.map(t => t.name) || [])
               ]}
             />
+            
+            <ThemeAnalyticsDashboard />
           </div>
 
           <div className="lg:col-span-2">

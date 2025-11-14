@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { startThemeSession } from '@/lib/themeAnalytics';
 
 export type AppTheme = 'default' | 'halloween' | 'halloween-minimal' | 'christmas' | 'christmas-wonderland' | 'liquid-glass' | 'gold-diamond';
 
@@ -98,6 +99,9 @@ export const useTheme = () => {
       
       setActiveTheme(themeName as AppTheme);
       applyTheme(themeName as AppTheme, themeData?.colors);
+      
+      // Track theme activation
+      startThemeSession(themeName);
       
       // Clear the reload flag once theme is successfully applied
       sessionStorage.removeItem('theme-reloaded');

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { trackThemeAction } from "@/lib/themeAnalytics";
 
 interface PreMadeTheme {
   id: string;
@@ -231,6 +232,7 @@ export const ThemeGallery = ({ onImportTheme }: ThemeGalleryProps) => {
           .eq("theme_name", themeName);
 
         if (error) throw error;
+        trackThemeAction(themeName, 'unfavorite');
         toast.success("Removed from favorites");
       } else {
         const { error } = await supabase
@@ -238,6 +240,7 @@ export const ThemeGallery = ({ onImportTheme }: ThemeGalleryProps) => {
           .insert({ user_id: user.id, theme_name: themeName });
 
         if (error) throw error;
+        trackThemeAction(themeName, 'favorite');
         toast.success("Added to favorites");
       }
     },
