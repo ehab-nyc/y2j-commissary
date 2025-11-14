@@ -122,7 +122,7 @@ export const useTheme = () => {
     localStorage.removeItem('theme-preference');
     
     // Remove ALL theme-related classes
-    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'halloween-animated', 'liquid-glass', 'gold-diamond', 'dark', 'light');
+    root.classList.remove('holiday', 'christmas-wonderland', 'christmas-animated', 'halloween', 'halloween-minimal', 'halloween-animated', 'halloween-speed-slow', 'halloween-speed-normal', 'halloween-speed-fast', 'liquid-glass', 'gold-diamond', 'dark', 'light');
     
     // Apply custom colors if available
     if (customColors && typeof customColors === 'object') {
@@ -139,19 +139,29 @@ export const useTheme = () => {
       root.classList.add('halloween');
       // Check if animations should be enabled (default: true)
       const animationsEnabled = localStorage.getItem('halloween_animations') !== 'false';
+      const speed = localStorage.getItem('halloween_speed') || 'normal';
       if (animationsEnabled) {
         root.classList.add('halloween-animated');
+        root.classList.add(`halloween-speed-${speed}`);
       }
-      console.log('Halloween theme class added to HTML element', animationsEnabled ? 'with animations' : 'without animations');
+      console.log('Halloween theme class added to HTML element', animationsEnabled ? `with animations (${speed})` : 'without animations');
     } else if (theme === 'halloween-minimal') {
       root.classList.add('halloween-minimal');
       console.log('Halloween Minimal theme class added to HTML element');
     } else if (theme === 'christmas') {
       root.classList.add('holiday');
-      console.log('Christmas theme class added to HTML element');
+      const christmasAnimations = localStorage.getItem('christmas_animations') !== 'false';
+      if (christmasAnimations) {
+        root.classList.add('christmas-animated');
+      }
+      console.log('Christmas theme class added to HTML element', christmasAnimations ? 'with animations' : 'without animations');
     } else if (theme === 'christmas-wonderland') {
       root.classList.add('christmas-wonderland');
-      console.log('Christmas Wonderland theme class added to HTML element');
+      const christmasAnimations = localStorage.getItem('christmas_animations') !== 'false';
+      if (christmasAnimations) {
+        root.classList.add('christmas-animated');
+      }
+      console.log('Christmas Wonderland theme class added to HTML element', christmasAnimations ? 'with animations' : 'without animations');
     } else if (theme === 'liquid-glass') {
       root.classList.add('liquid-glass');
       console.log('Liquid Glass theme class added to HTML element');

@@ -719,6 +719,49 @@ body {
   }
 }
 
+@keyframes snowfall {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(20px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes snowfall-drift {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(25vh) translateX(-15px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(15px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(75vh) translateX(-10px) rotate(270deg);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(5px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
 /* Pumpkins - only on root html element with animations enabled */
 html.halloween.halloween-animated::before {
   content: "🎃";
@@ -866,6 +909,228 @@ html.halloween.halloween-animated header::after {
   z-index: 1;
   animation: fall-sway 15s linear infinite 11s;
   filter: drop-shadow(0 0 5px hsl(45 100% 50%));
+}
+
+/* Halloween animation speed variants */
+/* Slow speed - 1.5x duration */
+html.halloween.halloween-speed-slow.halloween-animated::before {
+  animation-duration: 16.5s;
+}
+html.halloween.halloween-speed-slow.halloween-animated::after {
+  animation-duration: 19.5s;
+}
+html.halloween.halloween-speed-slow.halloween-animated body::before {
+  animation-duration: 21s;
+}
+html.halloween.halloween-speed-slow.halloween-animated body::after {
+  animation-duration: 18s;
+}
+html.halloween.halloween-speed-slow.halloween-animated main::before,
+html.halloween.halloween-speed-slow.halloween-animated main::after {
+  animation-duration: 22.5s;
+}
+html.halloween.halloween-speed-slow.halloween-animated nav::before,
+html.halloween.halloween-speed-slow.halloween-animated nav::after {
+  animation-duration: 19.5s;
+}
+html.halloween.halloween-speed-slow.halloween-animated div[class*="max-w"]::before {
+  animation-duration: 22.5s;
+}
+html.halloween.halloween-speed-slow.halloween-animated div[class*="max-w"]::after {
+  animation-duration: 24s;
+}
+html.halloween.halloween-speed-slow.halloween-animated header::before,
+html.halloween.halloween-speed-slow.halloween-animated header::after {
+  animation-duration: 25.5s;
+}
+
+/* Fast speed - 0.6x duration */
+html.halloween.halloween-speed-fast.halloween-animated::before {
+  animation-duration: 6.6s;
+}
+html.halloween.halloween-speed-fast.halloween-animated::after {
+  animation-duration: 7.8s;
+}
+html.halloween.halloween-speed-fast.halloween-animated body::before {
+  animation-duration: 8.4s;
+}
+html.halloween.halloween-speed-fast.halloween-animated body::after {
+  animation-duration: 7.2s;
+}
+html.halloween.halloween-speed-fast.halloween-animated main::before,
+html.halloween.halloween-speed-fast.halloween-animated main::after {
+  animation-duration: 9s;
+}
+html.halloween.halloween-speed-fast.halloween-animated nav::before,
+html.halloween.halloween-speed-fast.halloween-animated nav::after {
+  animation-duration: 7.8s;
+}
+html.halloween.halloween-speed-fast.halloween-animated div[class*="max-w"]::before {
+  animation-duration: 9s;
+}
+html.halloween.halloween-speed-fast.halloween-animated div[class*="max-w"]::after {
+  animation-duration: 9.6s;
+}
+html.halloween.halloween-speed-fast.halloween-animated header::before,
+html.halloween.halloween-speed-fast.halloween-animated header::after {
+  animation-duration: 10.2s;
+}
+
+/* Christmas falling snowflakes - only on root html element with animations enabled */
+html.holiday.christmas-animated::before,
+html.christmas-wonderland.christmas-animated::before {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 10%;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 12s linear infinite;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated::after,
+html.christmas-wonderland.christmas-animated::after {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 70%;
+  font-size: 2.5rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 14s linear infinite 2s;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated body::before,
+html.christmas-wonderland.christmas-animated body::before {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 35%;
+  font-size: 1.8rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall-drift 15s linear infinite 4s;
+  filter: drop-shadow(0 0 6px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated body::after,
+html.christmas-wonderland.christmas-animated body::after {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 85%;
+  font-size: 2.2rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 13s linear infinite 6s;
+  filter: drop-shadow(0 0 6px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated main::before,
+html.christmas-wonderland.christmas-animated main::before {
+  content: "⭐";
+  position: fixed;
+  top: -10vh;
+  left: 20%;
+  font-size: 1.5rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall-drift 16s linear infinite 1s;
+  filter: drop-shadow(0 0 10px hsl(45 100% 70%));
+}
+
+html.holiday.christmas-animated main::after,
+html.christmas-wonderland.christmas-animated main::after {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 60%;
+  font-size: 2.3rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 14s linear infinite 5s;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated nav::before,
+html.christmas-wonderland.christmas-animated nav::before {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 5%;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall-drift 13s linear infinite 3s;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated nav::after,
+html.christmas-wonderland.christmas-animated nav::after {
+  content: "⭐";
+  position: fixed;
+  top: -10vh;
+  left: 50%;
+  font-size: 1.6rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 15s linear infinite 7s;
+  filter: drop-shadow(0 0 10px hsl(45 100% 70%));
+}
+
+html.holiday.christmas-animated div[class*="max-w"]::before,
+html.christmas-wonderland.christmas-animated div[class*="max-w"]::before {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 15%;
+  font-size: 2.1rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 16s linear infinite 8s;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated div[class*="max-w"]::after,
+html.christmas-wonderland.christmas-animated div[class*="max-w"]::after {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 90%;
+  font-size: 2.4rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall-drift 17s linear infinite 10s;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated header::before,
+html.christmas-wonderland.christmas-animated header::before {
+  content: "❄️";
+  position: fixed;
+  top: -10vh;
+  left: 45%;
+  font-size: 1.9rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall-drift 18s linear infinite 9s;
+  filter: drop-shadow(0 0 8px hsl(200 100% 85%));
+}
+
+html.holiday.christmas-animated header::after,
+html.christmas-wonderland.christmas-animated header::after {
+  content: "⭐";
+  position: fixed;
+  top: -10vh;
+  left: 80%;
+  font-size: 1.7rem;
+  pointer-events: none;
+  z-index: 1;
+  animation: snowfall 16s linear infinite 11s;
+  filter: drop-shadow(0 0 10px hsl(45 100% 70%));
 }
 
 /* Halloween glow effects */
