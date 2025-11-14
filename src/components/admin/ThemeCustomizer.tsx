@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ interface ThemeColors {
 
 interface ThemeCustomizerProps {
   onSave: (name: string, description: string, colors: ThemeColors) => Promise<void>;
+  initialColors?: ThemeColors;
 }
 
 const defaultColors: ThemeColors = {
@@ -43,11 +44,31 @@ const defaultColors: ThemeColors = {
   border: "214.3 31.8% 91.4%",
 };
 
-export const ThemeCustomizer = ({ onSave }: ThemeCustomizerProps) => {
+export const ThemeCustomizer = ({ onSave, initialColors }: ThemeCustomizerProps) => {
   const [themeName, setThemeName] = useState("");
   const [description, setDescription] = useState("");
-  const [colors, setColors] = useState<ThemeColors>(defaultColors);
+  const [colors, setColors] = useState<ThemeColors>(initialColors || defaultColors);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update colors when initialColors prop changes
+  useEffect(() => {
+    if (initialColors) {
+      setColors(initialColors);
+    }
+  }, [initialColors]);
+
+  // Update colors when called from palette generator
+  const applyColors = (newColors: ThemeColors) => {
+    setColors(newColors);
+  };
+
+  // Expose applyColors globally for palette generator
+  useEffect(() => {
+    (window as any).applyThemeColors = applyColors;
+    return () => {
+      delete (window as any).applyThemeColors;
+    };
+  }, []);
 
   const handleColorChange = (key: keyof ThemeColors, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }));
