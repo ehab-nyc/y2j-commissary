@@ -330,44 +330,71 @@ export default function ReceiptSettings() {
           </div>
         </div>
 
-        {/* Template Selector */}
+        {/* Template Grid View */}
         <Card>
           <CardHeader>
-            <CardTitle>Select Template</CardTitle>
+            <CardTitle>All Templates</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="template-select">Current Template</Label>
-              <select
-                id="template-select"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={selectedTemplateId || ''}
-                onChange={(e) => {
-                  const newTemplate = templates?.find(t => t.id === e.target.value);
-                  if (newTemplate) {
-                    setSelectedTemplateId(newTemplate.id);
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {templates?.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => {
+                    setSelectedTemplateId(t.id);
                     setTemplateData({
-                      name: newTemplate.name,
-                      header_text: newTemplate.header_text || "",
-                      footer_text: newTemplate.footer_text || "",
-                      show_company_info: newTemplate.show_company_info,
-                      show_logo: newTemplate.show_logo ?? true,
-                      paper_width: newTemplate.paper_width,
-                      text_size: newTemplate.text_size || 12,
-                      font_family: newTemplate.font_family || "Courier New, monospace",
-                      print_margin: newTemplate.print_margin || 1.6,
-                      logo_size: newTemplate.logo_size || 100,
-                      logo_position: newTemplate.logo_position || 'center',
+                      name: t.name,
+                      header_text: t.header_text || "",
+                      footer_text: t.footer_text || "",
+                      show_company_info: t.show_company_info,
+                      show_logo: t.show_logo ?? true,
+                      paper_width: t.paper_width,
+                      text_size: t.text_size || 12,
+                      font_family: t.font_family || "Courier New, monospace",
+                      print_margin: t.print_margin || 1.6,
+                      logo_size: t.logo_size || 100,
+                      logo_position: t.logo_position || 'center',
                     });
-                  }
-                }}
-              >
-                {templates?.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} {t.is_default ? '(Default)' : ''}
-                  </option>
-                ))}
-              </select>
+                  }}
+                  className={`relative cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-lg ${
+                    selectedTemplateId === t.id
+                      ? 'border-primary shadow-md'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="font-semibold text-sm truncate">{t.name}</h3>
+                    {t.is_default && (
+                      <Star className="h-4 w-4 fill-primary text-primary" />
+                    )}
+                  </div>
+                  <div className="bg-muted rounded overflow-hidden" style={{ height: '200px' }}>
+                    <div className="scale-[0.4] origin-top-left" style={{ width: '250%' }}>
+                      <ReceiptPreview
+                        orderNumber="12345"
+                        customerName="John Doe"
+                        items={[
+                          { name: "Product A", quantity: 2, price: 15.99, box_size: "1 box" },
+                        ]}
+                        total={31.98}
+                        serviceFee={3.00}
+                        date={new Date()}
+                        template={{
+                          header_text: t.header_text || "",
+                          footer_text: t.footer_text || "",
+                          show_company_info: t.show_company_info,
+                          show_logo: t.show_logo ?? true,
+                          paper_width: t.paper_width,
+                          logo_size: t.logo_size || 100,
+                          logo_position: t.logo_position || 'center',
+                        }}
+                        companyInfo={companyInfo}
+                        logoUrl={companyLogo}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
