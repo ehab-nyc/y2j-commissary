@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Save, Upload, Image as ImageIcon, Palette, Plus, Trash2, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ThemePreview } from "@/components/admin/ThemePreview";
 import { ThemeCustomizer } from "@/components/admin/ThemeCustomizer";
+import { ThemeGallery } from "@/components/admin/ThemeGallery";
+import { ColorPaletteGenerator } from "@/components/admin/ColorPaletteGenerator";
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -581,8 +584,26 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
 
+          <div className="lg:col-span-2 space-y-6">
+            <ThemeGallery 
+              onImportTheme={async (name, description, colors) => {
+                await saveCustomThemeMutation.mutateAsync({ name, description, colors });
+              }}
+            />
+            
+            <ColorPaletteGenerator 
+              onApplyPalette={(colors) => {
+                // Apply colors to the theme customizer
+                if ((window as any).applyThemeColors) {
+                  (window as any).applyThemeColors(colors);
+                  toast.success("Palette applied! You can now save it as a theme.");
+                }
+              }}
+            />
+          </div>
+
           <div className="lg:col-span-2">
-            <ThemeCustomizer 
+            <ThemeCustomizer
               onSave={async (name, description, colors) => {
                 await saveCustomThemeMutation.mutateAsync({ name, description, colors });
               }}
