@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppTheme = 'default' | 'halloween' | 'halloween-minimal' | 'christmas' | 'christmas-wonderland' | 'liquid-glass';
+export type AppTheme = 'default' | 'halloween' | 'halloween-minimal' | 'christmas' | 'christmas-wonderland' | 'liquid-glass' | 'gold-diamond';
 
 export const useTheme = () => {
   const [activeTheme, setActiveTheme] = useState<AppTheme>('default');
@@ -81,7 +81,7 @@ export const useTheme = () => {
     localStorage.removeItem('theme-preference');
     
     // Remove ALL theme-related classes
-    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'liquid-glass', 'dark', 'light');
+    root.classList.remove('holiday', 'christmas-wonderland', 'halloween', 'halloween-minimal', 'liquid-glass', 'gold-diamond', 'dark', 'light');
     
     // Apply the selected theme
     if (theme === 'halloween') {
@@ -99,6 +99,9 @@ export const useTheme = () => {
     } else if (theme === 'liquid-glass') {
       root.classList.add('liquid-glass');
       console.log('Liquid Glass theme class added to HTML element');
+    } else if (theme === 'gold-diamond') {
+      root.classList.add('gold-diamond');
+      console.log('Gold Diamond theme class added to HTML element');
     } else {
       console.log('Default theme applied (no theme class added)');
     }
