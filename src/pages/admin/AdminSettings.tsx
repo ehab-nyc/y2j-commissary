@@ -33,6 +33,7 @@ import { ThemeVersionHistory } from "@/components/admin/ThemeVersionHistory";
 import { ThemeComparison } from "@/components/admin/ThemeComparison";
 import { ThemeFavorites } from "@/components/admin/ThemeFavorites";
 import { ThemeAnalyticsDashboard } from "@/components/admin/ThemeAnalyticsDashboard";
+import { ThemeAnimationPreview } from "@/components/admin/ThemeAnimationPreview";
 import { trackThemeAction } from "@/lib/themeAnalytics";
 
 const AdminSettings = () => {
@@ -703,6 +704,17 @@ const AdminSettings = () => {
                 
                 {halloweenAnimations && (
                   <>
+                    <div className="space-y-3 pt-4 border-t">
+                      <Label className="text-base">Live Preview</Label>
+                      <ThemeAnimationPreview
+                        theme="halloween"
+                        enabled={halloweenAnimations}
+                        speed={halloweenSpeed as 'slow' | 'normal' | 'fast'}
+                        selectedEmojis={selectedHalloweenEmojis}
+                        emojiOptions={halloweenEmojiOptions}
+                      />
+                    </div>
+                    
                     <div className="space-y-2 pt-4 border-t">
                       <Label htmlFor="halloween-speed" className="text-base">
                         Animation Speed
@@ -712,7 +724,6 @@ const AdminSettings = () => {
                         onValueChange={(value) => {
                           setHalloweenSpeed(value);
                           localStorage.setItem('halloween_speed', value);
-                          window.location.reload();
                         }}
                       >
                         <SelectTrigger id="halloween-speed">
@@ -724,6 +735,9 @@ const AdminSettings = () => {
                           <SelectItem value="fast">Fast (Intense)</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Preview updates instantly. Click "Apply Settings" below to save.
+                      </p>
                     </div>
                     
                     <div className="space-y-3 pt-4 border-t">
@@ -745,7 +759,6 @@ const AdminSettings = () => {
                                   : selectedHalloweenEmojis.filter(e => e !== option.value);
                                 setSelectedHalloweenEmojis(newSelection);
                                 localStorage.setItem('halloween_emojis', JSON.stringify(newSelection));
-                                window.location.reload();
                               }}
                             />
                             <Label
@@ -758,6 +771,14 @@ const AdminSettings = () => {
                         ))}
                       </div>
                     </div>
+                    
+                    <Button
+                      onClick={() => window.location.reload()}
+                      className="w-full"
+                      variant="default"
+                    >
+                      Apply Settings to App
+                    </Button>
                   </>
                 )}
               </CardContent>
@@ -794,38 +815,57 @@ const AdminSettings = () => {
                 </div>
                 
                 {christmasAnimations && (
-                  <div className="space-y-3 pt-4 border-t">
-                    <Label className="text-base">
-                      Animation Elements
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Choose which emojis appear in the falling animations
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {christmasEmojiOptions.map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`christmas-${option.value}`}
-                            checked={selectedChristmasEmojis.includes(option.value)}
-                            onCheckedChange={(checked) => {
-                              const newSelection = checked
-                                ? [...selectedChristmasEmojis, option.value]
-                                : selectedChristmasEmojis.filter(e => e !== option.value);
-                              setSelectedChristmasEmojis(newSelection);
-                              localStorage.setItem('christmas_emojis', JSON.stringify(newSelection));
-                              window.location.reload();
-                            }}
-                          />
-                          <Label
-                            htmlFor={`christmas-${option.value}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {option.label}
-                          </Label>
-                        </div>
-                      ))}
+                  <>
+                    <div className="space-y-3 pt-4 border-t">
+                      <Label className="text-base">Live Preview</Label>
+                      <ThemeAnimationPreview
+                        theme="christmas"
+                        enabled={christmasAnimations}
+                        selectedEmojis={selectedChristmasEmojis}
+                        emojiOptions={christmasEmojiOptions}
+                      />
                     </div>
-                  </div>
+                    
+                    <div className="space-y-3 pt-4 border-t">
+                      <Label className="text-base">
+                        Animation Elements
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Choose which emojis appear in the falling animations
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {christmasEmojiOptions.map((option) => (
+                          <div key={option.value} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`christmas-${option.value}`}
+                              checked={selectedChristmasEmojis.includes(option.value)}
+                              onCheckedChange={(checked) => {
+                                const newSelection = checked
+                                  ? [...selectedChristmasEmojis, option.value]
+                                  : selectedChristmasEmojis.filter(e => e !== option.value);
+                                setSelectedChristmasEmojis(newSelection);
+                                localStorage.setItem('christmas_emojis', JSON.stringify(newSelection));
+                              }}
+                            />
+                            <Label
+                              htmlFor={`christmas-${option.value}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <Button
+                      onClick={() => window.location.reload()}
+                      className="w-full"
+                      variant="default"
+                    >
+                      Apply Settings to App
+                    </Button>
+                  </>
                 )}
               </CardContent>
             </Card>
