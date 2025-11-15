@@ -104,6 +104,30 @@ export function PrintJobHistory() {
     retryMutation.mutate(jobId);
   };
 
+  // Delete pending jobs mutation
+  const deletePendingMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("star_cloudprnt_jobs" as any)
+        .delete()
+        .eq("status", "pending");
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("All pending print jobs deleted");
+      queryClient.invalidateQueries({ queryKey: ["star-cloudprnt-jobs"] });
+    },
+    onError: (error) => {
+      console.error("Error deleting pending jobs:", error);
+      toast.error("Failed to delete pending jobs");
+    },
+  });
+
+  const handleDeletePending = () => {
+    deletePendingMutation.mutate();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
@@ -132,23 +156,40 @@ export function PrintJobHistory() {
     }
   };
 
+  const pendingCount = jobs?.filter(job => job.status === 'pending').length || 0;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Print Job History</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["star-cloudprnt-jobs"] })}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </CardTitle>
-        <CardDescription>
-          Track all CloudPRNT print jobs with real-time status updates
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Print Job History</CardTitle>
+            <CardDescription>
+              Track all CloudPRNT print jobs with real-time status updates
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            {pendingCount > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeletePending}
+                disabled={deletePendingMutation.isPending}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Delete {pendingCount} Pending
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["star-cloudprnt-jobs"] })}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
