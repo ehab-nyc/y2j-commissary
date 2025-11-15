@@ -49,6 +49,10 @@ import Geofencing from "./pages/Geofencing";
 import GPSAlerts from "./pages/GPSAlerts";
 import GPSSettings from "./pages/GPSSettings";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Returns from "./pages/Returns";
+import ProductPerformance from "./pages/ProductPerformance";
+import DataBackup from "./pages/DataBackup";
+import SMSNotifications from "./pages/SMSNotifications";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +104,10 @@ const AppContent = () => {
           <Route path="/employee-shifts" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><EmployeeShifts /></ProtectedRoute>} />
           <Route path="/receipt-settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><ReceiptSettings /></ProtectedRoute>} />
           <Route path="/hardware-setup" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><HardwareSetup /></ProtectedRoute>} />
+          <Route path="/returns" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Returns /></ProtectedRoute>} />
+          <Route path="/product-performance" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><ProductPerformance /></ProtectedRoute>} />
+          <Route path="/data-backup" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><DataBackup /></ProtectedRoute>} />
+          <Route path="/sms-notifications" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><SMSNotifications /></ProtectedRoute>} />
           
           {/* GPS Routes */}
           <Route path="/gps" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><GPS /></ProtectedRoute>} />

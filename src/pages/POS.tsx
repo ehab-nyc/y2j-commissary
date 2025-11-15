@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3 } from 'lucide-react';
+import { Package, ShoppingCart, FileText, Wrench, Users, ClipboardList, Clock, BarChart3, RotateCcw, TrendingUp, MessageSquare, Database } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
@@ -32,6 +32,13 @@ const POS = () => {
       roles: ['manager', 'admin', 'super_admin']
     },
     {
+      title: 'Returns & Refunds',
+      description: 'Process returns and manage refunds',
+      icon: RotateCcw,
+      path: '/returns',
+      roles: ['worker', 'manager', 'admin', 'super_admin']
+    },
+    {
       title: 'Customers',
       description: 'View and manage customers',
       icon: Users,
@@ -43,6 +50,13 @@ const POS = () => {
       description: 'View sales and performance metrics',
       icon: BarChart3,
       path: '/analytics',
+      roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'Product Performance',
+      description: 'Analyze product sales velocity',
+      icon: TrendingUp,
+      path: '/product-performance',
       roles: ['manager', 'admin', 'super_admin']
     },
     {
@@ -58,6 +72,20 @@ const POS = () => {
       icon: Clock,
       path: '/employee-shifts',
       roles: ['worker', 'manager', 'admin', 'super_admin']
+    },
+    {
+      title: 'SMS Notifications',
+      description: 'Manage SMS templates and settings',
+      icon: MessageSquare,
+      path: '/sms-notifications',
+      roles: ['admin', 'super_admin']
+    },
+    {
+      title: 'Data Backup',
+      description: 'Export and backup database',
+      icon: Database,
+      path: '/data-backup',
+      roles: ['admin', 'super_admin']
     },
     {
       title: 'Receipt Settings',
