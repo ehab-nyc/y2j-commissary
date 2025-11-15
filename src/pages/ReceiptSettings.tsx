@@ -33,6 +33,7 @@ type ReceiptTemplate = {
   show_company_info: boolean;
   show_logo?: boolean;
   paper_width: number;
+  paper_type?: 'thermal_58mm' | 'thermal_80mm' | 'a4_paper';
   show_barcode: boolean;
   text_size?: number;
   font_family?: string;
@@ -57,6 +58,7 @@ export default function ReceiptSettings() {
     show_company_info: true,
     show_logo: true,
     paper_width: 80,
+    paper_type: 'thermal_80mm' as 'thermal_58mm' | 'thermal_80mm' | 'a4_paper',
     text_size: 12,
     font_family: "Courier New, monospace",
     print_margin: 1.6,
@@ -103,6 +105,7 @@ export default function ReceiptSettings() {
         show_company_info: template.show_company_info,
         show_logo: template.show_logo ?? true,
         paper_width: template.paper_width,
+        paper_type: template.paper_type || 'thermal_80mm',
         text_size: template.text_size || 12,
         font_family: template.font_family || "Courier New, monospace",
         print_margin: template.print_margin || 1.6,
@@ -282,6 +285,7 @@ export default function ReceiptSettings() {
       show_company_info: true,
       show_logo: true,
       paper_width: 80,
+      paper_type: 'thermal_80mm',
       text_size: 12,
       font_family: "Courier New, monospace",
       print_margin: 1.6,
@@ -413,6 +417,7 @@ export default function ReceiptSettings() {
                       show_company_info: t.show_company_info,
                       show_logo: t.show_logo ?? true,
                       paper_width: t.paper_width,
+                      paper_type: t.paper_type || 'thermal_80mm',
                       text_size: t.text_size || 12,
                       font_family: t.font_family || "Courier New, monospace",
                       print_margin: t.print_margin || 1.6,
@@ -652,18 +657,28 @@ export default function ReceiptSettings() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="paper-width">Paper Width (mm)</Label>
-                  <Input
-                    id="paper-width"
-                    type="number"
-                    value={templateData.paper_width}
-                    onChange={(e) =>
+                  <Label htmlFor="paper-type">Paper Type</Label>
+                  <select
+                    id="paper-type"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={templateData.paper_type}
+                    onChange={(e) => {
+                      const paperType = e.target.value as 'thermal_58mm' | 'thermal_80mm' | 'a4_paper';
+                      const paperWidth = paperType === 'thermal_58mm' ? 58 : paperType === 'thermal_80mm' ? 80 : 210;
                       setTemplateData({
                         ...templateData,
-                        paper_width: parseInt(e.target.value),
-                      })
-                    }
-                  />
+                        paper_type: paperType,
+                        paper_width: paperWidth,
+                      });
+                    }}
+                  >
+                    <option value="thermal_58mm">Thermal 58mm</option>
+                    <option value="thermal_80mm">Thermal 80mm</option>
+                    <option value="a4_paper">A4 Paper (210mm)</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Automatically adjusts paper width and layout for different printer types
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="text-size">Text Size: {templateData.text_size}px</Label>
