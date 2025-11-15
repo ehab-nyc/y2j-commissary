@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireRole, requireAnyRole }: ProtectedRouteProps) => {
+  // Note: hasRole() is for UX only - actual security is enforced via RLS policies on the backend
   const { user, loading, hasRole } = useAuth();
 
   if (loading) {
