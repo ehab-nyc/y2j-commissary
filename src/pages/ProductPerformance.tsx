@@ -57,9 +57,9 @@ export default function ProductPerformance() {
     }
   };
 
-  const fastMovers = products.filter(p => p.sales_velocity > 1 && p.total_sold > 0);
-  const slowMovers = products.filter(p => (p.sales_velocity <= 0.5 || p.total_sold === 0) && p.days_of_stock !== null);
-  const profitLeaders = [...products].sort((a, b) => b.total_profit - a.total_profit).slice(0, 10);
+  const fastMovers = products.filter(p => (p.sales_velocity ?? 0) > 1 && (p.total_sold ?? 0) > 0);
+  const slowMovers = products.filter(p => ((p.sales_velocity ?? 0) <= 0.5 || (p.total_sold ?? 0) === 0) && p.days_of_stock !== null);
+  const profitLeaders = [...products].sort((a, b) => (b.total_profit ?? 0) - (a.total_profit ?? 0)).slice(0, 10);
 
   const calculateProfitMargin = (revenue: number, cost: number) => {
     if (revenue === 0) return 0;
@@ -110,18 +110,18 @@ export default function ProductPerformance() {
                   <Badge variant="outline">{product.category_name}</Badge>
                 )}
               </TableCell>
-              <TableCell className="text-right">{product.current_stock}</TableCell>
-              <TableCell className="text-right">{product.total_sold}</TableCell>
-              <TableCell className={`text-right ${getSalesVelocityColor(product.sales_velocity)}`}>
-                {product.sales_velocity.toFixed(2)}
+              <TableCell className="text-right">{product.current_stock ?? 0}</TableCell>
+              <TableCell className="text-right">{product.total_sold ?? 0}</TableCell>
+              <TableCell className={`text-right ${getSalesVelocityColor(product.sales_velocity ?? 0)}`}>
+                {(product.sales_velocity ?? 0).toFixed(2)}
               </TableCell>
               <TableCell className={`text-right ${getDaysOfStockColor(product.days_of_stock)}`}>
                 {product.days_of_stock !== null ? product.days_of_stock.toFixed(0) : 'N/A'}
               </TableCell>
-              <TableCell className="text-right">${product.total_revenue.toFixed(2)}</TableCell>
-              <TableCell className="text-right font-semibold">${product.total_profit.toFixed(2)}</TableCell>
+              <TableCell className="text-right">${(product.total_revenue ?? 0).toFixed(2)}</TableCell>
+              <TableCell className="text-right font-semibold">${(product.total_profit ?? 0).toFixed(2)}</TableCell>
               <TableCell className="text-right">
-                {calculateProfitMargin(product.total_revenue, product.total_cost).toFixed(1)}%
+                {calculateProfitMargin(product.total_revenue ?? 0, product.total_cost ?? 0).toFixed(1)}%
               </TableCell>
             </TableRow>
           ))
@@ -130,9 +130,9 @@ export default function ProductPerformance() {
     </Table>
   );
 
-  const totalRevenue = products.reduce((sum, p) => sum + p.total_revenue, 0);
-  const totalProfit = products.reduce((sum, p) => sum + p.total_profit, 0);
-  const totalSold = products.reduce((sum, p) => sum + p.total_sold, 0);
+  const totalRevenue = products.reduce((sum, p) => sum + (p.total_revenue ?? 0), 0);
+  const totalProfit = products.reduce((sum, p) => sum + (p.total_profit ?? 0), 0);
+  const totalSold = products.reduce((sum, p) => sum + (p.total_sold ?? 0), 0);
   const averageMargin = products.length > 0 
     ? products.reduce((sum, p) => sum + calculateProfitMargin(p.total_revenue, p.total_cost), 0) / products.length 
     : 0;
