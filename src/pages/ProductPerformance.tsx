@@ -37,17 +37,24 @@ export default function ProductPerformance() {
   }, []);
 
   const fetchProductPerformance = async () => {
-    const { data, error } = await supabase
-      .from('product_performance_stats')
-      .select('*')
-      .order('total_sold', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('product_performance_stats')
+        .select('*')
+        .order('total_sold', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching product performance:', error);
-    } else {
+      if (error) {
+        console.error('Error fetching product performance:', error);
+        throw error;
+      }
+      
+      console.log('Product performance data:', data);
       setProducts(data || []);
+    } catch (error) {
+      console.error('Failed to fetch product performance:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fastMovers = products.filter(p => p.sales_velocity > 1 && p.total_sold > 0);
