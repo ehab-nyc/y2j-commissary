@@ -84,7 +84,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/products')}>
               {activeLogo ? (
                 <>
                   <img src={activeLogo} alt="Logo" className="h-10 w-10 rounded-full object-cover" />
