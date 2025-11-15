@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Printer, FileText } from "lucide-react";
 import { PrintReceipt } from "./PrintReceipt";
-import { PrintWithStar } from "./PrintWithStar";
 
 interface PrintReceiptDialogProps {
   orderNumber: string;
@@ -98,21 +97,6 @@ export function PrintReceiptDialog({
               </div>
             </div>
           </Button>
-          </div>
-          
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground mb-3">Star Thermal Printer (Network)</p>
-            <PrintWithStar
-              orderNumber={orderNumber}
-              customerName={customerName}
-              items={items}
-              total={total}
-              serviceFee={serviceFee}
-              date={date}
-              cartName={cartName}
-              cartNumber={cartNumber}
-              processedBy={processedBy}
-            />
           </div>
         </div>
       </DialogContent>
