@@ -20,6 +20,7 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  // Note: hasRole() checks are for UX/UI visibility only - security is enforced server-side via RLS policies
   const { user, hasRole, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

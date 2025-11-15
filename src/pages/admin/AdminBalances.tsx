@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Save, Trash2, Printer, Archive, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import DOMPurify from 'dompurify';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -632,7 +633,9 @@ export default function AdminBalances() {
     `);
     printWindow.document.write('</style></head><body>');
     printWindow.document.write('<div class="report-header"><h2>Weekly Summary Report</h2><p>Current week remaining balance and aggregated totals per customer</p></div>');
-    printWindow.document.write(printContent.innerHTML);
+    // Sanitize HTML content to prevent XSS attacks before printing
+    const sanitizedContent = DOMPurify.sanitize(printContent.innerHTML);
+    printWindow.document.write(sanitizedContent);
     printWindow.document.write('</body></html>');
     printWindow.document.close();
     printWindow.focus();
