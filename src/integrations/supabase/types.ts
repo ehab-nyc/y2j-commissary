@@ -840,6 +840,7 @@ export type Database = {
           logo_position: string | null
           logo_size: number | null
           name: string
+          paper_type: string | null
           paper_width: number | null
           print_margin: number | null
           show_barcode: boolean | null
@@ -859,6 +860,7 @@ export type Database = {
           logo_position?: string | null
           logo_size?: number | null
           name: string
+          paper_type?: string | null
           paper_width?: number | null
           print_margin?: number | null
           show_barcode?: boolean | null
@@ -878,6 +880,7 @@ export type Database = {
           logo_position?: string | null
           logo_size?: number | null
           name?: string
+          paper_type?: string | null
           paper_width?: number | null
           print_margin?: number | null
           show_barcode?: boolean | null

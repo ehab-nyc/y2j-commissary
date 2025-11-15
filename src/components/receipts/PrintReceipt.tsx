@@ -21,6 +21,7 @@ type ReceiptTemplate = {
   show_company_info: boolean;
   show_logo?: boolean;
   paper_width: number;
+  paper_type?: 'thermal_58mm' | 'thermal_80mm' | 'a4_paper';
   show_barcode: boolean;
   text_size?: number;
   font_family?: string;
@@ -136,8 +137,27 @@ export function PrintReceipt({
 
 
   const generateReceiptContent = () => {
+    // Get paper width based on paper type
+    const getPaperWidth = () => {
+      if (!template?.paper_type) return template?.paper_width || 80;
+      
+      switch (template.paper_type) {
+        case 'thermal_58mm':
+          return 58;
+        case 'thermal_80mm':
+          return 80;
+        case 'a4_paper':
+          return 210;
+        default:
+          return template.paper_width || 80;
+      }
+    };
+
+    const paperWidth = getPaperWidth();
+    const fontSize = template?.text_size || (paperWidth === 58 ? 10 : paperWidth === 210 ? 14 : 12);
+    
     return `
-      <div style="font-family: ${template?.font_family || 'Courier New, monospace'}; max-width: ${template?.paper_width || 80}mm; font-size: ${template?.text_size || 12}px; color: black; font-weight: 600;">
+      <div style="font-family: ${template?.font_family || 'Courier New, monospace'}; max-width: ${paperWidth}mm; font-size: ${fontSize}px; color: black; font-weight: 600;">
         ${template?.show_company_info ? `
           <div style="text-align: ${template?.logo_position || 'center'}; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 16px;">
             ${template?.show_logo && companyLogo ? `<img src="${companyLogo}" alt="Logo" style="max-height: ${template?.logo_size || 100}px; margin: 0 auto 8px auto; display: block; filter: contrast(1.2) brightness(0.9);" />` : ''}
