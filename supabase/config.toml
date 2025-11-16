@@ -1,5 +1,8 @@
 project_id = "jscmqiktfesaggpdeegk"
 
+[functions.star-cloudprnt]
+verify_jwt = true
+
 [functions.ai-search]
 verify_jwt = true
 
