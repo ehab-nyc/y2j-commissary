@@ -5,6 +5,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, X, Edit, Trash2, Clock, User, Calendar, Image as ImageIcon } from 'lucide-react';
+import { useState } from 'react';
+import { ResolutionNotesDialog } from './ResolutionNotesDialog';
 
 interface Customer {
   id: string;
@@ -58,8 +60,24 @@ export function ViolationsTable({
   getStatusIcon,
   getSeverityColor
 }: ViolationsTableProps) {
+  const [resolveDialog, setResolveDialog] = useState<{ open: boolean; violationId: string | null }>({
+    open: false,
+    violationId: null,
+  });
+
+  const handleResolveClick = (violationId: string) => {
+    setResolveDialog({ open: true, violationId });
+  };
+
+  const submitResolve = async (notes: string) => {
+    if (resolveDialog.violationId) {
+      await updateStatus(resolveDialog.violationId, 'resolved', notes);
+    }
+  };
+
   return (
-    <div className="grid gap-4">
+    <>
+      <div className="grid gap-4">
       {violations.map((violation) => (
         <Card key={violation.id} className="overflow-hidden">
           <CardHeader>
@@ -192,10 +210,7 @@ export function ViolationsTable({
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={() => {
-                      const notes = prompt('Enter resolution notes:');
-                      if (notes) updateStatus(violation.id, 'resolved', notes);
-                    }}
+                    onClick={() => handleResolveClick(violation.id)}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Resolve
@@ -241,13 +256,22 @@ export function ViolationsTable({
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+                </AlertDialog>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+
+  <ResolutionNotesDialog
+    open={resolveDialog.open}
+    onOpenChange={(open) => setResolveDialog({ open, violationId: null })}
+    onSubmit={submitResolve}
+    title="Resolve Violation"
+    description="Please provide details about how this violation was resolved."
+  />
+</>
+);
 }
