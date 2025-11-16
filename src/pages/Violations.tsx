@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, AlertCircle, CheckCircle, Clock, X, Trash2, Edit, AlertTriangle, Info, XOctagon, ShoppingCart, ArrowLeft, Download, Mail, MessageSquare, Search, CalendarIcon, Filter } from 'lucide-react';
 import { violationSchema } from '@/lib/validation';
 import { ViolationsTable } from '@/components/violations/ViolationsTable';
+import { ResolutionNotesDialog } from '@/components/violations/ResolutionNotesDialog';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -403,12 +404,20 @@ export default function Violations() {
     }
   };
 
-  const handleResolveAll = async (cartViolations: Violation[]) => {
-    try {
-      const notes = prompt('Enter resolution notes for all violations:');
-      if (!notes) return;
+  const [bulkResolveDialog, setBulkResolveDialog] = useState<{ open: boolean; violations: Violation[] }>({
+    open: false,
+    violations: [],
+  });
 
-      for (const violation of cartViolations) {
+  const handleResolveAll = async (cartViolations: Violation[]) => {
+    setBulkResolveDialog({ open: true, violations: cartViolations });
+  };
+
+  const submitBulkResolve = async (notes: string) => {
+    try {
+      const violations = bulkResolveDialog.violations;
+      
+      for (const violation of violations) {
         await supabase.from('violations').update({
           status: 'resolved',
           resolved_at: new Date().toISOString(),
@@ -416,7 +425,7 @@ export default function Violations() {
         }).eq('id', violation.id);
       }
 
-      toast({ title: 'All violations resolved', description: `Resolved ${cartViolations.length} violation(s)` });
+      toast({ title: 'All violations resolved', description: `Resolved ${violations.length} violation(s)` });
       fetchViolations();
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error resolving violations', description: error.message });
@@ -1454,6 +1463,14 @@ export default function Violations() {
           </Button>
         </div>
       )}
+
+      <ResolutionNotesDialog
+        open={bulkResolveDialog.open}
+        onOpenChange={(open) => setBulkResolveDialog({ open, violations: [] })}
+        onSubmit={submitBulkResolve}
+        title="Resolve All Violations"
+        description={`Enter resolution notes for ${bulkResolveDialog.violations.length} violation(s).`}
+      />
     </DashboardLayout>
   );
 }
