@@ -37,6 +37,7 @@ import Inventory from "./pages/Inventory";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import StockTake from "./pages/StockTake";
 import Customers from "./pages/Customers";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import EmployeeShifts from "./pages/EmployeeShifts";
 import ReceiptSettings from "./pages/ReceiptSettings";
 import HardwareSetup from "./pages/HardwareSetup";
@@ -96,6 +97,7 @@ const AppContent = () => {
           <Route path="/admin/cart-assignments" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><AdminCartAssignments /></ProtectedRoute>} />
           <Route path="/owner" element={<ProtectedRoute requireRole="owner"><Owner /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/customer-dashboard" element={<ProtectedRoute requireRole="customer"><CustomerDashboard /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><Analytics /></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute requireAnyRole={['worker', 'manager', 'admin', 'super_admin']}><Inventory /></ProtectedRoute>} />
           <Route path="/purchase-orders" element={<ProtectedRoute requireAnyRole={['manager', 'admin', 'super_admin']}><PurchaseOrders /></ProtectedRoute>} />

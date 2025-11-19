@@ -69,6 +69,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const navItems = [
     { path: '/products', label: 'Products', icon: ShoppingBag, show: true },
+    { path: '/customer-dashboard', label: 'My Dashboard', icon: BarChart3, show: hasRole('customer') },
     { path: '/orders', label: t('nav.myOrders'), icon: ShoppingCart, show: hasRole('customer') },
     { path: '/my-violations', label: 'My Violations', icon: AlertCircle, show: hasRole('customer') },
     { path: '/owner', label: 'Owner Dashboard', icon: Store, show: hasRole('owner') },
