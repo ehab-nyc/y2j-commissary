@@ -13,6 +13,7 @@ import { Plus, Edit, Trash2, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { productSchema } from '@/lib/validation';
+import { BulkProductImport } from '@/components/inventory/BulkProductImport';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -22,6 +23,7 @@ const AdminProducts = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedBoxSizes, setSelectedBoxSizes] = useState<string[]>(['1 box']);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
 
   const BOX_SIZE_OPTIONS = ['1 box', '1/2 box', '1/4 box'];
 
@@ -173,38 +175,40 @@ const AdminProducts = () => {
       <div className="space-y-6">
         <BackButton to="/admin" label="Back to Admin Panel" />
         
-        <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-muted-foreground">Manage product inventory</p>
-        </div>
-
-        <Dialog open={showProductDialog} onOpenChange={(open) => {
-          setShowProductDialog(open);
-          if (!open) {
-            setEditingProduct(null);
-            setImageFile(null);
-            setImagePreview(null);
-            setSelectedBoxSizes(['1 box']);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingProduct(null);
-              setImageFile(null);
-              setImagePreview(null);
-              setSelectedBoxSizes(['1 box']);
-            }} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingProduct ? 'Edit' : 'Add'} Product</DialogTitle>
-              <DialogDescription>
-                {editingProduct ? 'Update' : 'Create a new'} product in the inventory
-              </DialogDescription>
-            </DialogHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Products</h1>
+            <p className="text-muted-foreground">Manage product inventory</p>
+          </div>
+          <div className="flex gap-2">
+            <BulkProductImport onImportComplete={fetchProducts} />
+            <Dialog open={showProductDialog} onOpenChange={(open) => {
+              setShowProductDialog(open);
+              if (!open) {
+                setEditingProduct(null);
+                setImageFile(null);
+                setImagePreview(null);
+                setSelectedBoxSizes(['1 box']);
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setImageFile(null);
+                  setImagePreview(null);
+                  setSelectedBoxSizes(['1 box']);
+                }} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Product
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{editingProduct ? 'Edit' : 'Add'} Product</DialogTitle>
+                  <DialogDescription>
+                    {editingProduct ? 'Update' : 'Create a new'} product in the inventory
+                  </DialogDescription>
+                </DialogHeader>
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="image">Product Image</Label>
@@ -330,6 +334,8 @@ const AdminProducts = () => {
             </form>
           </DialogContent>
         </Dialog>
+          </div>
+        </div>
 
         <Table>
           <TableHeader>
