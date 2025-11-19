@@ -461,6 +461,70 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_forecasts: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          days_until_stockout: number | null
+          forecast_date: string
+          id: string
+          predicted_demand: number
+          product_id: string
+          reorder_suggestion: number | null
+          trend: string | null
+          updated_at: string
+          variant_id: string | null
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          days_until_stockout?: number | null
+          forecast_date?: string
+          id?: string
+          predicted_demand: number
+          product_id: string
+          reorder_suggestion?: number | null
+          trend?: string | null
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          days_until_stockout?: number | null
+          forecast_date?: string
+          id?: string
+          predicted_demand?: number
+          product_id?: string
+          reorder_suggestion?: number | null
+          trend?: string | null
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_forecasts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_performance_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_forecasts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_forecasts_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       location_history: {
         Row: {
           accuracy: number | null
@@ -678,6 +742,63 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          barcode: string | null
+          cost_price: number | null
+          created_at: string
+          id: string
+          is_active: boolean
+          price: number
+          product_id: string
+          quantity: number
+          sku: string
+          updated_at: string
+          variant_name: string
+        }
+        Insert: {
+          barcode?: string | null
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price: number
+          product_id: string
+          quantity?: number
+          sku: string
+          updated_at?: string
+          variant_name: string
+        }
+        Update: {
+          barcode?: string | null
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          product_id?: string
+          quantity?: number
+          sku?: string
+          updated_at?: string
+          variant_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_performance_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
