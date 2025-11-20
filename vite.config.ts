@@ -181,104 +181,13 @@ export default defineConfig(({ mode }) => ({
         drop_debugger: true,
       },
     },
-    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Core vendors - loaded on all pages
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-core';
-            }
-            if (id.includes('react-router-dom')) {
-              return 'router';
-            }
-            if (id.includes('@tanstack/react-query')) {
-              return 'query';
-            }
-            if (id.includes('@supabase/supabase-js')) {
-              return 'supabase';
-            }
-            
-            // Radix UI components - split by usage frequency
-            if (id.includes('@radix-ui/react-dialog') || 
-                id.includes('@radix-ui/react-dropdown-menu') ||
-                id.includes('@radix-ui/react-toast')) {
-              return 'radix-common';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'radix-extended';
-            }
-            
-            // Charts and visualization
-            if (id.includes('recharts')) {
-              return 'charts';
-            }
-            
-            // Map libraries
-            if (id.includes('mapbox')) {
-              return 'mapbox';
-            }
-            
-            // Other large libraries
-            if (id.includes('lucide-react')) {
-              return 'icons';
-            }
-            if (id.includes('date-fns')) {
-              return 'date-utils';
-            }
-            
-            // Everything else from node_modules
-            return 'vendor';
-          }
-          
-          // Route-based code splitting
-          if (id.includes('/src/pages/')) {
-            // Admin pages
-            if (id.includes('/pages/admin/')) {
-              return 'admin-pages';
-            }
-            // Analytics pages
-            if (id.includes('Analytics') || id.includes('ProductPerformance')) {
-              return 'analytics-pages';
-            }
-            // GPS/Fleet pages
-            if (id.includes('GPS') || id.includes('Fleet') || id.includes('Geofencing')) {
-              return 'gps-pages';
-            }
-            // Inventory pages
-            if (id.includes('Inventory') || id.includes('StockTake') || id.includes('PurchaseOrders')) {
-              return 'inventory-pages';
-            }
-            // Order pages
-            if (id.includes('Orders') || id.includes('ProcessedOrders')) {
-              return 'order-pages';
-            }
-            // Receipt pages
-            if (id.includes('Receipt')) {
-              return 'receipt-pages';
-            }
-          }
-          
-          // Component-based splitting
-          if (id.includes('/src/components/')) {
-            // Admin components
-            if (id.includes('/components/admin/')) {
-              return 'admin-components';
-            }
-            // Analytics components
-            if (id.includes('/components/analytics/')) {
-              return 'analytics-components';
-            }
-            // Inventory components
-            if (id.includes('/components/inventory/')) {
-              return 'inventory-components';
-            }
-            // Receipt components
-            if (id.includes('/components/receipts/')) {
-              return 'receipt-components';
-            }
-          }
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-toast'],
+          'query-vendor': ['@tanstack/react-query'],
+          'supabase-vendor': ['@supabase/supabase-js'],
         },
       },
     },
