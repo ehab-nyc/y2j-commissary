@@ -25,19 +25,23 @@
     <!-- Critical CSS - Inlined for faster initial render -->
     <style>
       *,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:currentColor}
-      html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif}
-      body{margin:0;line-height:inherit}
-      #root{min-height:100vh;display:flex;flex-direction:column}
+      html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif;background:#1a1f2e}
+      body{margin:0;line-height:inherit;background:#1a1f2e;color:#fff}
+      #root{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center}
       .min-h-screen{min-height:100vh}
       .flex{display:flex}
       .items-center{align-items:center}
       .justify-center{justify-content:center}
       .p-4{padding:1rem}
       .relative{position:relative}
-      /* Loading state */
-      #root:empty::before{content:'';position:absolute;top:50%;left:50%;width:3rem;height:3rem;margin:-1.5rem 0 0 -1.5rem;border:4px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+      /* Enhanced loading state for faster FCP */
+      #root:empty::before{content:'Y2J Commissary';position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:700;color:#fff;font-family:ui-serif,Georgia,serif;letter-spacing:0.05em}
+      #root:empty::after{content:'';position:absolute;top:50%;left:50%;width:3rem;height:3rem;margin:1.5rem 0 0 -1.5rem;border:4px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
       @keyframes spin{to{transform:rotate(360deg)}}
     </style>
+    
+    <!-- Remove invalid preload links that reference hashed assets -->
+    
     
     <!-- Google Fonts - Non-blocking load -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
