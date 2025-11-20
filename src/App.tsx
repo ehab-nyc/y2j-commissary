@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,52 +8,56 @@ import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useTheme } from "./hooks/useTheme";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
+
+// Critical routes - load immediately
 import Auth from "./pages/Auth";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
 import Worker from "./pages/Worker";
-import ProcessedOrders from "./pages/ProcessedOrders";
 import Manager from "./pages/Manager";
-import AdminHub from "./pages/AdminHub";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminProcessedOrders from "./pages/admin/AdminProcessedOrders";
-import AdminDeletedOrders from "./pages/admin/AdminDeletedOrders";
-import AdminViolations from "./pages/admin/AdminViolations";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminSMS from "./pages/admin/AdminSMS";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
-import AdminBalances from "./pages/admin/AdminBalances";
-import AdminCartAssignments from "./pages/admin/AdminCartAssignments";
 import Owner from "./pages/Owner";
 import Profile from "./pages/Profile";
-import Violations from "./pages/Violations";
-import CustomerViolations from "./pages/CustomerViolations";
 import NotFound from "./pages/NotFound";
-import Analytics from "./pages/Analytics";
-import Inventory from "./pages/Inventory";
-import PurchaseOrders from "./pages/PurchaseOrders";
-import StockTake from "./pages/StockTake";
-import Customers from "./pages/Customers";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import EmployeeShifts from "./pages/EmployeeShifts";
-import ReceiptSettings from "./pages/ReceiptSettings";
-import HardwareSetup from "./pages/HardwareSetup";
 import POS from "./pages/POS";
-import GPS from "./pages/GPS";
-import FleetMap from "./pages/FleetMap";
-import FleetVehicles from "./pages/FleetVehicles";
-import FleetHistory from "./pages/FleetHistory";
-import Geofencing from "./pages/Geofencing";
-import GPSAlerts from "./pages/GPSAlerts";
-import GPSSettings from "./pages/GPSSettings";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Returns from "./pages/Returns";
-import ProductPerformance from "./pages/ProductPerformance";
-import DataBackup from "./pages/DataBackup";
-import SMSNotifications from "./pages/SMSNotifications";
+
+// Non-critical routes - lazy load for better performance
+const ProcessedOrders = lazy(() => import("./pages/ProcessedOrders"));
+const AdminHub = lazy(() => import("./pages/AdminHub"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminProcessedOrders = lazy(() => import("./pages/admin/AdminProcessedOrders"));
+const AdminDeletedOrders = lazy(() => import("./pages/admin/AdminDeletedOrders"));
+const AdminViolations = lazy(() => import("./pages/admin/AdminViolations"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminSMS = lazy(() => import("./pages/admin/AdminSMS"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminAnnouncements = lazy(() => import("./pages/admin/AdminAnnouncements"));
+const AdminBalances = lazy(() => import("./pages/admin/AdminBalances"));
+const AdminCartAssignments = lazy(() => import("./pages/admin/AdminCartAssignments"));
+const Violations = lazy(() => import("./pages/Violations"));
+const CustomerViolations = lazy(() => import("./pages/CustomerViolations"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Inventory = lazy(() => import("./pages/Inventory"));
+const PurchaseOrders = lazy(() => import("./pages/PurchaseOrders"));
+const StockTake = lazy(() => import("./pages/StockTake"));
+const Customers = lazy(() => import("./pages/Customers"));
+const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const EmployeeShifts = lazy(() => import("./pages/EmployeeShifts"));
+const ReceiptSettings = lazy(() => import("./pages/ReceiptSettings"));
+const HardwareSetup = lazy(() => import("./pages/HardwareSetup"));
+const GPS = lazy(() => import("./pages/GPS"));
+const FleetMap = lazy(() => import("./pages/FleetMap"));
+const FleetVehicles = lazy(() => import("./pages/FleetVehicles"));
+const FleetHistory = lazy(() => import("./pages/FleetHistory"));
+const Geofencing = lazy(() => import("./pages/Geofencing"));
+const GPSAlerts = lazy(() => import("./pages/GPSAlerts"));
+const GPSSettings = lazy(() => import("./pages/GPSSettings"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Returns = lazy(() => import("./pages/Returns"));
+const ProductPerformance = lazy(() => import("./pages/ProductPerformance"));
+const DataBackup = lazy(() => import("./pages/DataBackup"));
+const SMSNotifications = lazy(() => import("./pages/SMSNotifications"));
 
 const queryClient = new QueryClient();
 
@@ -68,7 +72,12 @@ const AppContent = () => {
       <Sonner />
       <PWAUpdatePrompt />
       <BrowserRouter>
-        <Routes>
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen bg-background">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        }>
+          <Routes>
           <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -121,7 +130,8 @@ const AppContent = () => {
           <Route path="/gps/settings" element={<ProtectedRoute requireAnyRole={['admin', 'super_admin']}><GPSSettings /></ProtectedRoute>} />
           
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </>
   );
