@@ -113,13 +113,36 @@ export default defineConfig(({ mode }) => ({
             }
           },
           {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/(themes|app_settings).*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "supabase-theme-settings-cache",
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              },
+              plugins: [
+                {
+                  cacheKeyWillBeUsed: async ({ request }) => {
+                    const url = new URL(request.url);
+                    return url.origin + url.pathname + url.search;
+                  }
+                }
+              ]
+            }
+          },
+          {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-cache",
+              cacheName: "supabase-api-cache",
+              networkTimeoutSeconds: 3,
               expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 30 // 30 minutes
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5 // 5 minutes for other API calls
               },
               cacheableResponse: {
                 statuses: [0, 200]
